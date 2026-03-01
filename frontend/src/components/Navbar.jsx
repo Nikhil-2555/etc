@@ -2,9 +2,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import {
     FiShoppingCart, FiUser, FiLogOut, FiMenu, FiSearch, FiHeart, FiBell,
-    FiChevronDown, FiGrid, FiBox, FiSettings, FiX
+    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon
 } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
 
@@ -12,6 +13,7 @@ const Navbar = () => {
     const { totalItems } = useCart();
     const { totalWishlistItems } = useWishlist();
     const { user, logout } = useAuth();
+    const { darkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -60,7 +62,7 @@ const Navbar = () => {
 
 
             {/* Main Navbar */}
-            <nav className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm">
+            <nav className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
                 <div className="max-w-[1920px] mx-auto px-6 h-20 flex items-center justify-between gap-4 md:gap-8">
 
                     {/* Logo */}
@@ -118,7 +120,16 @@ const Navbar = () => {
                             )}
                         </div>
 
-                        <Link to="/wishlist" className="text-gray-600 hover:text-primary-600 transition-colors relative">
+                        {/* Dark Mode Toggle */}
+                        <button
+                            onClick={toggleTheme}
+                            className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                            aria-label="Toggle dark mode"
+                        >
+                            {darkMode ? <FiSun size={20} /> : <FiMoon size={20} />}
+                        </button>
+
+                        <Link to="/wishlist" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 transition-colors relative">
                             <FiHeart size={22} />
                             {totalWishlistItems > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
@@ -246,6 +257,15 @@ const Navbar = () => {
                                 <Link to="/products?category=beauty & personal care" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Beauty</Link>
                                 <Link to="/products?category=books & media" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Books</Link>
                             </div>
+
+                            {/* Mobile Dark Mode Toggle */}
+                            <button
+                                onClick={toggleTheme}
+                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                            >
+                                {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+                                {darkMode ? 'Light Mode' : 'Dark Mode'}
+                            </button>
 
                             <div className="border-t border-gray-100 pt-4">
                                 {user ? (

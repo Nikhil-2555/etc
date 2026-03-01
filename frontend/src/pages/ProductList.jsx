@@ -72,8 +72,8 @@ const ProductList = () => {
         <div className="max-w-[1920px] mx-auto px-6 py-8">
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Shop</h1>
-                    <p className="text-gray-500 text-sm mt-1">{filteredProducts.length} results found</p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shop</h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{filteredProducts.length} results found</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
@@ -84,7 +84,7 @@ const ProductList = () => {
                             placeholder="Search products..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all w-full sm:w-64"
+                            className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all w-full sm:w-64 bg-white dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                         />
                     </div>
 
@@ -98,7 +98,7 @@ const ProductList = () => {
                     <select
                         value={sortOrder}
                         onChange={(e) => setSortOrder(e.target.value)}
-                        className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm bg-white"
+                        className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-primary-500 text-sm bg-white dark:bg-gray-800 dark:text-white"
                     >
                         <option value="popular">Most Popular</option>
                         <option value="price-low-high">Price: Low to High</option>
@@ -111,14 +111,14 @@ const ProductList = () => {
             <div className="flex flex-col md:flex-row gap-8">
                 {/* Filters Sidebar */}
                 <aside className={`w-full md:w-60 space-y-8 ${showFilters ? 'block' : 'hidden md:block'}`}>
-                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm sticky top-24">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm sticky top-24">
                         <div className="flex justify-between items-center mb-6 md:hidden">
                             <h3 className="font-bold text-lg">Filters</h3>
                             <button onClick={() => setShowFilters(false)}><FiX size={20} /></button>
                         </div>
 
                         <div className="mb-8">
-                            <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Categories</h3>
                             <div className="space-y-2">
                                 {categories.map(cat => (
                                     <label key={cat} className="flex items-center space-x-2 cursor-pointer group">
@@ -136,7 +136,7 @@ const ProductList = () => {
                         </div>
 
                         <div>
-                            <h3 className="font-semibold text-gray-900 mb-4">Price Range</h3>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Price Range</h3>
                             <div className="flex items-center space-x-4 mb-4">
                                 <span className="text-sm text-gray-500">₹{priceRange[0]}</span>
                                 <input
@@ -158,7 +158,7 @@ const ProductList = () => {
                     {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                             {[1, 2, 3, 4, 5, 6].map(i => (
-                                <div key={i} className="animate-pulse bg-white border border-gray-100 rounded-2xl p-4 h-96"></div>
+                                <div key={i} className="animate-pulse bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 h-96"></div>
                             ))}
                         </div>
                     ) : filteredProducts.length > 0 ? (
@@ -168,8 +168,8 @@ const ProductList = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                            <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
+                        <div className="text-center py-20 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                            <p className="text-gray-500 dark:text-gray-400 text-lg">No products found matching your criteria.</p>
                             <button
                                 onClick={() => { setSelectedCategory('All'); setSearchQuery(''); setPriceRange([0, 200000]); }}
                                 className="mt-4 text-primary-600 font-medium hover:underline"

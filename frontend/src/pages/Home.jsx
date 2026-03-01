@@ -24,12 +24,12 @@ const Home = () => {
     }, []);
 
     const categories = [
-        { name: 'Electronics', icon: <FiSmartphone />, color: 'bg-blue-100 text-blue-600' },
-        { name: 'Clothing', icon: <FiShoppingBag />, color: 'bg-pink-100 text-pink-600' },
-        { name: 'Furniture', icon: <FiMonitor />, color: 'bg-green-100 text-green-600' },
-        { name: 'Sports', icon: <FiSpeaker />, color: 'bg-purple-100 text-purple-600' },
-        { name: 'Beauty & Personal Care', icon: <FiCodesandbox />, color: 'bg-rose-100 text-rose-600' },
-        { name: 'Books & Media', icon: <FiMonitor />, color: 'bg-amber-100 text-amber-600' },
+        { name: 'Electronics', icon: <FiSmartphone />, color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400', slug: 'electronics' },
+        { name: 'Clothing', icon: <FiShoppingBag />, color: 'bg-pink-100 text-pink-600 dark:bg-pink-900/40 dark:text-pink-400', slug: 'clothing' },
+        { name: 'Furniture', icon: <FiMonitor />, color: 'bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400', slug: 'furniture' },
+        { name: 'Sports', icon: <FiSpeaker />, color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400', slug: 'sports' },
+        { name: 'Beauty & Personal Care', icon: <FiCodesandbox />, color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400', slug: 'beauty & personal care' },
+        { name: 'Books & Media', icon: <FiMonitor />, color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400', slug: 'books & media' },
     ];
 
     return (
@@ -78,27 +78,28 @@ const Home = () => {
             <section className="container mx-auto px-4">
                 <div className="flex justify-between items-end mb-12">
                     <div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Browse by Category</h2>
-                        <p className="text-gray-500">Find exactly what you're looking for</p>
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Browse by Category</h2>
+                        <p className="text-gray-500 dark:text-gray-400">Find exactly what you're looking for</p>
                     </div>
-                    <Link to="/products" className="text-primary-600 font-medium hover:text-primary-700 flex items-center gap-1 group">
+                    <Link to="/products" className="text-primary-600 dark:text-primary-400 font-medium hover:text-primary-700 flex items-center gap-1 group">
                         View All Categories <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
                     {categories.map((cat, idx) => (
-                        <motion.div
-                            key={idx}
-                            whileHover={{ y: -5 }}
-                            className="p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-primary-100 transition-all cursor-pointer group"
-                        >
-                            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-6 ${cat.color} group-hover:scale-110 transition-transform`}>
-                                {cat.icon}
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-1">{cat.name}</h3>
-                            <p className="text-sm text-gray-400">120+ Products</p>
-                        </motion.div>
+                        <Link key={idx} to={`/products?category=${encodeURIComponent(cat.slug)}`}>
+                            <motion.div
+                                whileHover={{ y: -5 }}
+                                className="p-8 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl hover:border-primary-100 dark:hover:border-primary-800 transition-all cursor-pointer group"
+                            >
+                                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl mb-6 ${cat.color} group-hover:scale-110 transition-transform`}>
+                                    {cat.icon}
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{cat.name}</h3>
+                                <p className="text-sm text-gray-400 dark:text-gray-500">120+ Products</p>
+                            </motion.div>
+                        </Link>
                     ))}
                 </div>
             </section>
@@ -107,10 +108,10 @@ const Home = () => {
             <section className="container mx-auto px-4">
                 <div className="flex justify-between items-end mb-12">
                     <div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Products</h2>
-                        <p className="text-gray-500">Handpicked selections just for you</p>
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Featured Products</h2>
+                        <p className="text-gray-500 dark:text-gray-400">Handpicked selections just for you</p>
                     </div>
-                    <Link to="/products" className="text-primary-600 font-medium hover:text-primary-700 flex items-center gap-1 group">
+                    <Link to="/products" className="text-primary-600 dark:text-primary-400 font-medium hover:text-primary-700 flex items-center gap-1 group">
                         View All Products <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
@@ -118,10 +119,10 @@ const Home = () => {
                 {loading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="animate-pulse bg-white rounded-2xl p-4 border border-gray-100 h-[400px]">
-                                <div className="bg-gray-200 h-64 rounded-xl mb-4 w-full"></div>
-                                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                            <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 h-[400px]">
+                                <div className="bg-gray-200 dark:bg-gray-700 h-64 rounded-xl mb-4 w-full"></div>
+                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                             </div>
                         ))}
                     </div>
@@ -141,12 +142,11 @@ const Home = () => {
                     <div className="relative z-10 max-w-xl">
                         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Upgrade Your Tech Game</h2>
                         <p className="text-primary-200 text-lg mb-8">Get up to 40% off on all premium electronics this week. Don't miss out on the latest gadgets.</p>
-                        <button className="px-8 py-4 bg-white text-primary-900 rounded-xl font-bold hover:bg-gray-100 transition-colors">
+                        <Link to="/products?category=electronics" className="inline-block px-8 py-4 bg-white text-primary-900 rounded-xl font-bold hover:bg-gray-100 transition-colors">
                             Shop Electronics
-                        </button>
+                        </Link>
                     </div>
                     <div className="hidden lg:block absolute right-20 top-1/2 -translate-y-1/2">
-                        {/* Abstract shapes or image */}
                         <div className="w-64 h-64 bg-primary-500 rounded-full blur-3xl opacity-30 animate-pulse"></div>
                     </div>
                 </div>
@@ -156,3 +156,4 @@ const Home = () => {
 };
 
 export default Home;
+

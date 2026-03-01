@@ -68,8 +68,13 @@ export const fetchAllOrders = async () => {
     return data;
 };
 
-export const getAIRecommendations = async (prompt) => {
-    const { data } = await api.post('/ai/chat', { prompt });
+export const getAIRecommendations = async (message, conversationHistory = []) => {
+    const { data } = await api.post('/ai/chat', { message, conversationHistory });
+    return data;
+};
+
+export const getSmartRecommendations = async (productId, cartItems = []) => {
+    const { data } = await api.post('/ai/recommendations', { productId, cartItems });
     return data;
 };
 
