@@ -24,6 +24,8 @@ app.use(express.json());
 const allowedOrigins = [
     'http://localhost:5100',
     'http://127.0.0.1:5100',
+    'http://localhost:5101',
+    'http://127.0.0.1:5101',
 ];
 app.use(cors({
     origin: function (origin, callback) {
