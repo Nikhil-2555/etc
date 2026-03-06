@@ -28,7 +28,7 @@ const checkUniqueness = async () => {
         } else {
             console.log('❌ FAILURE: Found duplicates!');
             duplicates.forEach(d => console.log(`- ${d.title} uses same image as ${d.dup_of}`));
-        }
+        } dada
 
         process.exit();
     } catch (error) {
