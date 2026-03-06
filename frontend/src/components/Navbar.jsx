@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import {
     FiShoppingCart, FiUser, FiLogOut, FiMenu, FiSearch, FiHeart, FiBell,
-    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon
+    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle
 } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
 
@@ -58,11 +58,11 @@ const Navbar = () => {
     ];
 
     return (
-        <div className="navbar-sticky">
+        <div className="navbar-sticky relative z-[100]">
 
 
             {/* Main Navbar */}
-            <nav className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
+            <nav className="relative z-[100] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
                 <div className="max-w-[1920px] mx-auto px-6 h-20 flex items-center justify-between gap-4 md:gap-8">
 
                     {/* Logo */}
@@ -99,7 +99,7 @@ const Navbar = () => {
                             </button>
 
                             {isCategoryMenuOpen && (
-                                <div className="absolute top-full right-0 mt-4 w-60 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
+                                <div className="absolute top-full right-0 mt-4 w-60 z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
                                     {categories.map((cat, idx) => (
                                         <Link
                                             key={idx}
@@ -128,6 +128,10 @@ const Navbar = () => {
                         >
                             {darkMode ? <FiSun size={20} /> : <FiMoon size={20} />}
                         </button>
+
+                        <Link to="/support" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 transition-colors relative" aria-label="Customer Support">
+                            <FiMessageCircle size={22} />
+                        </Link>
 
                         <Link to="/wishlist" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 transition-colors relative">
                             <FiHeart size={22} />
@@ -173,7 +177,7 @@ const Navbar = () => {
                                 </button>
 
                                 {isUserMenuOpen && (
-                                    <div className="absolute top-full right-0 mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
+                                    <div className="absolute top-full right-0 mt-3 w-56 z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
                                         <div className="px-4 py-3 border-b border-gray-50">
                                             <p className="text-sm font-bold text-gray-900">{user.name}</p>
                                             <p className="text-xs text-gray-500 truncate">{user.email}</p>

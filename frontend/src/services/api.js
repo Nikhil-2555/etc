@@ -13,6 +13,18 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Handle global response errors (e.g. 401 Unauthorized token expirations)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
+
 export const fetchProducts = async () => {
     const { data } = await api.get('/products');
     return data;

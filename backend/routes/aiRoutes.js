@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 const Product = require('../models/Product');
 
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize Groq
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // System prompt that makes the AI act as a shopping assistant
 const SYSTEM_PROMPT = `You are "ShopFlow AI", a friendly and knowledgeable shopping assistant for the ShopFlow e-commerce store.
@@ -37,10 +37,10 @@ router.post('/chat', async (req, res) => {
             return res.status(400).json({ message: 'Message is required' });
         }
 
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+        if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'YOUR_GROQ_API_KEY_HERE') {
             return res.status(503).json({
-                message: 'AI service is not configured. Please add your GEMINI_API_KEY to the .env file.',
-                reply: "I'm not configured yet! The store admin needs to add a Gemini API key. You can get one free at https://aistudio.google.com/apikey 🔑"
+                message: 'AI service is not configured. Please add your GROQ_API_KEY to the .env file.',
+                reply: "I'm not configured yet! The store admin needs to add a Groq API key."
             });
         }
 
@@ -51,29 +51,32 @@ router.post('/chat', async (req, res) => {
             `• ${p.title} — ₹${p.price} (${p.category})${p.stock <= 0 ? ' [OUT OF STOCK]' : ''}${p.sizes?.length ? ` [Sizes: ${p.sizes.join(', ')}]` : ''} — Rating: ${p.rating?.rate || 'N/A'}/5`
         ).join('\n');
 
-        // Build conversation for Gemini
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        // Build conversation for Groq
+        const messages = [
+            {
+                role: 'system',
+                content: `${SYSTEM_PROMPT}\n\nHere is our current product catalog:\n${catalogSummary}`
+            },
+            {
+                role: 'assistant',
+                content: "I'm ShopFlow AI, ready to help you find the perfect products! I have access to your full catalog and I'm here to assist with recommendations, comparisons, gift ideas, and any shopping questions. How can I help you today? 🛍️"
+            },
+            ...conversationHistory.map(msg => ({
+                role: msg.role === 'user' ? 'user' : 'assistant',
+                content: msg.content
+            })),
+            {
+                role: 'user',
+                content: message
+            }
+        ];
 
-        const chat = model.startChat({
-            history: [
-                {
-                    role: 'user',
-                    parts: [{ text: `${SYSTEM_PROMPT}\n\nHere is our current product catalog:\n${catalogSummary}\n\nPlease acknowledge that you understand your role and are ready to help customers.` }],
-                },
-                {
-                    role: 'model',
-                    parts: [{ text: "I'm ShopFlow AI, ready to help you find the perfect products! I have access to your full catalog and I'm here to assist with recommendations, comparisons, gift ideas, and any shopping questions. How can I help you today? 🛍️" }],
-                },
-                // Include previous conversation history
-                ...conversationHistory.map(msg => ({
-                    role: msg.role === 'user' ? 'user' : 'model',
-                    parts: [{ text: msg.content }],
-                })),
-            ],
+        const chatCompletion = await groq.chat.completions.create({
+            messages,
+            model: 'llama-3.3-70b-versatile', // using a highly capable 70b groq model
         });
 
-        const result = await chat.sendMessage(message);
-        const reply = result.response.text();
+        const reply = chatCompletion.choices[0]?.message?.content || "I couldn't process that.";
 
         res.json({
             reply,
@@ -83,18 +86,10 @@ router.post('/chat', async (req, res) => {
     } catch (error) {
         console.error('AI Chat Error:', error.message);
 
-        // Handle specific Gemini API errors
         if (error.message?.includes('API_KEY')) {
             return res.status(401).json({
                 message: 'Invalid API key',
                 reply: "There's an issue with the AI configuration. Please check the API key. 🔧"
-            });
-        }
-
-        if (error.message?.includes('404') || error.message?.includes('not found')) {
-            return res.status(503).json({
-                message: 'Model not available',
-                reply: "The AI model isn't available right now. Please make sure the Generative Language API is enabled in your Google Cloud project. 🔧"
             });
         }
 
@@ -112,7 +107,7 @@ router.post('/recommendations', async (req, res) => {
     try {
         const { productId, cartItems = [] } = req.body;
 
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+        if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'YOUR_GROQ_API_KEY_HERE') {
             // Fallback: return random products from the same category
             let product = null;
             if (productId) {
@@ -149,8 +144,6 @@ router.post('/recommendations', async (req, res) => {
             `ID:${p._id} | ${p.title} | ₹${p.price} | ${p.category} | Rating:${p.rating?.rate || 'N/A'}`
         ).join('\n');
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
         const prompt = `You are a product recommendation engine for ShopFlow e-commerce.
 
 ${contextPrompt}
@@ -164,8 +157,12 @@ Consider: category relevance, price range compatibility, and what pairs well tog
 IMPORTANT: Respond ONLY with a JSON array of product IDs, nothing else. Example: ["id1", "id2", "id3", "id4"]
 Only use IDs from the catalog above.`;
 
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text().trim();
+        const chatCompletion = await groq.chat.completions.create({
+            messages: [{ role: 'user', content: prompt }],
+            model: 'llama-3.3-70b-versatile',
+        });
+
+        const responseText = chatCompletion.choices[0]?.message?.content?.trim() || "[]";
 
         // Parse AI response — extract JSON array
         let recommendedIds = [];

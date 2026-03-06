@@ -414,8 +414,8 @@ router.get('/analytics', protect, admin, async (req, res) => {
             .populate('user', 'name')
             .select('user totalPrice createdAt status isPaid isDelivered orderItems');
 
-        // 6. Low Stock Items (Stock < 2) - Critically Low
-        const lowStockProducts = await Product.find({ stock: { $lt: 2 } })
+        // 6. Low Stock Items (Stock < 10) - Critically Low
+        const lowStockProducts = await Product.find({ stock: { $lt: 10 } })
             .select('title stock image category')
             .limit(10);
 

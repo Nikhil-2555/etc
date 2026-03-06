@@ -21,7 +21,7 @@ import { WishlistProvider } from './context/WishlistContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Wishlist from './pages/Wishlist';
 import Payment from './pages/Payment';
-import AIChatWidget from './components/AIChatWidget';
+import CustomerSupport from './pages/CustomerSupport';
 
 const ProtectedRoute = ({ children, role }) => {
   const { user, loading } = useAuth();
@@ -89,12 +89,13 @@ function App() {
                         </ProtectedRoute>
                       } />
 
+                      <Route path="/support" element={<CustomerSupport />} />
+
                       {/* 404 Catch-all */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>
                   <Footer />
-                  <AIChatWidget />
                   <Toaster position="bottom-right" toastOptions={{
                     style: {
                       background: '#333',

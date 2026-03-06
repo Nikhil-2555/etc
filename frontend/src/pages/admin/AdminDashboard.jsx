@@ -535,10 +535,10 @@ const AdminDashboard = () => {
                                                 <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
                                                     <div className="flex items-center gap-4">
                                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold ${order.status === 'delivered' ? 'bg-emerald-100 text-emerald-600' :
-                                                                order.status === 'cancelled' ? 'bg-red-100 text-red-600' :
-                                                                    order.status === 'shipped' ? 'bg-blue-100 text-blue-600' :
-                                                                        order.status === 'processing' ? 'bg-indigo-100 text-indigo-600' :
-                                                                            'bg-amber-100 text-amber-600'
+                                                            order.status === 'cancelled' ? 'bg-red-100 text-red-600' :
+                                                                order.status === 'shipped' ? 'bg-blue-100 text-blue-600' :
+                                                                    order.status === 'processing' ? 'bg-indigo-100 text-indigo-600' :
+                                                                        'bg-amber-100 text-amber-600'
                                                             }`}>
                                                             {order.user?.name?.charAt(0) || 'U'}
                                                         </div>
@@ -550,10 +550,10 @@ const AdminDashboard = () => {
                                                     <div className="text-right">
                                                         <p className="font-black text-gray-900">₹{order.totalPrice.toLocaleString('en-IN')}</p>
                                                         <span className={`text-[10px] uppercase font-bold tracking-wider ${order.status === 'delivered' ? 'text-emerald-500' :
-                                                                order.status === 'cancelled' ? 'text-red-500' :
-                                                                    order.status === 'shipped' ? 'text-blue-500' :
-                                                                        order.status === 'processing' ? 'text-indigo-500' :
-                                                                            'text-amber-500'
+                                                            order.status === 'cancelled' ? 'text-red-500' :
+                                                                order.status === 'shipped' ? 'text-blue-500' :
+                                                                    order.status === 'processing' ? 'text-indigo-500' :
+                                                                        'text-amber-500'
                                                             }`}>
                                                             {order.status || 'Pending'}
                                                         </span>
@@ -574,7 +574,7 @@ const AdminDashboard = () => {
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-bold text-gray-900">Inventory Health - Critical Alerts</h3>
-                                            <p className="text-sm text-gray-500">Products requiring immediate restocking (less than 2 units remaining)</p>
+                                            <p className="text-sm text-gray-500">Products requiring immediate restocking (less than 10 units remaining)</p>
                                         </div>
                                     </div>
 
@@ -599,7 +599,7 @@ const AdminDashboard = () => {
                                                     <div className="mt-3 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                                                         <div
                                                             className="h-full bg-rose-500 rounded-full transition-all duration-1000"
-                                                            style={{ width: `${(product.stock / 2) * 100}%` }}
+                                                            style={{ width: `${(product.stock / 10) * 100}%` }}
                                                         />
                                                     </div>
                                                 </div>

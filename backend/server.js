@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
+dotenv.config();
 const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
@@ -9,7 +10,6 @@ const orderRoutes = require('./routes/orderRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 
-dotenv.config();
 connectDB();
 
 const app = express();

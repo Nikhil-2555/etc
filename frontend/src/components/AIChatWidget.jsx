@@ -142,7 +142,7 @@ const AIChatWidget = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-3rem)] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden"
+                        className="fixed bottom-6 right-6 z-50 w-[600px] max-w-[calc(100vw-2rem)] h-[800px] max-h-[calc(100vh-3rem)] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden"
                     >
                         {/* Header */}
                         <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-5 py-4 flex items-center justify-between flex-shrink-0">
@@ -185,8 +185,8 @@ const AIChatWidget = () => {
                                     <div className={`flex gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                                         {/* Avatar */}
                                         <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center mt-1 ${msg.role === 'user'
-                                                ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400'
-                                                : 'bg-gradient-to-br from-primary-500 to-primary-700 text-white'
+                                            ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400'
+                                            : 'bg-gradient-to-br from-primary-500 to-primary-700 text-white'
                                             }`}>
                                             {msg.role === 'user' ? <FiUser size={14} /> : <FiCpu size={14} />}
                                         </div>
@@ -194,10 +194,10 @@ const AIChatWidget = () => {
                                         {/* Bubble */}
                                         <div
                                             className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                                    ? 'bg-primary-600 text-white rounded-br-md'
-                                                    : msg.isError
-                                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-800 rounded-bl-md'
-                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-md'
+                                                ? 'bg-primary-600 text-white rounded-br-md'
+                                                : msg.isError
+                                                    ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-800 rounded-bl-md'
+                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-md'
                                                 }`}
                                             dangerouslySetInnerHTML={{
                                                 __html: msg.role === 'user' ? msg.content : formatMessage(msg.content)
@@ -280,15 +280,15 @@ const AIChatWidget = () => {
                                     onClick={() => sendMessage()}
                                     disabled={!input.trim() || isLoading}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${input.trim() && !isLoading
-                                            ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-md'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
+                                        ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-md'
+                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
                                         }`}
                                 >
                                     <FiSend size={14} />
                                 </button>
                             </div>
                             <p className="text-[10px] text-gray-400 dark:text-gray-500 text-center mt-2">
-                                Powered by Gemini AI · Responses may not be 100% accurate
+                                Powered by Groq AI · Responses may not be 100% accurate
                             </p>
                         </div>
                     </motion.div>
