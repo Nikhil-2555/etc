@@ -3,15 +3,17 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useCompare } from '../context/CompareContext';
 import {
     FiShoppingCart, FiUser, FiLogOut, FiMenu, FiSearch, FiHeart, FiBell,
-    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle
+    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle, FiLayers
 } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
 
 const Navbar = () => {
     const { totalItems } = useCart();
     const { totalWishlistItems } = useWishlist();
+    const { compareItems } = useCompare();
     const { user, logout } = useAuth();
     const { darkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
@@ -142,6 +144,15 @@ const Navbar = () => {
                             )}
                         </Link>
 
+                        <Link to="/compare" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 transition-colors relative" aria-label="Compare Products">
+                            <FiLayers size={22} />
+                            {compareItems.length > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                                    {compareItems.length}
+                                </span>
+                            )}
+                        </Link>
+
                         {(user?.role === 'admin' || user?.role === 'manager') && (
                             <Link
                                 to="/admin"
@@ -219,6 +230,14 @@ const Navbar = () => {
 
                     {/* Mobile Menu Button */}
                     <div className="flex md:hidden items-center space-x-4">
+                        <Link to="/compare" className="relative text-gray-600 hover:text-primary-600 transition-colors">
+                            <FiLayers size={24} />
+                            {compareItems.length > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                                    {compareItems.length}
+                                </span>
+                            )}
+                        </Link>
                         <Link to="/cart" className="relative text-gray-600 hover:text-primary-600 transition-colors">
                             <FiShoppingCart size={24} />
                             {totalItems > 0 && (

@@ -1,13 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import { FiShoppingCart, FiStar, FiHeart } from 'react-icons/fi';
+import { useCompare } from '../context/CompareContext';
+import { FiShoppingCart, FiStar, FiHeart, FiLayers } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const ProductCard = ({ product }) => {
     const { addToCart } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+    const { addToCompare, removeFromCompare, compareItems } = useCompare();
     const navigate = useNavigate();
+
+    const isCompared = compareItems.some((item) => item._id === (product._id || product.id));
 
     const handleAddToCart = (e) => {
         e.preventDefault();
@@ -31,6 +35,17 @@ const ProductCard = ({ product }) => {
         }
     };
 
+    const handleToggleCompare = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const productId = product._id || product.id;
+        if (isCompared) {
+            removeFromCompare(productId);
+        } else {
+            addToCompare(product);
+        }
+    };
+
     return (
         <div className="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100 dark:border-gray-700 relative">
             <Link to={`/products/${product._id || product.id}`} className="block relative aspect-[4/5] overflow-hidden bg-gray-50 dark:bg-gray-700">
@@ -42,12 +57,20 @@ const ProductCard = ({ product }) => {
                     }}
                     className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 will-change-transform"
                 />
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex flex-col gap-2">
                     <button
                         onClick={handleToggleWishlist}
                         className={`p-2 rounded-full shadow-md transition-colors ${isInWishlist(product._id || product.id) ? 'bg-red-50 dark:bg-red-900/30 text-red-500' : 'bg-white dark:bg-gray-800 text-gray-500 hover:text-red-500'}`}
+                        title={isInWishlist(product._id || product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
                     >
                         <FiHeart size={18} fill={isInWishlist(product._id || product.id) ? "currentColor" : "none"} />
+                    </button>
+                    <button
+                        onClick={handleToggleCompare}
+                        className={`p-2 rounded-full shadow-md transition-colors ${isCompared ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500' : 'bg-white dark:bg-gray-800 text-gray-500 hover:text-indigo-500'}`}
+                        title={isCompared ? "Remove from Compare" : "Compare Product"}
+                    >
+                        <FiLayers size={18} />
                     </button>
                 </div>
             </Link>

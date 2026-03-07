@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchProductById, getSmartRecommendations } from '../services/api';
 import { useCart } from '../context/CartContext';
+import { useCompare } from '../context/CompareContext';
 import ProductCard from '../components/ProductCard';
-import { FiStar, FiTruck, FiShield, FiRotateCcw, FiPlus, FiMinus, FiShoppingCart, FiCpu } from 'react-icons/fi';
+import { FiStar, FiTruck, FiShield, FiRotateCcw, FiPlus, FiMinus, FiShoppingCart, FiCpu, FiLayers } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const ProductDetail = () => {
@@ -16,7 +17,20 @@ const ProductDetail = () => {
     const [recsLoading, setRecsLoading] = useState(true);
     const [recsAIPowered, setRecsAIPowered] = useState(false);
     const { addToCart, cart } = useCart();
+    const { addToCompare, removeFromCompare, compareItems } = useCompare();
     const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+    const isCompared = product && compareItems.some((item) => item._id === (product._id || product.id));
+
+    const handleToggleCompare = () => {
+        if (!product) return;
+        const productId = product._id || product.id;
+        if (isCompared) {
+            removeFromCompare(productId);
+        } else {
+            addToCompare(product);
+        }
+    };
 
     useEffect(() => {
         const loadProduct = async () => {
@@ -147,6 +161,13 @@ const ProductDetail = () => {
                         </button>
                     </div>
 
+                    <button
+                        onClick={handleToggleCompare}
+                        className={`w-full mb-8 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold transition-all border-2 ${isCompared ? 'border-indigo-600 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-400' : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800'}`}
+                    >
+                        <FiLayers /> {isCompared ? 'Remove from Compare' : 'Add to Compare'}
+                    </button>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                             <FiTruck className="text-primary-600 text-xl" />
@@ -172,8 +193,8 @@ const ProductDetail = () => {
                     <div className="flex items-center gap-3 mb-10">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">You Might Also Like</h2>
                         <span className={`text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 ${recsAIPowered
-                                ? 'bg-gradient-to-r from-primary-100 to-purple-100 dark:from-primary-900/40 dark:to-purple-900/40 text-primary-700 dark:text-primary-300'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                            ? 'bg-gradient-to-r from-primary-100 to-purple-100 dark:from-primary-900/40 dark:to-purple-900/40 text-primary-700 dark:text-primary-300'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                             }`}>
                             <FiCpu size={12} />
                             {recsAIPowered ? 'AI Powered' : 'Similar'}

@@ -22,6 +22,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import Wishlist from './pages/Wishlist';
 import Payment from './pages/Payment';
 import CustomerSupport from './pages/CustomerSupport';
+import Compare from './pages/Compare';
+import { CompareProvider } from './context/CompareContext';
 
 const ProtectedRoute = ({ children, role }) => {
   const { user, loading } = useAuth();
@@ -45,73 +47,76 @@ function App() {
       <AuthProvider>
         <ThemeProvider>
           <WishlistProvider>
-            <CartProvider>
-              <Router>
-                <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
-                  <Navbar />
-                  <main className="flex-grow">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/products" element={<ProductList />} />
-                      <Route path="/products/:id" element={<ProductDetail />} />
-                      <Route path="/cart" element={<Cart />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/signup" element={<Signup />} />
-                      <Route path="/sales" element={<Sales />} />
-                      <Route path="/wishlist" element={
-                        <ProtectedRoute>
-                          <Wishlist />
-                        </ProtectedRoute>
-                      } />
+            <CompareProvider>
+              <CartProvider>
+                <Router>
+                  <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
+                    <Navbar />
+                    <main className="flex-grow">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/products" element={<ProductList />} />
+                        <Route path="/products/:id" element={<ProductDetail />} />
+                        <Route path="/cart" element={<Cart />} />
+                        <Route path="/compare" element={<Compare />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route path="/sales" element={<Sales />} />
+                        <Route path="/wishlist" element={
+                          <ProtectedRoute>
+                            <Wishlist />
+                          </ProtectedRoute>
+                        } />
 
-                      <Route path="/checkout" element={
-                        <ProtectedRoute>
-                          <Checkout />
-                        </ProtectedRoute>
-                      } />
+                        <Route path="/checkout" element={
+                          <ProtectedRoute>
+                            <Checkout />
+                          </ProtectedRoute>
+                        } />
 
-                      <Route path="/dashboard" element={
-                        <ProtectedRoute>
-                          <UserDashboard />
-                        </ProtectedRoute>
-                      } />
+                        <Route path="/dashboard" element={
+                          <ProtectedRoute>
+                            <UserDashboard />
+                          </ProtectedRoute>
+                        } />
 
-                      <Route path="/payment" element={
-                        <ProtectedRoute>
-                          <Payment />
-                        </ProtectedRoute>
-                      } />
+                        <Route path="/payment" element={
+                          <ProtectedRoute>
+                            <Payment />
+                          </ProtectedRoute>
+                        } />
 
-                      <Route path="/admin/login" element={<AdminLogin />} />
-                      <Route path="/admin" element={
-                        <ProtectedRoute role={['admin', 'manager']}>
-                          <AdminDashboard />
-                        </ProtectedRoute>
-                      } />
+                        <Route path="/admin/login" element={<AdminLogin />} />
+                        <Route path="/admin" element={
+                          <ProtectedRoute role={['admin', 'manager']}>
+                            <AdminDashboard />
+                          </ProtectedRoute>
+                        } />
 
-                      <Route path="/support" element={<CustomerSupport />} />
+                        <Route path="/support" element={<CustomerSupport />} />
 
-                      {/* 404 Catch-all */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </main>
-                  <Footer />
-                  <Toaster position="bottom-right" toastOptions={{
-                    style: {
-                      background: '#333',
-                      color: '#fff',
-                    },
-                    success: {
-                      duration: 3000,
-                      iconTheme: {
-                        primary: '#6366f1',
-                        secondary: '#fff',
+                        {/* 404 Catch-all */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </main>
+                    <Footer />
+                    <Toaster position="bottom-right" toastOptions={{
+                      style: {
+                        background: '#333',
+                        color: '#fff',
                       },
-                    },
-                  }} />
-                </div>
-              </Router>
-            </CartProvider>
+                      success: {
+                        duration: 3000,
+                        iconTheme: {
+                          primary: '#6366f1',
+                          secondary: '#fff',
+                        },
+                      },
+                    }} />
+                  </div>
+                </Router>
+              </CartProvider>
+            </CompareProvider>
           </WishlistProvider>
         </ThemeProvider>
       </AuthProvider>
