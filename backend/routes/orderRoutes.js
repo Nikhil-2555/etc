@@ -31,6 +31,16 @@ router.post('/', protect, async (req, res) => {
         });
 
         const createdOrder = await order.save();
+
+        // Emit Real-Time Notification for Order Placed
+        if (req.app.locals.io) {
+            req.app.locals.io.to(req.user._id.toString()).emit('notification', {
+                title: 'Order Placed!',
+                message: `Your order has been placed successfully.`,
+                type: 'success'
+            });
+        }
+
         res.status(201).json(createdOrder);
     }
 });

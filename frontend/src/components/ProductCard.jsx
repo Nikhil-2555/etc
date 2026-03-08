@@ -92,7 +92,9 @@ const ProductCard = ({ product }) => {
                 <div className="flex justify-between items-end mt-4">
                     <div>
                         <span className="text-2xl font-bold text-gray-900 dark:text-white">₹{product.price.toLocaleString('en-IN')}</span>
-                        <span className="text-sm text-gray-400 dark:text-gray-500 line-through ml-2">₹{(product.price * 1.2).toLocaleString('en-IN')}</span>
+                        {product.originalPrice > product.price && (
+                            <span className="text-sm text-gray-400 dark:text-gray-500 line-through ml-2">₹{product.originalPrice.toLocaleString('en-IN')}</span>
+                        )}
                     </div>
                     <button
                         onClick={handleAddToCart}

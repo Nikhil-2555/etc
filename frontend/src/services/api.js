@@ -17,7 +17,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response && error.response.status === 401) {
+        const isLoginRequest = error.config && error.config.url && error.config.url.includes('/users/login');
+        if (error.response && error.response.status === 401 && !isLoginRequest) {
             localStorage.removeItem('user');
             window.location.href = '/login';
         }
@@ -32,6 +33,11 @@ export const fetchProducts = async () => {
 
 export const fetchProductById = async (id) => {
     const { data } = await api.get(`/products/${id}`);
+    return data;
+};
+
+export const searchProducts = async (query) => {
+    const { data } = await api.get(`/products/search?q=${encodeURIComponent(query)}`);
     return data;
 };
 

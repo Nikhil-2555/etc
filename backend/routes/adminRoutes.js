@@ -560,6 +560,16 @@ router.patch('/orders/:id/status', protect, admin, async (req, res) => {
         }
 
         const updatedOrder = await order.save();
+
+        // Emit Real-Time Notification for Order Shipped/Delivered
+        if (req.app.locals.io && (status === 'shipped' || status === 'delivered')) {
+            req.app.locals.io.to(order.user.toString()).emit('notification', {
+                title: status === 'shipped' ? 'Order Shipped! 🚚' : 'Order Delivered! 📦',
+                message: `Your order has been ${status}.`,
+                type: 'info'
+            });
+        }
+
         res.json(updatedOrder);
     } catch (error) {
         res.status(500).json({ message: 'Error updating order status' });

@@ -18,7 +18,8 @@ const Login = () => {
             try {
                 const userData = await login(values.email, values.password);
                 toast.success('Successfully logged in!');
-                if (userData.role === 'admin' || userData.role === 'manager') {
+                const role = userData.role?.toLowerCase() || 'user';
+                if (role === 'admin' || role === 'manager') {
                     navigate('/admin');
                 } else {
                     navigate('/dashboard');

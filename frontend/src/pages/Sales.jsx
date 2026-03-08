@@ -61,7 +61,7 @@ const Sales = () => {
             try {
                 const data = await fetchProducts();
                 // Filter products on sale 
-                const saleProducts = data.filter(product => product.onSale || product.discount > 0);
+                const saleProducts = data.filter(product => product.originalPrice && product.originalPrice > product.price);
                 setProducts(saleProducts);
             } catch (error) {
                 console.error("Failed to load products", error);

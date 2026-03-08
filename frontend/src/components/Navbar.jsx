@@ -9,6 +9,7 @@ import {
     FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle, FiLayers
 } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
+import { searchProducts } from '../services/api';
 
 const Navbar = () => {
     const { totalItems } = useCart();
@@ -21,8 +22,11 @@ const Navbar = () => {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
     const userMenuRef = useRef(null);
     const categoryMenuRef = useRef(null);
+    const searchRef = useRef(null);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -33,16 +37,40 @@ const Navbar = () => {
             if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target)) {
                 setIsCategoryMenuOpen(false);
             }
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowSuggestions(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            if (searchQuery.trim().length >= 2) {
+                try {
+                    const data = await searchProducts(searchQuery);
+                    setSuggestions(data);
+                    setShowSuggestions(true);
+                } catch (error) {
+                    console.error('Error fetching suggestions:', error);
+                }
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        };
+
+        const debounceTimer = setTimeout(fetchSuggestions, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [searchQuery]);
 
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
             navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
             setIsMenuOpen(false);
+            setShowSuggestions(false);
         }
     };
 
@@ -73,19 +101,43 @@ const Navbar = () => {
                     </Link>
 
                     {/* Desktop Search Bar */}
-                    <div className="hidden md:flex flex-1 max-w-2xl relative">
+                    <div className="hidden md:flex flex-1 max-w-2xl relative" ref={searchRef}>
                         <form onSubmit={handleSearch} className="w-full relative">
                             <input
                                 type="text"
                                 placeholder="Search for products, brands and more..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                                 className="w-full pl-5 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:border-primary-500 focus:bg-white transition-all text-sm"
                             />
                             <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors">
                                 <FiSearch size={16} />
                             </button>
                         </form>
+
+                        {/* Search Suggestions Dropdown */}
+                        {showSuggestions && suggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 max-h-[300px] overflow-y-auto w-full">
+                                {suggestions.map((product) => (
+                                    <button
+                                        key={product._id}
+                                        onClick={() => {
+                                            navigate(`/products/${product._id}`);
+                                            setShowSuggestions(false);
+                                            setSearchQuery('');
+                                        }}
+                                        className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0"
+                                    >
+                                        <img src={product.image} alt={product.title} className="w-10 h-10 object-cover rounded-md shrink-0" />
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-sm font-semibold text-gray-800 line-clamp-1 truncate">{product.title}</p>
+                                            <p className="text-xs text-primary-600 font-bold">₹{product.price.toLocaleString('en-IN')}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Desktop Actions */}
@@ -256,18 +308,44 @@ const Navbar = () => {
                 {isMenuOpen && (
                     <div className="md:hidden bg-white border-t border-gray-100 absolute top-full left-0 right-0 shadow-xl border-b z-40 max-h-[90vh] overflow-y-auto">
                         <div className="p-4 space-y-6">
-                            <form onSubmit={handleSearch} className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search products..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 transition-all"
-                                />
-                                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                    <FiSearch size={20} />
-                                </button>
-                            </form>
+                            <div className="relative">
+                                <form onSubmit={handleSearch} className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Search products..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                                        className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 transition-all"
+                                    />
+                                    <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                        <FiSearch size={20} />
+                                    </button>
+                                </form>
+                                {/* Search Suggestions Dropdown Mobile */}
+                                {showSuggestions && suggestions.length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 max-h-[250px] overflow-y-auto w-full">
+                                        {suggestions.map((product) => (
+                                            <button
+                                                key={product._id}
+                                                onClick={() => {
+                                                    navigate(`/products/${product._id}`);
+                                                    setShowSuggestions(false);
+                                                    setIsMenuOpen(false);
+                                                    setSearchQuery('');
+                                                }}
+                                                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0"
+                                            >
+                                                <img src={product.image} alt={product.title} className="w-8 h-8 object-cover rounded-md shrink-0" />
+                                                <div className="flex-1 overflow-hidden">
+                                                    <p className="text-sm font-semibold text-gray-800 line-clamp-1 truncate">{product.title}</p>
+                                                    <p className="text-xs text-primary-600 font-bold">₹{product.price.toLocaleString('en-IN')}</p>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="space-y-1">
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Menu</p>

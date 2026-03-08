@@ -24,6 +24,7 @@ import Payment from './pages/Payment';
 import CustomerSupport from './pages/CustomerSupport';
 import Compare from './pages/Compare';
 import { CompareProvider } from './context/CompareContext';
+import NotificationManager from './components/NotificationManager';
 
 const ProtectedRoute = ({ children, role }) => {
   const { user, loading } = useAuth();
@@ -113,6 +114,7 @@ function App() {
                         },
                       },
                     }} />
+                    <NotificationManager />
                   </div>
                 </Router>
               </CartProvider>
