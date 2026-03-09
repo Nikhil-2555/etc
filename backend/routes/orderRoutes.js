@@ -10,6 +10,9 @@ router.post('/', protect, async (req, res) => {
         orderItems,
         shippingAddress,
         paymentMethod,
+        paymentStatus,
+        orderStatus,
+        transactionId,
         totalPrice,
         couponCode,
         discountAmount,
@@ -28,11 +31,16 @@ router.post('/', protect, async (req, res) => {
             user: req.user._id,
             shippingAddress,
             paymentMethod,
+            paymentStatus: paymentStatus || 'Pending',
+            orderStatus: orderStatus || 'Placed',
+            transactionId: transactionId || null,
             totalPrice,
+            isPaid: paymentStatus === 'Paid',
+            paidAt: paymentStatus === 'Paid' ? Date.now() : undefined,
+            status: paymentMethod === 'COD' ? 'pending' : 'pending',
             couponCode,
             discountAmount,
-            rewardPointsEarned: Math.floor(totalPrice / 100), // e.g. 1 point for every 100 spent
-            status: 'pending',
+            rewardPointsEarned: Math.floor(totalPrice / 100),
         });
 
         const createdOrder = await order.save();
@@ -54,6 +62,68 @@ router.post('/', protect, async (req, res) => {
         }
 
         res.status(201).json(createdOrder);
+    }
+});
+
+// @desc Simulate payment for an order (Demo)
+// @route PUT /api/orders/:id/simulate-payment
+router.put('/:id/simulate-payment', protect, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Ensure user owns the order
+        if (order.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        if (order.status === 'cancelled') {
+            return res.status(400).json({ message: 'Cannot pay a cancelled order' });
+        }
+
+        // Simulate 80% success rate
+        const isSuccess = Math.random() < 0.8;
+
+        if (isSuccess) {
+            const transactionId = 'TXN' + Date.now() + Math.floor(Math.random() * 10000);
+            order.paymentStatus = 'Paid';
+            order.orderStatus = 'Placed';
+            order.transactionId = transactionId;
+            order.isPaid = true;
+            order.paidAt = Date.now();
+            order.status = 'processing';
+
+            const updatedOrder = await order.save();
+
+            // Emit Real-Time Notification for Payment Success
+            if (req.app.locals.io) {
+                req.app.locals.io.to(req.user._id.toString()).emit('notification', {
+                    title: 'Payment Successful! 🎉',
+                    message: `Your payment of ₹${order.totalPrice} was successful. Transaction ID: ${transactionId}`,
+                    type: 'success'
+                });
+            }
+
+            return res.json({
+                success: true,
+                transactionId,
+                order: updatedOrder,
+            });
+        } else {
+            order.paymentStatus = 'Failed';
+            order.orderStatus = 'Placed';
+            const updatedOrder = await order.save();
+
+            return res.json({
+                success: false,
+                order: updatedOrder,
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error simulating payment', error: error.message });
     }
 });
 
@@ -98,6 +168,7 @@ router.put('/:id/pay', protect, async (req, res) => {
         order.isPaid = true;
         order.paidAt = Date.now();
         order.status = 'processing';
+        order.paymentStatus = 'Paid';
         order.paymentResult = {
             id: req.body.id,
             status: req.body.status,
@@ -137,6 +208,7 @@ router.patch('/:id/cancel', protect, async (req, res) => {
         }
 
         order.status = 'cancelled';
+        order.orderStatus = 'Cancelled';
         order.cancelledAt = Date.now();
 
         const updatedOrder = await order.save();

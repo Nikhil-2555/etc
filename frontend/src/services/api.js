@@ -91,6 +91,16 @@ export const payOrder = async (id, paymentResult) => {
     return data;
 };
 
+export const simulatePayment = async (orderId) => {
+    const { data } = await api.put(`/orders/${orderId}/simulate-payment`);
+    return data;
+};
+
+export const fetchOrderById = async (orderId) => {
+    const { data } = await api.get(`/orders/${orderId}`);
+    return data;
+};
+
 export const cancelOrder = async (id) => {
     const { data } = await api.patch(`/orders/${id}/cancel`);
     return data;

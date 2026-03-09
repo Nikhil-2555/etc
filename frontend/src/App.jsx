@@ -20,7 +20,10 @@ import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Wishlist from './pages/Wishlist';
-import Payment from './pages/Payment';
+import ProcessingPayment from './pages/Payment';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailed from './pages/PaymentFailed';
+import OrderConfirmation from './pages/OrderConfirmation';
 import CustomerSupport from './pages/CustomerSupport';
 import Compare from './pages/Compare';
 import { CompareProvider } from './context/CompareContext';
@@ -81,9 +84,28 @@ function App() {
                           </ProtectedRoute>
                         } />
 
-                        <Route path="/payment" element={
+                        {/* Payment Flow Routes */}
+                        <Route path="/payment/processing/:orderId" element={
                           <ProtectedRoute>
-                            <Payment />
+                            <ProcessingPayment />
+                          </ProtectedRoute>
+                        } />
+
+                        <Route path="/payment/success/:orderId" element={
+                          <ProtectedRoute>
+                            <PaymentSuccess />
+                          </ProtectedRoute>
+                        } />
+
+                        <Route path="/payment/failed/:orderId" element={
+                          <ProtectedRoute>
+                            <PaymentFailed />
+                          </ProtectedRoute>
+                        } />
+
+                        <Route path="/order-confirmation/:orderId" element={
+                          <ProtectedRoute>
+                            <OrderConfirmation />
                           </ProtectedRoute>
                         } />
 
