@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { FiBox, FiUser, FiSettings, FiLogOut, FiCalendar, FiMail, FiMapPin, FiShoppingBag, FiInfo, FiEdit2, FiTrash2, FiSave, FiX } from 'react-icons/fi';
-import { fetchMyOrders, updateProfile as updateUserProfileAPI, deleteAccount, cancelOrder } from '../../services/api';
+import { fetchMyOrders, updateProfile as updateUserProfileAPI, deleteAccount, cancelOrder, fetchActiveCoupons, fetchProfile } from '../../services/api';
 import { toast } from 'react-hot-toast';
 
 const UserDashboard = () => {
@@ -11,6 +11,8 @@ const UserDashboard = () => {
     const [activeTab, setActiveTab] = useState('orders');
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [rewardPoints, setRewardPoints] = useState(0);
+    const [activeCoupons, setActiveCoupons] = useState([]);
 
     // Profile Edit State
     const [isEditing, setIsEditing] = useState(false);
@@ -39,8 +41,23 @@ const UserDashboard = () => {
                 setLoading(false);
             }
         };
+
+        const loadProfileAndCoupons = async () => {
+            try {
+                const profileData = await fetchProfile();
+                setRewardPoints(profileData.rewardPoints || 0);
+
+                const coupons = await fetchActiveCoupons();
+                setActiveCoupons(coupons);
+            } catch (error) {
+                console.error("Failed to load profile details or coupons", error);
+            }
+        };
+
         if (activeTab === 'orders') {
             loadOrders();
+        } else if (activeTab === 'profile') {
+            loadProfileAndCoupons();
         }
     }, [activeTab]);
 
@@ -265,6 +282,39 @@ const UserDashboard = () => {
                         <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-2xl border border-gray-100 dark:border-gray-600">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Current Date</p>
                             <p className="text-lg font-bold text-gray-900 dark:text-white">{new Date().toLocaleDateString('en-IN', { dateStyle: 'long' })}</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 border-t border-gray-100 dark:border-gray-700 pt-8">
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-full flex items-center justify-center text-xl">
+                                🌟
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Reward Points</h3>
+                                <p className="text-sm text-gray-500">You have earned <span className="font-bold text-amber-600">{rewardPoints}</span> points!</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Available Coupons</h3>
+                            {activeCoupons.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {activeCoupons.map((coupon) => (
+                                        <div key={coupon._id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border-2 border-dashed border-primary-200 dark:border-primary-800 flex items-center justify-between">
+                                            <div>
+                                                <p className="font-bold text-primary-600 mb-1">{coupon.code}</p>
+                                                <p className="text-xs text-gray-500">{coupon.description}</p>
+                                            </div>
+                                            <button className="bg-primary-50 text-primary-600 px-3 py-1 rounded text-xs font-bold hover:bg-primary-100 transition-colors">
+                                                USE CODE
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500 italic">No valid coupons available right now.</p>
+                            )}
                         </div>
                     </div>
                 </>

@@ -11,6 +11,8 @@ router.post('/', protect, async (req, res) => {
         shippingAddress,
         paymentMethod,
         totalPrice,
+        couponCode,
+        discountAmount,
     } = req.body;
 
     if (orderItems && orderItems.length === 0) {
@@ -27,10 +29,20 @@ router.post('/', protect, async (req, res) => {
             shippingAddress,
             paymentMethod,
             totalPrice,
+            couponCode,
+            discountAmount,
+            rewardPointsEarned: Math.floor(totalPrice / 100), // e.g. 1 point for every 100 spent
             status: 'pending',
         });
 
         const createdOrder = await order.save();
+
+        // Update User Reward Points
+        const user = await require('../models/User').findById(req.user._id);
+        if (user) {
+            user.rewardPoints += createdOrder.rewardPointsEarned;
+            await user.save();
+        }
 
         // Emit Real-Time Notification for Order Placed
         if (req.app.locals.io) {

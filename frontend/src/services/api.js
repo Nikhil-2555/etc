@@ -61,6 +61,21 @@ export const deleteAccount = async () => {
     return data;
 };
 
+export const fetchProfile = async () => {
+    const { data } = await api.get('/users/profile');
+    return data;
+};
+
+export const fetchActiveCoupons = async () => {
+    const { data } = await api.get('/coupons');
+    return data;
+};
+
+export const applyCoupon = async (code, orderAmount, items) => {
+    const { data } = await api.post('/coupons/apply', { code, orderAmount, items });
+    return data;
+};
+
 export const createOrder = async (orderData) => {
     const { data } = await api.post('/orders', orderData);
     return data;

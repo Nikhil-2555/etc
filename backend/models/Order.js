@@ -24,6 +24,9 @@ const orderSchema = mongoose.Schema({
     deliveredAt: { type: Date },
     status: { type: String, enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'], default: 'pending' },
     cancelledAt: { type: Date },
+    couponCode: { type: String },
+    discountAmount: { type: Number, default: 0 },
+    rewardPointsEarned: { type: Number, default: 0 },
 }, {
     timestamps: true,
 });

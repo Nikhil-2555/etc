@@ -20,6 +20,7 @@ router.post('/login', async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            rewardPoints: user.rewardPoints,
             token: generateToken(user._id),
         });
     } else {
@@ -48,6 +49,7 @@ router.post('/', async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            rewardPoints: user.rewardPoints,
             token: generateToken(user._id),
         });
     } else {
@@ -65,6 +67,7 @@ router.get('/profile', protect, async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            rewardPoints: user.rewardPoints,
         });
     } else {
         res.status(404).json({ message: 'User not found' });
@@ -90,6 +93,7 @@ router.put('/profile', protect, async (req, res) => {
             name: updatedUser.name,
             email: updatedUser.email,
             role: updatedUser.role,
+            rewardPoints: updatedUser.rewardPoints,
             token: generateToken(updatedUser._id),
         });
     } else {
