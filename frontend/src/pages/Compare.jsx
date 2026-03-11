@@ -137,8 +137,8 @@ const Compare = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 py-8 px-4">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 py-8 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1600px] w-full mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                     <div>
@@ -155,8 +155,8 @@ const Compare = () => {
                         <button
                             onClick={() => setHighlightDifferences(!highlightDifferences)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border-2 ${highlightDifferences
-                                    ? 'border-yellow-400 bg-yellow-50 text-yellow-700 shadow-md shadow-yellow-100'
-                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                                ? 'border-yellow-400 bg-yellow-50 text-yellow-700 shadow-md shadow-yellow-100'
+                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                                 }`}
                         >
                             <FiZap size={14} />
@@ -267,8 +267,8 @@ const Compare = () => {
                                                     <button
                                                         onClick={() => handleToggleWishlist(product)}
                                                         className={`p-1.5 rounded-lg border-2 transition-all ${isInWishlist(product._id || product.id)
-                                                                ? 'bg-red-50 border-red-200 text-red-500'
-                                                                : 'bg-white border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-400'
+                                                            ? 'bg-red-50 border-red-200 text-red-500'
+                                                            : 'bg-white border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-400'
                                                             }`}
                                                     >
                                                         <FiHeart size={12} fill={isInWishlist(product._id || product.id) ? 'currentColor' : 'none'} />
@@ -312,12 +312,12 @@ const Compare = () => {
                                             </td>
                                             {compareItems.map((product) => (
                                                 <td key={product._id} className={`px-4 py-4 text-center border-l border-gray-100 ${highlightDifferences && isDifferent(p => p.price) && lowestPrice?._id === product._id
-                                                        ? 'bg-green-50'
-                                                        : ''
+                                                    ? 'bg-green-50'
+                                                    : ''
                                                     }`}>
                                                     <span className={`text-lg font-black ${compareItems.length >= 2 && lowestPrice?._id === product._id
-                                                            ? 'text-green-600'
-                                                            : 'text-gray-900'
+                                                        ? 'text-green-600'
+                                                        : 'text-gray-900'
                                                         }`}>
                                                         {formatPrice(product.price)}
                                                     </span>
@@ -484,8 +484,8 @@ const Compare = () => {
                                                 return (
                                                     <td key={product._id} className="px-4 py-4 text-center border-l border-gray-100">
                                                         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${inStock
-                                                                ? 'bg-green-100 text-green-700'
-                                                                : 'bg-red-100 text-red-700'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-red-100 text-red-700'
                                                             }`}>
                                                             {inStock ? <><FiCheck size={10} /> In Stock</> : <><FiX size={10} /> Out of Stock</>}
                                                         </span>
