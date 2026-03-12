@@ -2,9 +2,18 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { FiBox, FiUser, FiSettings, FiLogOut, FiCalendar, FiMail, FiMapPin, FiShoppingBag, FiInfo, FiEdit2, FiTrash2, FiSave, FiX } from 'react-icons/fi';
+import { FiBox, FiUser, FiSettings, FiLogOut, FiCalendar, FiMail, FiMapPin, FiShoppingBag, FiInfo, FiEdit2, FiTrash2, FiSave, FiX, FiAlertTriangle, FiMessageSquare } from 'react-icons/fi';
 import { fetchMyOrders, updateProfile as updateUserProfileAPI, deleteAccount, cancelOrder, fetchActiveCoupons, fetchProfile } from '../../services/api';
 import { toast } from 'react-hot-toast';
+
+const CANCEL_REASONS = [
+    { id: 'changed_mind', label: 'Changed my mind', icon: '🤔' },
+    { id: 'found_cheaper', label: 'Found a better price elsewhere', icon: '💰' },
+    { id: 'ordered_mistake', label: 'Ordered by mistake', icon: '❌' },
+    { id: 'delivery_time', label: 'Delivery time is too long', icon: '⏳' },
+    { id: 'wrong_item', label: 'Ordered wrong item / size', icon: '📦' },
+    { id: 'payment_issue', label: 'Payment or pricing issue', icon: '💳' },
+];
 
 const UserDashboard = () => {
     const { user, logout, updateProfile } = useAuth();
@@ -13,6 +22,12 @@ const UserDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [rewardPoints, setRewardPoints] = useState(0);
     const [activeCoupons, setActiveCoupons] = useState([]);
+
+    // Cancel Modal State
+    const [cancelModal, setCancelModal] = useState({ open: false, orderId: null });
+    const [selectedReason, setSelectedReason] = useState('');
+    const [customReason, setCustomReason] = useState('');
+    const [isCancelling, setIsCancelling] = useState(false);
 
     // Profile Edit State
     const [isEditing, setIsEditing] = useState(false);
@@ -95,7 +110,7 @@ const UserDashboard = () => {
             };
 
             const data = await updateUserProfileAPI(updatedData);
-            updateProfile(data); // Update context
+            updateProfile(data);
             setIsEditing(false);
             toast.success("Profile updated successfully");
         } catch (error) {
@@ -113,14 +128,181 @@ const UserDashboard = () => {
         }
     };
 
-    const handleCancelOrder = async (orderId) => {
+    // Open cancel modal
+    const openCancelModal = (orderId) => {
+        setCancelModal({ open: true, orderId });
+        setSelectedReason('');
+        setCustomReason('');
+    };
+
+    // Close cancel modal
+    const closeCancelModal = () => {
+        setCancelModal({ open: false, orderId: null });
+        setSelectedReason('');
+        setCustomReason('');
+        setIsCancelling(false);
+    };
+
+    // Handle actual cancellation with reason
+    const handleConfirmCancel = async () => {
+        const reason = selectedReason === 'other'
+            ? customReason.trim()
+            : CANCEL_REASONS.find(r => r.id === selectedReason)?.label || '';
+
+        if (!reason) {
+            toast.error('Please select or enter a reason for cancellation');
+            return;
+        }
+
+        setIsCancelling(true);
         try {
-            await cancelOrder(orderId);
+            await cancelOrder(cancelModal.orderId, reason);
             toast.success('Order cancelled successfully');
-            setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'cancelled' } : o));
+            setOrders(prev => prev.map(o =>
+                o._id === cancelModal.orderId
+                    ? { ...o, status: 'cancelled', cancellationReason: reason, cancelledAt: new Date().toISOString() }
+                    : o
+            ));
+            closeCancelModal();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to cancel order');
+            setIsCancelling(false);
         }
+    };
+
+    // Cancel Reason Modal Component
+    const CancelModal = () => {
+        if (!cancelModal.open) return null;
+
+        const cancellingOrder = orders.find(o => o._id === cancelModal.orderId);
+
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                {/* Backdrop */}
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeCancelModal} />
+
+                {/* Modal */}
+                <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-red-500 to-rose-600 px-6 py-5 text-white">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                <FiAlertTriangle size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black">Cancel Order</h3>
+                                <p className="text-red-100 text-sm">
+                                    Order #{cancelModal.orderId?.slice(-8).toUpperCase()} • {cancellingOrder ? formatCurrency(cancellingOrder.totalPrice) : ''}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className="px-6 py-5">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-5 font-medium">
+                            Please tell us why you'd like to cancel this order:
+                        </p>
+
+                        {/* Preset Reasons */}
+                        <div className="space-y-2 mb-4">
+                            {CANCEL_REASONS.map((reason) => (
+                                <button
+                                    key={reason.id}
+                                    type="button"
+                                    onClick={() => { setSelectedReason(reason.id); setCustomReason(''); }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all duration-200 ${selectedReason === reason.id
+                                        ? 'border-red-400 bg-red-50 dark:bg-red-900/20 shadow-sm'
+                                        : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-600 hover:shadow-sm'
+                                        }`}
+                                >
+                                    <span className="text-lg flex-shrink-0">{reason.icon}</span>
+                                    <span className={`text-sm font-medium ${selectedReason === reason.id ? 'text-red-700 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                        {reason.label}
+                                    </span>
+                                    {selectedReason === reason.id && (
+                                        <div className="ml-auto w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </button>
+                            ))}
+
+                            {/* Other / Custom Reason */}
+                            <button
+                                type="button"
+                                onClick={() => setSelectedReason('other')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all duration-200 ${selectedReason === 'other'
+                                    ? 'border-red-400 bg-red-50 dark:bg-red-900/20 shadow-sm'
+                                    : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-600 hover:shadow-sm'
+                                    }`}
+                            >
+                                <span className="text-lg flex-shrink-0"><FiMessageSquare /></span>
+                                <span className={`text-sm font-medium ${selectedReason === 'other' ? 'text-red-700 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                    Other reason
+                                </span>
+                                {selectedReason === 'other' && (
+                                    <div className="ml-auto w-5 h-5 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Custom Reason Text Area */}
+                        {selectedReason === 'other' && (
+                            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                <textarea
+                                    value={customReason}
+                                    onChange={(e) => setCustomReason(e.target.value)}
+                                    placeholder="Please describe your reason..."
+                                    maxLength={300}
+                                    rows={3}
+                                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-red-400 resize-none transition-colors"
+                                />
+                                <p className="text-xs text-gray-400 mt-1 text-right">{customReason.length}/300</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 flex gap-3">
+                        <button
+                            onClick={closeCancelModal}
+                            className="flex-1 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all active:scale-[0.98]"
+                        >
+                            Keep Order
+                        </button>
+                        <button
+                            onClick={handleConfirmCancel}
+                            disabled={isCancelling || (!selectedReason) || (selectedReason === 'other' && !customReason.trim())}
+                            className={`flex-1 py-3 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${isCancelling || (!selectedReason) || (selectedReason === 'other' && !customReason.trim())
+                                ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 shadow-lg hover:shadow-red-500/30'
+                                }`}
+                        >
+                            {isCancelling ? (
+                                <>
+                                    <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    Cancelling...
+                                </>
+                            ) : (
+                                <>
+                                    <FiX size={16} /> Cancel Order
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     const renderOrders = () => (
@@ -134,56 +316,90 @@ const UserDashboard = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                 </div>
             ) : orders.length > 0 ? (
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-gray-100 text-sm text-gray-500 uppercase">
-                                <th className="py-4 px-4">Order ID</th>
-                                <th className="py-4 px-4">Date & Time</th>
-                                <th className="py-4 px-4">Status</th>
-                                <th className="py-4 px-4">Total</th>
-                                <th className="py-4 px-4 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {orders.map(order => (
-                                <tr key={order._id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="py-4 px-4 font-mono text-sm text-gray-900">#{order._id.slice(-8).toUpperCase()}</td>
-                                    <td className="py-4 px-4 text-gray-600 text-sm">{formatDate(order.createdAt)}</td>
-                                    <td className="py-4 px-4">
-                                        <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
-                                            ${order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                                order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                                                    order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                                                        order.status === 'processing' ? 'bg-indigo-100 text-indigo-700' :
-                                                            'bg-amber-100 text-amber-700'}`}>
-                                            {order.status === 'cancelled' ? 'Cancelled' :
-                                                order.status === 'delivered' ? 'Delivered' :
-                                                    order.status === 'shipped' ? 'Shipped' :
-                                                        order.status === 'processing' ? 'Processing' : 'Pending'}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-4 font-bold text-gray-900">{formatCurrency(order.totalPrice)}</td>
-                                    <td className="py-4 px-4 text-right flex items-center justify-end gap-2">
-                                        <button className="text-primary-600 hover:text-primary-800 text-sm font-bold transition-colors">View Details</button>
-                                        {order.status === 'pending' && (
+                <div className="space-y-4">
+                    {orders.map(order => (
+                        <div key={order._id} className={`bg-white dark:bg-gray-800 rounded-2xl border transition-all hover:shadow-md ${order.status === 'cancelled'
+                            ? 'border-red-200 dark:border-red-900/50'
+                            : 'border-gray-100 dark:border-gray-700'
+                            }`}>
+                            {/* Order Header Row */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-5">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${order.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-600' :
+                                        order.status === 'delivered' ? 'bg-green-100 dark:bg-green-900/30 text-green-600' :
+                                            order.status === 'shipped' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
+                                                order.status === 'processing' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600' :
+                                                    'bg-amber-100 dark:bg-amber-900/30 text-amber-600'
+                                        }`}>
+                                        <FiBox size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="font-mono text-sm font-bold text-gray-900 dark:text-white">
+                                            #{order._id.slice(-8).toUpperCase()}
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            {formatDate(order.createdAt)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                        ${order.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                                            order.status === 'delivered' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                                                order.status === 'shipped' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                                                    order.status === 'processing' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' :
+                                                        'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
+                                        {order.status === 'cancelled' ? 'Cancelled' :
+                                            order.status === 'delivered' ? 'Delivered' :
+                                                order.status === 'shipped' ? 'Shipped' :
+                                                    order.status === 'processing' ? 'Processing' : 'Pending'}
+                                    </span>
+
+                                    <span className="font-bold text-gray-900 dark:text-white text-sm">
+                                        {formatCurrency(order.totalPrice)}
+                                    </span>
+
+                                    <div className="flex items-center gap-2">
+                                        <button className="text-primary-600 hover:text-primary-800 dark:hover:text-primary-400 text-sm font-bold transition-colors">
+                                            View Details
+                                        </button>
+                                        {(order.status === 'pending' || order.status === 'processing') && (
                                             <button
-                                                onClick={() => handleCancelOrder(order._id)}
-                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-lg text-xs font-bold transition-all border border-transparent hover:border-red-200"
+                                                onClick={() => openCancelModal(order._id)}
+                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-transparent hover:border-red-200 dark:hover:border-red-800 flex items-center gap-1.5"
                                             >
-                                                Cancel
+                                                <FiX size={14} /> Cancel
                                             </button>
                                         )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Cancellation Reason Banner (for cancelled orders) */}
+                            {order.status === 'cancelled' && (
+                                <div className="mx-5 mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl px-4 py-3 flex items-start gap-3">
+                                    <FiAlertTriangle className="text-red-500 flex-shrink-0 mt-0.5" size={16} />
+                                    <div>
+                                        <p className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider mb-1">Cancellation Reason</p>
+                                        <p className="text-sm text-red-600 dark:text-red-300 font-medium">
+                                            {order.cancellationReason || 'No reason provided'}
+                                        </p>
+                                        {order.cancelledAt && (
+                                            <p className="text-[11px] text-red-400 dark:text-red-500 mt-1">
+                                                Cancelled on {formatDate(order.cancelledAt)}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
             ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                    <FiShoppingBag className="mx-auto text-4xl text-gray-300 mb-4" />
-                    <p className="text-gray-500">No orders found yet</p>
+                <div className="text-center py-12 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                    <FiShoppingBag className="mx-auto text-4xl text-gray-300 dark:text-gray-600 mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400">No orders found yet</p>
                     <button onClick={() => window.location.href = '/products'} className="mt-4 text-primary-600 font-bold hover:underline font-sm">Start Shopping</button>
                 </div>
             )}
@@ -380,6 +596,8 @@ const UserDashboard = () => {
 
     return (
         <div className="container mx-auto px-4 py-12">
+            {/* Cancel Reason Modal */}
+            <CancelModal />
             <div className="flex items-center gap-4 mb-10">
                 <div className="w-16 h-1 bg-primary-600 rounded-full"></div>
                 <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">MY ACCOUNT</h1>

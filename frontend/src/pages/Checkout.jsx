@@ -68,7 +68,7 @@ const Checkout = () => {
                 toast.success('Order placed successfully! 🎉');
                 navigate(`/order-confirmation/${createdOrder._id}`);
             } else {
-                navigate(`/payment/processing/${createdOrder._id}`);
+                navigate(`/payment/${createdOrder._id}`);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to place order');

@@ -21,6 +21,7 @@ import { WishlistProvider } from './context/WishlistContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Wishlist from './pages/Wishlist';
 import ProcessingPayment from './pages/Payment';
+import PaymentGateway from './pages/PaymentGateway';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
 import OrderConfirmation from './pages/OrderConfirmation';
@@ -85,6 +86,12 @@ function App() {
                         } />
 
                         {/* Payment Flow Routes */}
+                        <Route path="/payment/:orderId" element={
+                          <ProtectedRoute>
+                            <PaymentGateway />
+                          </ProtectedRoute>
+                        } />
+
                         <Route path="/payment/processing/:orderId" element={
                           <ProtectedRoute>
                             <ProcessingPayment />

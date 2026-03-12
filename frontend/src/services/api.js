@@ -101,8 +101,8 @@ export const fetchOrderById = async (orderId) => {
     return data;
 };
 
-export const cancelOrder = async (id) => {
-    const { data } = await api.patch(`/orders/${id}/cancel`);
+export const cancelOrder = async (id, reason) => {
+    const { data } = await api.patch(`/orders/${id}/cancel`, { reason });
     return data;
 };
 
