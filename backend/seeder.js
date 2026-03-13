@@ -138,15 +138,24 @@ const importData = async () => {
         await Product.insertMany(products);
 
         const salt = await bcrypt.genSalt(10);
+<<<<<<< HEAD
         // Set standard password for users, but override the admin's below
         const hashedPassword = await bcrypt.hash('password123', salt);
         const adminPassword = await bcrypt.hash('admin@123', salt);
+=======
+        const hashedPassword = await bcrypt.hash('password123', salt);
+>>>>>>> 77d4b9abf9f347e4c076144297cef03383020a43
 
         const users = [
             {
                 name: 'Admin User',
+<<<<<<< HEAD
                 email: 'admin@gmail.com',
                 password: adminPassword,
+=======
+                email: 'admin@shop.com',
+                password: hashedPassword,
+>>>>>>> 77d4b9abf9f347e4c076144297cef03383020a43
                 role: 'admin'
             },
             {
