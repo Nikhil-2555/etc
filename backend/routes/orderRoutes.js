@@ -65,6 +65,40 @@ router.post('/', protect, async (req, res) => {
     }
 });
 
+// @desc Create Stripe PaymentIntent for an order
+// @route POST /api/orders/:id/create-payment-intent
+router.post('/:id/create-payment-intent', protect, async (req, res) => {
+    try {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Ensure user owns the order
+        if (order.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Amount must be in the smallest currency unit (paise for INR)
+        const amountInPaise = Math.round(order.totalPrice * 100);
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amountInPaise,
+            currency: 'inr',
+            metadata: {
+                orderId: order._id.toString(),
+            },
+        });
+
+        res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+        console.error('Stripe PaymentIntent error:', error.message);
+        res.status(500).json({ message: 'Failed to create payment intent', error: error.message });
+    }
+});
+
 // @desc Simulate payment for an order (Demo)
 // @route PUT /api/orders/:id/simulate-payment
 router.put('/:id/simulate-payment', protect, async (req, res) => {

@@ -12,6 +12,8 @@
   "dependencies": {
     "@base-ui/react": "^1.2.0",
     "@fontsource-variable/geist": "^5.2.8",
+    "@stripe/react-stripe-js": "^5.6.1",
+    "@stripe/stripe-js": "^8.9.0",
     "axios": "^1.13.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -33,11 +35,7 @@
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-<<<<<<< HEAD
     "@vitejs/plugin-react": "^5.2.0",
-=======
-    "@vitejs/plugin-react": "^5.1.1",
->>>>>>> 77d4b9abf9f347e4c076144297cef03383020a43
     "autoprefixer": "^10.4.24",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",

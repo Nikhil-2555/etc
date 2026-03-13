@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { FiBox, FiUser, FiSettings, FiLogOut, FiCalendar, FiMail, FiMapPin, FiShoppingBag, FiInfo, FiEdit2, FiTrash2, FiSave, FiX, FiAlertTriangle, FiMessageSquare } from 'react-icons/fi';
+import { FiBox, FiUser, FiSettings, FiLogOut, FiCalendar, FiMail, FiMapPin, FiShoppingBag, FiInfo, FiEdit2, FiTrash2, FiSave, FiX, FiAlertTriangle, FiMessageSquare, FiFileText, FiEye } from 'react-icons/fi';
 import { fetchMyOrders, updateProfile as updateUserProfileAPI, deleteAccount, cancelOrder, fetchActiveCoupons, fetchProfile } from '../../services/api';
 import { toast } from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ const CANCEL_REASONS = [
 
 const UserDashboard = () => {
     const { user, logout, updateProfile } = useAuth();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('orders');
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -361,8 +363,18 @@ const UserDashboard = () => {
                                     </span>
 
                                     <div className="flex items-center gap-2">
-                                        <button className="text-primary-600 hover:text-primary-800 dark:hover:text-primary-400 text-sm font-bold transition-colors">
-                                            View Details
+                                        <button
+                                            onClick={() => navigate(`/order-confirmation/${order._id}`)}
+                                            className="text-primary-600 hover:text-primary-800 dark:hover:text-primary-400 text-sm font-bold transition-colors flex items-center gap-1"
+                                        >
+                                            <FiEye size={14} /> View Details
+                                        </button>
+                                        <span className="text-gray-200 dark:text-gray-600">|</span>
+                                        <button
+                                            onClick={() => navigate(`/receipt/${order._id}`)}
+                                            className="text-emerald-600 hover:text-emerald-800 dark:hover:text-emerald-400 text-sm font-bold transition-colors flex items-center gap-1"
+                                        >
+                                            <FiFileText size={14} /> Receipt
                                         </button>
                                         {(order.status === 'pending' || order.status === 'processing') && (
                                             <button

@@ -25,6 +25,7 @@ import PaymentGateway from './pages/PaymentGateway';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
 import OrderConfirmation from './pages/OrderConfirmation';
+import Receipt from './pages/Receipt';
 import CustomerSupport from './pages/CustomerSupport';
 import Compare from './pages/Compare';
 import { CompareProvider } from './context/CompareContext';
@@ -113,6 +114,12 @@ function App() {
                         <Route path="/order-confirmation/:orderId" element={
                           <ProtectedRoute>
                             <OrderConfirmation />
+                          </ProtectedRoute>
+                        } />
+
+                        <Route path="/receipt/:orderId" element={
+                          <ProtectedRoute>
+                            <Receipt />
                           </ProtectedRoute>
                         } />
 

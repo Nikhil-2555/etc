@@ -270,9 +270,9 @@ const Checkout = () => {
                                         <h3 className={`font-black text-base mb-1 ${selectedPayment === 'online' ? 'text-primary-700' : 'text-gray-800'}`}>
                                             Online Payment
                                         </h3>
-                                        <p className="text-xs text-gray-500">Credit Card, Debit Card, UPI, Net Banking</p>
+                                        <p className="text-xs text-gray-500">Credit Card, Debit Card</p>
                                         <div className="flex gap-1.5 mt-3">
-                                            {['Visa', 'MC', 'UPI', 'RuPay'].map(tag => (
+                                            {['Visa', 'MasterCard', 'RuPay'].map(tag => (
                                                 <span key={tag} className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${selectedPayment === 'online'
                                                         ? 'bg-primary-100 text-primary-700'
                                                         : 'bg-gray-100 text-gray-500'

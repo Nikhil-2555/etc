@@ -96,6 +96,11 @@ export const simulatePayment = async (orderId) => {
     return data;
 };
 
+export const createPaymentIntent = async (orderId) => {
+    const { data } = await api.post(`/orders/${orderId}/create-payment-intent`);
+    return data;
+};
+
 export const fetchOrderById = async (orderId) => {
     const { data } = await api.get(`/orders/${orderId}`);
     return data;

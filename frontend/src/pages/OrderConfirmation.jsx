@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchOrderById, cancelOrder } from '../services/api';
-import { FiCheckCircle, FiPackage, FiTruck, FiShoppingBag, FiArrowRight, FiCopy, FiX, FiAlertTriangle, FiMessageSquare } from 'react-icons/fi';
+import { FiCheckCircle, FiPackage, FiTruck, FiShoppingBag, FiArrowRight, FiCopy, FiX, FiAlertTriangle, FiMessageSquare, FiFileText } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 
 const CANCEL_REASONS = [
@@ -375,6 +375,12 @@ const OrderConfirmation = () => {
                                 className="w-full bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-primary-600/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                             >
                                 <FiShoppingBag size={16} /> Continue Shopping
+                            </button>
+                            <button
+                                onClick={() => navigate(`/receipt/${order._id}`)}
+                                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                            >
+                                <FiFileText size={16} /> Download Receipt
                             </button>
                             <button
                                 onClick={() => navigate('/dashboard')}

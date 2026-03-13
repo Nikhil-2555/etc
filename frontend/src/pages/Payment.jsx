@@ -1,188 +1,213 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { simulatePayment } from '../services/api';
-import { FiShield, FiSmartphone, FiCreditCard, FiGlobe } from 'react-icons/fi';
+import { useNavigate, useParams } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { createPaymentIntent, payOrder } from '../services/api';
+import { FiShield, FiCreditCard, FiLock, FiCheckCircle } from 'react-icons/fi';
 
-// Method metadata to render correct icon + colour when state is available
-const METHOD_META = {
-    upi: {
-        label: 'UPI',
-        icon: FiSmartphone,
-        color: 'from-violet-500 to-purple-600',
-        shadow: 'shadow-violet-500/30',
-        bar: 'from-violet-400 to-purple-400',
-        subline: 'Auto-authorizing via Google Pay / PhonePe — No PIN required',
-        steps: ['Connecting to UPI gateway…', 'Verifying merchant…', 'Auto-authorizing payment…', 'Confirming transaction…'],
-    },
-    credit: {
-        label: 'Credit Card',
-        icon: FiCreditCard,
-        color: 'from-blue-500 to-cyan-600',
-        shadow: 'shadow-blue-500/30',
-        bar: 'from-blue-400 to-cyan-400',
-        subline: 'Card details auto-filled — Starting 3D secure authorization…',
-        steps: ['Connecting to card gateway…', 'Verifying card…', 'Running 3D Secure check…', 'Authorizing transaction…'],
-    },
-    debit: {
-        label: 'Debit Card',
-        icon: FiCreditCard,
-        color: 'from-emerald-500 to-teal-600',
-        shadow: 'shadow-emerald-500/30',
-        bar: 'from-emerald-400 to-teal-400',
-        subline: 'Card details auto-filled — Bank authorization in progress…',
-        steps: ['Connecting to bank gateway…', 'Verifying card…', 'Contacting your bank…', 'Confirming transaction…'],
-    },
-    netbanking: {
-        label: 'Net Banking',
-        icon: FiGlobe,
-        color: 'from-amber-500 to-orange-600',
-        shadow: 'shadow-amber-500/30',
-        bar: 'from-amber-400 to-orange-400',
-        subline: 'Bank portal connected — Logging in automatically…',
-        steps: ['Connecting to bank portal…', 'Authenticating session…', 'Processing payment…', 'Confirming transaction…'],
-    },
-};
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
-const DEFAULT_META = {
-    label: 'Payment',
-    icon: FiCreditCard,
-    color: 'from-primary-500 to-indigo-600',
-    shadow: 'shadow-primary-500/30',
-    bar: 'from-primary-400 to-indigo-400',
-    subline: 'Please wait while we securely process your payment.',
-    steps: ['Connecting to gateway…', 'Verifying details…', 'Processing payment…', 'Confirming transaction…'],
-};
-
-const ProcessingPayment = () => {
+// Inner checkout form component (must be inside <Elements>)
+const CheckoutForm = ({ orderId }) => {
+    const stripe = useStripe();
+    const elements = useElements();
     const navigate = useNavigate();
-    const { orderId } = useParams();
-    const location = useLocation();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
-    // Read method from router state (set by PaymentGateway after method click)
-    const stateMethodId = location.state?.methodId;
-    const meta = (stateMethodId && METHOD_META[stateMethodId]) ? METHOD_META[stateMethodId] : DEFAULT_META;
-    const Icon = meta.icon;
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!stripe || !elements) return;
 
-    const [stepIndex, setStepIndex] = useState(0);
-    const [dots, setDots] = useState('');
+        setIsProcessing(true);
+        setErrorMessage('');
 
-    useEffect(() => {
-        // Animate dots
-        const dotInterval = setInterval(() => {
-            setDots(prev => prev.length >= 3 ? '' : prev + '.');
-        }, 400);
+        try {
+            const { error, paymentIntent } = await stripe.confirmPayment({
+                elements,
+                redirect: 'if_required',
+            });
 
-        // Cycle through steps every 600ms
-        const stepInterval = setInterval(() => {
-            setStepIndex(prev => (prev < meta.steps.length - 1 ? prev + 1 : prev));
-        }, 600);
+            if (error) {
+                setErrorMessage(error.message || 'Payment failed. Please try again.');
+                setIsProcessing(false);
+                return;
+            }
 
-        // Simulate payment after 2.5 seconds
-        const paymentTimer = setTimeout(async () => {
-            try {
-                const result = await simulatePayment(orderId);
-                clearInterval(dotInterval);
-                clearInterval(stepInterval);
-                if (result.success) {
-                    navigate(`/payment/success/${orderId}?txn=${result.transactionId}`, { replace: true });
-                } else {
-                    navigate(`/payment/failed/${orderId}`, { replace: true });
-                }
-            } catch {
+            if (paymentIntent && paymentIntent.status === 'succeeded') {
+                // Mark order as paid in our backend
+                await payOrder(orderId, {
+                    id: paymentIntent.id,
+                    status: paymentIntent.status,
+                    update_time: new Date().toISOString(),
+                    paymentMethod: 'Stripe',
+                });
+
+                navigate(`/payment/success/${orderId}?txn=${paymentIntent.id}`, { replace: true });
+            } else {
                 navigate(`/payment/failed/${orderId}`, { replace: true });
             }
-        }, 2500);
-
-        return () => {
-            clearInterval(dotInterval);
-            clearInterval(stepInterval);
-            clearTimeout(paymentTimer);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [orderId, navigate]);
+        } catch (err) {
+            console.error('Payment confirmation error:', err);
+            setErrorMessage('An unexpected error occurred. Please try again.');
+            setIsProcessing(false);
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-primary-950 to-indigo-950 flex items-center justify-center px-4">
-            <div className="text-center w-full max-w-sm mx-auto">
-
-                {/* Animated Method Icon */}
-                <div className="relative mx-auto mb-10 w-36 h-36">
-                    {/* Ripple rings */}
-                    <div className={`absolute inset-0 rounded-full bg-white/10 animate-ping`} style={{ animationDuration: '2s' }} />
-                    <div className={`absolute inset-4 rounded-full bg-white/5 animate-ping`} style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
-                    {/* Main circle */}
-                    <div className={`relative w-36 h-36 rounded-full bg-gradient-to-br ${meta.color} flex items-center justify-center shadow-2xl ${meta.shadow}`}>
-                        <Icon className="text-white animate-pulse" size={52} />
-                    </div>
-                    {/* Orbiting dot */}
-                    <div className="absolute inset-0" style={{ animation: 'orbit 2s linear infinite' }}>
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-3 h-3 rounded-full bg-white/70 shadow-lg" />
-                    </div>
-                </div>
-
-                {/* Method Label */}
-                <div className={`inline-flex items-center gap-2 bg-gradient-to-r ${meta.color} text-white text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-5 shadow-lg`}>
-                    <Icon size={12} />
-                    {meta.label}
-                </div>
-
-                {/* Processing Text */}
-                <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
-                    Processing{dots}
-                </h1>
-
-                {/* Live Step Indicator */}
-                <p className="text-primary-200 text-sm mb-1 h-5 transition-all duration-300">
-                    {meta.steps[stepIndex]}
-                </p>
-                <p className="text-white/40 text-xs mb-8 max-w-xs mx-auto leading-relaxed">
-                    {meta.subline}
-                </p>
-
-                {/* Progress bar */}
-                <div className="w-72 md:w-80 h-2 bg-white/10 rounded-full overflow-hidden mx-auto mb-8">
-                    <div
-                        className={`h-full bg-gradient-to-r ${meta.bar} rounded-full`}
-                        style={{ animation: 'progressFill 2.5s ease-in-out forwards' }}
-                    />
-                </div>
-
-                {/* Step Dots */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                    {meta.steps.map((_, i) => (
-                        <div
-                            key={i}
-                            className={`rounded-full transition-all duration-300 ${i <= stepIndex ? `w-6 h-2 bg-gradient-to-r ${meta.bar}` : 'w-2 h-2 bg-white/20'}`}
-                        />
-                    ))}
-                </div>
-
-                {/* Security Badge */}
-                <div className="flex items-center justify-center gap-2 text-white/50 text-xs">
-                    <FiShield className="text-green-400" size={14} />
-                    <span>256-bit SSL Encrypted • No input required • Fully automated</span>
-                </div>
-
-                {/* Warning */}
-                <p className="text-white/25 text-[10px] mt-4">
-                    Do not close or refresh this page
-                </p>
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <PaymentElement
+                    options={{
+                        layout: 'tabs',
+                    }}
+                />
             </div>
 
-            {/* CSS Animations */}
-            <style>{`
-                @keyframes progressFill {
-                    0%   { width: 0%; }
-                    30%  { width: 40%; }
-                    60%  { width: 70%; }
-                    85%  { width: 90%; }
-                    100% { width: 100%; }
-                }
-                @keyframes orbit {
-                    from { transform: rotate(0deg); }
-                    to   { transform: rotate(360deg); }
-                }
-            `}</style>
+            {errorMessage && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+                    <span className="text-red-500 text-lg">⚠</span>
+                    {errorMessage}
+                </div>
+            )}
+
+            <button
+                type="submit"
+                disabled={!stripe || isProcessing}
+                className={`w-full py-4 rounded-xl font-black text-white text-lg transition-all flex items-center justify-center gap-3 shadow-lg ${
+                    isProcessing || !stripe
+                        ? 'bg-gray-400 cursor-not-allowed shadow-none'
+                        : 'bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 hover:shadow-primary-600/30 active:scale-[0.98]'
+                }`}
+            >
+                {isProcessing ? (
+                    <>
+                        <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Processing Payment…
+                    </>
+                ) : (
+                    <>
+                        <FiLock size={18} />
+                        Pay Now
+                    </>
+                )}
+            </button>
+
+            {/* Security footer */}
+            <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-gray-500 text-xs">
+                <FiShield className="text-green-500" size={14} />
+                <span>Secured by Stripe • 256-bit SSL Encrypted</span>
+            </div>
+        </form>
+    );
+};
+
+// Main Payment page component
+const ProcessingPayment = () => {
+    const { orderId } = useParams();
+    const navigate = useNavigate();
+    const [clientSecret, setClientSecret] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        const fetchSecret = async () => {
+            try {
+                const data = await createPaymentIntent(orderId);
+                setClientSecret(data.clientSecret);
+            } catch (err) {
+                console.error('Error creating payment intent:', err);
+                setError(err.response?.data?.message || 'Failed to initialize payment. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSecret();
+    }, [orderId]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-gray-900 dark:via-gray-950 dark:to-black flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-primary-500/30">
+                        <FiCreditCard className="text-white animate-pulse" size={28} />
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400 font-semibold">Initializing payment…</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-gray-900 dark:via-gray-950 dark:to-black flex items-center justify-center px-4">
+                <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center space-y-4">
+                    <div className="w-16 h-16 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <span className="text-red-500 text-3xl">✕</span>
+                    </div>
+                    <h2 className="text-xl font-black text-gray-900 dark:text-white">Payment Error</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">{error}</p>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="bg-gray-900 dark:bg-gray-700 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const appearance = {
+        theme: 'stripe',
+        variables: {
+            colorPrimary: '#6366f1',
+            colorBackground: '#ffffff',
+            colorText: '#1f2937',
+            fontFamily: '"Inter", system-ui, sans-serif',
+            borderRadius: '12px',
+            spacingUnit: '4px',
+        },
+    };
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-gray-900 dark:via-gray-950 dark:to-black py-12 px-4">
+            <div className="max-w-lg mx-auto">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-primary-500/30 mb-4">
+                        <FiCreditCard className="text-white" size={28} />
+                    </div>
+                    <h1 className="text-2xl font-black text-gray-900 dark:text-white">Complete Payment</h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Enter your payment details below</p>
+                </div>
+
+                {/* Secure badge */}
+                <div className="flex items-center justify-center gap-2 mb-6">
+                    <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs font-bold px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800">
+                        <FiCheckCircle size={12} />
+                        Stripe Test Mode
+                    </div>
+                </div>
+
+                {/* Stripe Elements */}
+                {clientSecret && (
+                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+                        <CheckoutForm orderId={orderId} />
+                    </Elements>
+                )}
+
+                {/* Test card hint */}
+                <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                    <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">🧪 Test Mode</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                        Use card number <span className="font-mono font-bold">4242 4242 4242 4242</span> with any future expiry and any CVC.
+                    </p>
+                </div>
+            </div>
         </div>
     );
 };

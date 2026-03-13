@@ -2,24 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchOrderById } from '../services/api';
 import {
-    FiCreditCard, FiSmartphone, FiGlobe, FiShield,
-    FiChevronRight, FiLock, FiArrowLeft, FiCheckCircle, FiEye, FiEyeOff
+    FiCreditCard, FiShield,
+    FiChevronRight, FiLock, FiArrowLeft, FiEye, FiEyeOff
 } from 'react-icons/fi';
 
 const paymentMethods = [
-    {
-        id: 'upi',
-        name: 'UPI',
-        description: 'Google Pay, PhonePe, Paytm, BHIM',
-        icon: FiSmartphone,
-        color: 'from-violet-500 to-purple-600',
-        lightBg: 'from-violet-50 to-purple-50',
-        border: 'border-violet-400',
-        chipBg: 'bg-violet-100 text-violet-700',
-        tags: ['GPay', 'PhonePe', 'Paytm', 'BHIM'],
-        connectMsg: 'Connecting to UPI...',
-        needsForm: 'upi',
-    },
     {
         id: 'credit',
         name: 'Credit Card',
@@ -46,19 +33,6 @@ const paymentMethods = [
         connectMsg: 'Connecting to card gateway...',
         needsForm: true,
     },
-    {
-        id: 'netbanking',
-        name: 'Net Banking',
-        description: 'SBI, HDFC, ICICI, Axis & more',
-        icon: FiGlobe,
-        color: 'from-amber-500 to-orange-600',
-        lightBg: 'from-amber-50 to-orange-50',
-        border: 'border-amber-400',
-        chipBg: 'bg-amber-100 text-amber-700',
-        tags: ['SBI', 'HDFC', 'ICICI', 'Axis'],
-        connectMsg: 'Connecting to bank portal...',
-        needsForm: false,
-    }
 ];
 
 // Format card number with spaces: 1234 5678 9012 3456
@@ -106,10 +80,7 @@ const PaymentGateway = () => {
     const [showCvv, setShowCvv] = useState(false);
     const [cardErrors, setCardErrors] = useState({});
 
-    // UPI form state
-    const [showUpiForm, setShowUpiForm] = useState(false);
-    const [upiId, setUpiId] = useState('');
-    const [upiError, setUpiError] = useState('');
+
 
     useEffect(() => {
         const loadOrder = async () => {
@@ -134,32 +105,10 @@ const PaymentGateway = () => {
         if (redirecting) return;
         const method = paymentMethods.find(m => m.id === methodId);
 
-        if (method.needsForm === 'upi') {
-            // UPI → show UPI ID form
-            setSelectedMethod(methodId);
-            setShowUpiForm(true);
-            setUpiError('');
-        } else if (method.needsForm === true) {
-            // Credit/Debit card → show card details form
-            setSelectedMethod(methodId);
-            setShowCardForm(true);
-            setCardErrors({});
-        } else {
-            // Net Banking → auto-redirect, no input needed
-            setSelectedMethod(methodId);
-            setRedirecting(true);
-            redirectTimerRef.current = setTimeout(() => {
-                navigate(`/payment/processing/${orderId}`, {
-                    replace: true,
-                    state: {
-                        methodId: method.id,
-                        methodName: method.name,
-                        methodColor: method.color,
-                        methodConnectMsg: method.connectMsg,
-                    }
-                });
-            }, 1500);
-        }
+        // Credit/Debit card → show card details form
+        setSelectedMethod(methodId);
+        setShowCardForm(true);
+        setCardErrors({});
     };
 
     // Validate and submit card form
@@ -226,23 +175,19 @@ const PaymentGateway = () => {
         }, 1500);
     };
 
-    // Go back from card/UPI form to method selection
+    // Go back from card form to method selection
     const handleBackToMethods = () => {
         setShowCardForm(false);
-        setShowUpiForm(false);
         setSelectedMethod('');
         setCardNumber('');
         setCardName('');
         setCardExpiry('');
         setCardCvv('');
         setCardErrors({});
-        setUpiId('');
-        setUpiError('');
     };
 
     const selectedMethodData = paymentMethods.find(m => m.id === selectedMethod);
     const cardBrand = getCardBrand(cardNumber);
-    const isUpiValid = upiId.trim().length >= 5 && upiId.includes('@');
 
     if (loading) {
         return (
@@ -298,150 +243,6 @@ const PaymentGateway = () => {
         );
     }
 
-    // --- UPI ID Form ---
-    if (showUpiForm && selectedMethodData) {
-        const Icon = selectedMethodData.icon;
-        const upiParts = upiId.split('@');
-        const upiHandle = upiParts.length > 1 ? upiParts[1] : '';
-
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 py-8 px-4">
-                <div className="max-w-xl mx-auto">
-                    {/* Back Button */}
-                    <button
-                        onClick={handleBackToMethods}
-                        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 font-medium mb-6 transition-colors"
-                    >
-                        <FiArrowLeft size={16} /> Change Payment Method
-                    </button>
-
-                    {/* UPI Header */}
-                    <div className="text-center mb-8">
-                        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${selectedMethodData.color} flex items-center justify-center mx-auto mb-4 shadow-xl`}>
-                            <Icon className="text-white" size={28} />
-                        </div>
-                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-1">
-                            Pay via UPI
-                        </h1>
-                        <p className="text-gray-500 text-sm">
-                            Amount: <span className="font-bold text-gray-800">₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}</span>
-                        </p>
-                    </div>
-
-                    {/* UPI Visual Preview */}
-                    <div className={`relative w-full max-w-md mx-auto rounded-2xl bg-gradient-to-br ${selectedMethodData.color} p-6 mb-8 shadow-2xl overflow-hidden`}>
-                        {/* Background pattern */}
-                        <div className="absolute inset-0 opacity-10">
-                            <div className="absolute top-4 right-4 w-32 h-32 rounded-full border-2 border-white" />
-                            <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full border-2 border-white" />
-                        </div>
-
-                        <div className="relative text-center py-4">
-                            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-4">
-                                <Icon className="text-white" size={32} />
-                            </div>
-                            <p className="text-white/60 text-xs uppercase tracking-widest mb-2">UPI ID</p>
-                            <p className="text-white text-2xl font-mono font-bold tracking-wide">
-                                {upiId || 'yourname@upi'}
-                            </p>
-                            {upiHandle && (
-                                <div className="mt-3 inline-flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full">
-                                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                                    <span className="text-white text-xs font-bold">@{upiHandle}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* UPI Form */}
-                    <form onSubmit={handleUpiSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 md:p-8 space-y-5">
-
-                        {/* UPI ID Input */}
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1.5">UPI ID</label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="yourname@axl"
-                                    value={upiId}
-                                    onChange={(e) => { setUpiId(e.target.value.toLowerCase()); setUpiError(''); }}
-                                    className={`w-full pl-12 pr-4 py-3.5 border-2 rounded-xl text-sm font-mono tracking-wide focus:outline-none transition-all ${upiError ? 'border-red-400 bg-red-50 focus:border-red-500' : 'border-gray-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-100'}`}
-                                />
-                                <FiSmartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                {isUpiValid && (
-                                    <FiCheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500" size={18} />
-                                )}
-                            </div>
-                            {upiError && <p className="text-xs text-red-500 mt-1 font-medium">{upiError}</p>}
-                        </div>
-
-                        {/* Quick UPI Suggestions */}
-                        <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Quick Select</p>
-                            <div className="flex flex-wrap gap-2">
-                                {['@oksbi', '@axl', '@ybl', '@paytm', '@ibl', '@okhdfcbank'].map(handle => {
-                                    const username = upiId.split('@')[0] || 'yourname';
-                                    return (
-                                        <button
-                                            key={handle}
-                                            type="button"
-                                            onClick={() => { setUpiId(username + handle); setUpiError(''); }}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${upiId.endsWith(handle)
-                                                ? 'border-violet-400 bg-violet-50 text-violet-700'
-                                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
-                                            }`}
-                                        >
-                                            {handle}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Popular Apps Info */}
-                        <div className="bg-violet-50 border border-violet-200 rounded-xl px-4 py-3">
-                            <p className="text-xs text-violet-700 font-medium flex items-center gap-2">
-                                <FiShield className="text-violet-500 flex-shrink-0" size={14} />
-                                Payment request will be sent to your UPI app. This is a demo — no real charges.
-                            </p>
-                        </div>
-
-                        {/* Pay Button */}
-                        <button
-                            type="submit"
-                            disabled={!isUpiValid}
-                            className={`w-full py-4 rounded-xl font-black text-white text-lg transition-all flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] ${
-                                isUpiValid
-                                    ? `bg-gradient-to-r ${selectedMethodData.color} hover:shadow-xl`
-                                    : 'bg-gray-300 cursor-not-allowed shadow-none'
-                            }`}
-                        >
-                            <FiLock size={18} />
-                            Verify & Pay ₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}
-                        </button>
-                    </form>
-
-                    {/* Security Footer */}
-                    <div className="mt-6 flex items-center justify-center gap-6">
-                        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                            <FiShield className="text-green-400" size={14}/>
-                            <span>256-bit SSL</span>
-                        </div>
-                        <div className="w-px h-4 bg-gray-200" />
-                        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                            <FiLock className="text-green-400" size={14}/>
-                            <span>NPCI Certified</span>
-                        </div>
-                        <div className="w-px h-4 bg-gray-200" />
-                        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                            <FiShield className="text-green-400" size={14}/>
-                            <span>100% Secure</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     // --- Card Details Form (Credit / Debit) ---
     if (showCardForm && selectedMethodData) {
