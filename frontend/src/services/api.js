@@ -126,6 +126,17 @@ export const getSmartRecommendations = async (productId, cartItems = []) => {
     return data;
 };
 
+export const transcribeAudio = async (audioBlob) => {
+    const formData = new FormData();
+    // Use 'audio.webm' as a default extension for browser-recorded media
+    formData.append('audio', audioBlob, 'audio.webm');
+    
+    // We send it as multipart/form-data, but we let Axios set the Content-Type automatically 
+    // so it includes the correct boundary parameter.
+    const { data } = await api.post('/ai/transcribe', formData);
+    return data;
+};
+
 // Admin APIs
 export const getAdminStats = async () => {
     const { data } = await api.get('/admin/stats');

@@ -6,10 +6,11 @@ import { useTheme } from '../context/ThemeContext';
 import { useCompare } from '../context/CompareContext';
 import {
     FiShoppingCart, FiUser, FiLogOut, FiMenu, FiSearch, FiHeart, FiBell,
-    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle, FiLayers
+    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle, FiLayers,
+    FiMic, FiMicOff
 } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
-import { searchProducts } from '../services/api';
+import { searchProducts, transcribeAudio } from '../services/api';
 
 const Navbar = () => {
     const { totalItems } = useCart();
@@ -24,9 +25,11 @@ const Navbar = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isListening, setIsListening] = useState(false);
     const userMenuRef = useRef(null);
     const categoryMenuRef = useRef(null);
     const searchRef = useRef(null);
+    const recognitionRef = useRef(null);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -74,6 +77,80 @@ const Navbar = () => {
         }
     };
 
+    // ── Smart Voice Search using Groq Whisper AI ──
+    const startVoiceSearch = async () => {
+        // If already listening, stop it
+        if (isListening && recognitionRef.current) {
+            recognitionRef.current.stop();
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            recognitionRef.current = mediaRecorder;
+            const audioChunks = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstart = () => {
+                setIsListening(true);
+            };
+
+            mediaRecorder.onstop = async () => {
+                setIsListening(false);
+                // Stop all tracks to release the microphone
+                stream.getTracks().forEach(track => track.stop());
+
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+                // Set a loading state visually in the search bar
+                setSearchQuery('⏳ Processing audio...');
+
+                try {
+                    const data = await transcribeAudio(audioBlob);
+                    if (data.success && data.text) {
+                        const transcript = data.text.trim();
+                        setSearchQuery(transcript);
+                        // Auto-navigate to search results
+                        navigate(`/products?search=${encodeURIComponent(transcript)}`);
+                        setIsMenuOpen(false);
+                        setShowSuggestions(false);
+                    } else {
+                        setSearchQuery('');
+                        alert('Could not understand the audio. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Transcription error:', error);
+                    setSearchQuery('');
+                    alert('Error processing voice search. Please try again.');
+                }
+            };
+
+            mediaRecorder.start();
+            
+            // Auto stop after 5 seconds to prevent indefinitely recording if user forgets
+            setTimeout(() => {
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            }, 5000);
+
+        } catch (error) {
+            console.error('Microphone access error:', error);
+            setIsListening(false);
+            if (error.name === 'NotAllowedError') {
+                alert('Microphone access was denied. Please allow microphone permissions to use voice search.');
+            } else {
+                alert('Could not access microphone: ' + error.message);
+            }
+        }
+    };
+
     const categories = [
         { name: 'Electronics', icon: <FiGrid />, path: '/products?category=electronics' },
         { name: 'Accessories', icon: <FiGrid />, path: '/products?category=accessories' },
@@ -102,15 +179,30 @@ const Navbar = () => {
 
                     {/* Desktop Search Bar */}
                     <div className="hidden md:flex flex-1 max-w-2xl relative" ref={searchRef}>
-                        <form onSubmit={handleSearch} className="w-full relative">
+                        <form onSubmit={handleSearch} className="w-full relative flex items-center">
                             <input
                                 type="text"
-                                placeholder="Search for products, brands and more..."
+                                placeholder={isListening ? '🎤 Listening... speak now' : 'Search for products, brands and more...'}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                                className="w-full pl-5 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:border-primary-500 focus:bg-white transition-all text-sm"
+                                className={`w-full pl-5 pr-24 py-2.5 bg-gray-50 border rounded-full focus:outline-none focus:border-primary-500 focus:bg-white transition-all text-sm ${
+                                    isListening ? 'border-red-400 ring-2 ring-red-200 bg-red-50/30' : 'border-gray-200'
+                                }`}
                             />
+                            {/* Voice Search Mic Button */}
+                            <button
+                                type="button"
+                                onClick={startVoiceSearch}
+                                className={`absolute right-12 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${
+                                    isListening
+                                        ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
+                                        : 'text-gray-400 hover:text-primary-600 hover:bg-gray-100'
+                                }`}
+                                title={isListening ? 'Stop listening' : 'Voice search'}
+                            >
+                                {isListening ? <FiMicOff size={16} /> : <FiMic size={16} />}
+                            </button>
                             <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors">
                                 <FiSearch size={16} />
                             </button>
@@ -312,12 +404,27 @@ const Navbar = () => {
                                 <form onSubmit={handleSearch} className="relative">
                                     <input
                                         type="text"
-                                        placeholder="Search products..."
+                                        placeholder={isListening ? '🎤 Listening...' : 'Search products...'}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                                        className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 transition-all"
+                                        className={`w-full pl-4 pr-20 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
+                                            isListening ? 'border-red-400 ring-2 ring-red-200 bg-red-50/30' : 'border-gray-200'
+                                        }`}
                                     />
+                                    {/* Mobile Voice Search Mic Button */}
+                                    <button
+                                        type="button"
+                                        onClick={startVoiceSearch}
+                                        className={`absolute right-12 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-all duration-200 ${
+                                            isListening
+                                                ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
+                                                : 'text-gray-400 hover:text-primary-600'
+                                        }`}
+                                        title={isListening ? 'Stop listening' : 'Voice search'}
+                                    >
+                                        {isListening ? <FiMicOff size={18} /> : <FiMic size={18} />}
+                                    </button>
                                     <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                                         <FiSearch size={20} />
                                     </button>

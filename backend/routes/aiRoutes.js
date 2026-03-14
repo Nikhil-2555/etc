@@ -250,4 +250,71 @@ Only use IDs from the catalog above.`;
     }
 });
 
+// Configure Multer for audio uploads
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, '..', 'uploads');
+        if (!fs.existsSync(uploadDir)){
+            fs.mkdirSync(uploadDir);
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, `audio-${Date.now()}.webm`);
+    }
+});
+const upload = multer({ storage: storage });
+
+// @desc    Transcribe Audio using Groq Whisper
+// @route   POST /api/ai/transcribe
+router.post('/transcribe', upload.single('audio'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No audio file provided' });
+        }
+
+        if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'YOUR_GROQ_API_KEY_HERE') {
+            fs.unlinkSync(req.file.path); // Clean up
+            return res.status(503).json({ message: 'AI service is not configured' });
+        }
+
+        // Use Groq Whisper API for transcription
+        const transcription = await groq.audio.transcriptions.create({
+            file: fs.createReadStream(req.file.path),
+            model: "whisper-large-v3-turbo",
+            response_format: "json",
+            temperature: 0.0
+        });
+
+        // Clean up temp file
+        try {
+            fs.unlinkSync(req.file.path);
+        } catch (e) {
+            console.error('Failed to cleanup audio file:', e);
+        }
+
+        res.json({
+            text: transcription.text,
+            success: true
+        });
+
+    } catch (error) {
+        console.error('Transcription Error:', error);
+        
+        // Clean up temp file on error
+        if (req.file && fs.existsSync(req.file.path)) {
+            try { fs.unlinkSync(req.file.path); } catch (e) {}
+        }
+
+        res.status(500).json({ 
+            message: 'Failed to transcribe audio', 
+            error: error.message 
+        });
+    }
+});
+
 module.exports = router;

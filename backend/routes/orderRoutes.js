@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // @desc Create new order
@@ -44,6 +45,16 @@ router.post('/', protect, async (req, res) => {
         });
 
         const createdOrder = await order.save();
+
+        // Update Product Stock
+        for (const item of createdOrder.orderItems) {
+            const product = await Product.findById(item.product);
+            if (product && typeof product.stock === 'number') {
+                product.stock -= item.quantity;
+                if (product.stock < 0) product.stock = 0;
+                await product.save();
+            }
+        }
 
         // Update User Reward Points
         const user = await require('../models/User').findById(req.user._id);
@@ -247,6 +258,15 @@ router.patch('/:id/cancel', protect, async (req, res) => {
         order.cancellationReason = req.body.reason || 'No reason provided';
 
         const updatedOrder = await order.save();
+
+        // Restore Product Stock on Cancellation
+        for (const item of updatedOrder.orderItems) {
+            const product = await Product.findById(item.product);
+            if (product && typeof product.stock === 'number') {
+                product.stock += item.quantity;
+                await product.save();
+            }
+        }
 
         // Emit Real-Time Notification for Order Cancelled
         if (req.app.locals.io) {
