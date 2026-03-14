@@ -15,7 +15,7 @@ const AIChatWidget = () => {
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
-            content: "Hey there! 👋 I'm your **ShopFlow AI** assistant. I can help you find products, suggest gifts, compare items, and more!\n\nTry asking me something or tap a quick prompt below!",
+            content: "Hey there! 👋 I'm **ShopMate AI** — your personal shopping assistant!\n\nI can help you **find products**, **compare items**, **suggest gifts**, and discover the best deals in our store. 🛍️\n\n> ⚠️ I'm a shopping-only assistant — I can't help with coding, writing, or general questions. Just shop talk here!\n\nTap a quick prompt below or ask me anything about our products!",
             timestamp: new Date(),
         }
     ]);
@@ -151,10 +151,10 @@ const AIChatWidget = () => {
                                     <FiCpu className="text-white" size={20} />
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-bold text-sm">ShopFlow AI</h3>
+                                    <h3 className="text-white font-bold text-sm">ShopMate AI</h3>
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                                        <span className="text-white/80 text-xs">Shopping Assistant</span>
+                                        <span className="text-white/80 text-xs">Shopping-Only Assistant</span>
                                     </div>
                                 </div>
                             </div>
