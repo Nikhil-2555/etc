@@ -102,11 +102,11 @@ const Checkout = () => {
     };
 
     if (cart.length === 0) {
-        return <div className="text-center py-20 font-bold text-gray-500">Your cart is empty. Please add items to checkout.</div>;
+        return <div className="text-center py-20 font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500">Your cart is empty. Please add items to checkout.</div>;
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30 py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
             <div className="max-w-6xl mx-auto">
                 {/* Progress Steps */}
                 <div className="flex items-center justify-center gap-0 mb-12">
@@ -118,14 +118,14 @@ const Checkout = () => {
                         <div key={step.num} className="flex items-center">
                             <div className="flex flex-col items-center">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black transition-all duration-500 ${step.done
-                                        ? 'bg-green-500 text-white shadow-lg shadow-green-200'
+                                        ? 'bg-green-50 dark:bg-green-900/300 text-white shadow-lg shadow-green-200'
                                         : (step.num === 1 && !shippingComplete) || (step.num === 2 && shippingComplete)
                                             ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
-                                            : 'bg-gray-200 text-gray-500'
+                                            : 'bg-gray-200 text-gray-500 dark:text-gray-400 dark:text-gray-500'
                                     }`}>
                                     {step.done ? <FiCheckCircle size={18} /> : step.num}
                                 </div>
-                                <span className={`text-xs mt-2 font-bold ${step.done ? 'text-green-600' : (step.num === 1 && !shippingComplete) || (step.num === 2 && shippingComplete) ? 'text-primary-600' : 'text-gray-400'
+                                <span className={`text-xs mt-2 font-bold ${step.done ? 'text-green-600 dark:text-green-400' : (step.num === 1 && !shippingComplete) || (step.num === 2 && shippingComplete) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'
                                     }`}>{step.label}</span>
                             </div>
                             {i < 2 && (
@@ -139,11 +139,11 @@ const Checkout = () => {
                     {/* Left Column: Shipping + Payment */}
                     <div className="flex-1 space-y-6">
                         {/* Step 1: Shipping Information */}
-                        <div className={`bg-white rounded-2xl border transition-all duration-300 ${shippingComplete ? 'border-green-200 shadow-sm' : 'border-gray-100 shadow-lg'}`}>
+                        <div className={`bg-white dark:bg-gray-800 rounded-2xl border transition-all duration-300 ${shippingComplete ? 'border-green-200 shadow-sm' : 'border-gray-100 dark:border-gray-700 shadow-lg'}`}>
                             <div className="p-6 md:p-8">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-black text-gray-900 flex items-center gap-3">
-                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${shippingComplete ? 'bg-green-500 text-white' : 'bg-primary-100 text-primary-600'}`}>
+                                    <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${shippingComplete ? 'bg-green-50 dark:bg-green-900/300 text-white' : 'bg-primary-100 text-primary-600 dark:text-primary-400'}`}>
                                             {shippingComplete ? <FiCheckCircle /> : '1'}
                                         </span>
                                         Shipping Information
@@ -151,7 +151,7 @@ const Checkout = () => {
                                     {shippingComplete && (
                                         <button
                                             onClick={() => setShippingComplete(false)}
-                                            className="text-sm text-primary-600 font-bold hover:underline"
+                                            className="text-sm text-primary-600 dark:text-primary-400 font-bold hover:underline"
                                         >
                                             Edit
                                         </button>
@@ -159,69 +159,69 @@ const Checkout = () => {
                                 </div>
 
                                 {shippingComplete ? (
-                                    <div className="bg-green-50 rounded-xl p-4 border border-green-100">
-                                        <p className="text-sm text-gray-700">
+                                    <div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-4 border border-green-100 dark:border-green-800">
+                                        <p className="text-sm text-gray-700 dark:text-gray-300">
                                             <strong>{formik.values.firstName} {formik.values.lastName}</strong><br />
                                             {formik.values.address}, {formik.values.city} - {formik.values.postalCode}<br />
-                                            <span className="text-gray-500">{formik.values.email}</span>
+                                            <span className="text-gray-500 dark:text-gray-400 dark:text-gray-500">{formik.values.email}</span>
                                         </p>
                                     </div>
                                 ) : (
                                     <form onSubmit={formik.handleSubmit} className="space-y-5">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div>
-                                                <label className="block text-sm font-bold text-gray-600 mb-1.5">First Name</label>
+                                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">First Name</label>
                                                 <input
                                                     type="text" name="firstName"
                                                     onChange={formik.handleChange} value={formik.values.firstName}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
+                                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                                     placeholder="John" required
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-bold text-gray-600 mb-1.5">Last Name</label>
+                                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Last Name</label>
                                                 <input
                                                     type="text" name="lastName"
                                                     onChange={formik.handleChange} value={formik.values.lastName}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
+                                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                                     placeholder="Doe" required
                                                 />
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-600 mb-1.5">Email Address</label>
+                                            <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Email Address</label>
                                             <input
                                                 type="email" name="email"
                                                 onChange={formik.handleChange} value={formik.values.email}
-                                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
+                                                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                                 placeholder="john@example.com" required
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-bold text-gray-600 mb-1.5">Street Address</label>
+                                            <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Street Address</label>
                                             <input
                                                 type="text" name="address"
                                                 onChange={formik.handleChange} value={formik.values.address}
-                                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
+                                                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                                 placeholder="123 Main Street" required
                                             />
                                         </div>
                                         <div className="grid grid-cols-2 gap-5">
                                             <div>
-                                                <label className="block text-sm font-bold text-gray-600 mb-1.5">City</label>
+                                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">City</label>
                                                 <input
                                                     type="text" name="city"
                                                     onChange={formik.handleChange} value={formik.values.city}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
+                                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                                     placeholder="Mumbai" required
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-bold text-gray-600 mb-1.5">Postal Code</label>
+                                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Postal Code</label>
                                                 <input
                                                     type="text" name="postalCode"
                                                     onChange={formik.handleChange} value={formik.values.postalCode}
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm"
+                                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                                     placeholder="400001" required
                                                 />
                                             </div>
@@ -238,11 +238,11 @@ const Checkout = () => {
                         </div>
 
                         {/* Step 2: Payment Method */}
-                        <div className={`bg-white rounded-2xl border transition-all duration-500 ${shippingComplete ? 'border-gray-100 shadow-lg opacity-100 translate-y-0' : 'border-gray-100 shadow-sm opacity-50 pointer-events-none translate-y-2'
+                        <div className={`bg-white dark:bg-gray-800 rounded-2xl border transition-all duration-500 ${shippingComplete ? 'border-gray-100 dark:border-gray-700 shadow-lg opacity-100 translate-y-0' : 'border-gray-100 dark:border-gray-700 shadow-sm opacity-50 pointer-events-none translate-y-2'
                             }`}>
                             <div className="p-6 md:p-8">
-                                <h2 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-6">
-                                    <span className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-bold">2</span>
+                                <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-3 mb-6">
+                                    <span className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 dark:text-primary-400 flex items-center justify-center text-sm font-bold">2</span>
                                     Select Payment Method
                                 </h2>
 
@@ -253,29 +253,29 @@ const Checkout = () => {
                                         onClick={() => setSelectedPayment('online')}
                                         className={`relative rounded-2xl border-2 p-6 transition-all duration-300 text-left group hover:shadow-lg ${selectedPayment === 'online'
                                                 ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-indigo-50 shadow-lg shadow-primary-100'
-                                                : 'border-gray-200 bg-white hover:border-primary-300'
+                                                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-primary-300'
                                             }`}
                                     >
                                         {selectedPayment === 'online' && (
                                             <div className="absolute top-3 right-3">
-                                                <FiCheckCircle className="text-primary-600" size={20} />
+                                                <FiCheckCircle className="text-primary-600 dark:text-primary-400" size={20} />
                                             </div>
                                         )}
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all ${selectedPayment === 'online'
                                                 ? 'bg-gradient-to-br from-primary-500 to-indigo-600 text-white shadow-lg shadow-primary-200'
-                                                : 'bg-primary-100 text-primary-600'
+                                                : 'bg-primary-100 text-primary-600 dark:text-primary-400'
                                             }`}>
                                             <FiCreditCard size={24} />
                                         </div>
-                                        <h3 className={`font-black text-base mb-1 ${selectedPayment === 'online' ? 'text-primary-700' : 'text-gray-800'}`}>
+                                        <h3 className={`font-black text-base mb-1 ${selectedPayment === 'online' ? 'text-primary-700 dark:text-primary-400' : 'text-gray-800 dark:text-gray-200'}`}>
                                             Online Payment
                                         </h3>
-                                        <p className="text-xs text-gray-500">Credit Card, Debit Card</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Credit Card, Debit Card</p>
                                         <div className="flex gap-1.5 mt-3">
                                             {['Visa', 'MasterCard', 'RuPay'].map(tag => (
                                                 <span key={tag} className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${selectedPayment === 'online'
-                                                        ? 'bg-primary-100 text-primary-700'
-                                                        : 'bg-gray-100 text-gray-500'
+                                                        ? 'bg-primary-100 text-primary-700 dark:text-primary-400'
+                                                        : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 dark:text-gray-500'
                                                     }`}>{tag}</span>
                                             ))}
                                         </div>
@@ -287,28 +287,28 @@ const Checkout = () => {
                                         onClick={() => setSelectedPayment('cod')}
                                         className={`relative rounded-2xl border-2 p-6 transition-all duration-300 text-left group hover:shadow-lg ${selectedPayment === 'cod'
                                                 ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 shadow-lg shadow-amber-100'
-                                                : 'border-gray-200 bg-white hover:border-amber-300'
+                                                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-amber-300'
                                             }`}
                                     >
                                         {selectedPayment === 'cod' && (
                                             <div className="absolute top-3 right-3">
-                                                <FiCheckCircle className="text-amber-600" size={20} />
+                                                <FiCheckCircle className="text-amber-600 dark:text-amber-400" size={20} />
                                             </div>
                                         )}
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all ${selectedPayment === 'cod'
                                                 ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-200'
-                                                : 'bg-amber-100 text-amber-600'
+                                                : 'bg-amber-100 text-amber-600 dark:text-amber-400'
                                             }`}>
                                             <FiTruck size={24} />
                                         </div>
-                                        <h3 className={`font-black text-base mb-1 ${selectedPayment === 'cod' ? 'text-amber-700' : 'text-gray-800'}`}>
+                                        <h3 className={`font-black text-base mb-1 ${selectedPayment === 'cod' ? 'text-amber-700 dark:text-amber-400' : 'text-gray-800 dark:text-gray-200'}`}>
                                             Cash on Delivery
                                         </h3>
-                                        <p className="text-xs text-gray-500">Pay when your order arrives at your doorstep</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Pay when your order arrives at your doorstep</p>
                                         <div className="flex gap-1.5 mt-3">
                                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${selectedPayment === 'cod'
-                                                    ? 'bg-amber-100 text-amber-700'
-                                                    : 'bg-gray-100 text-gray-500'
+                                                    ? 'bg-amber-100 text-amber-700 dark:text-amber-400'
+                                                    : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 dark:text-gray-500'
                                                 }`}>No extra charges</span>
                                         </div>
                                     </button>
@@ -316,9 +316,9 @@ const Checkout = () => {
 
                                 {/* COD Info */}
                                 {selectedPayment === 'cod' && (
-                                    <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="bg-amber-50 dark:bg-amber-900/30 rounded-xl p-4 border border-amber-200 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                         <p className="text-sm text-amber-800 font-medium flex items-center gap-2">
-                                            <FiPackage className="text-amber-600 flex-shrink-0" />
+                                            <FiPackage className="text-amber-600 dark:text-amber-400 flex-shrink-0" />
                                             You will pay <strong>₹{finalAmount.toLocaleString('en-IN')}</strong> in cash when the order is delivered.
                                         </p>
                                     </div>
@@ -326,7 +326,7 @@ const Checkout = () => {
 
                                 {/* Online Info */}
                                 {selectedPayment === 'online' && (
-                                    <div className="bg-primary-50 rounded-xl p-4 border border-primary-200 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="bg-primary-50 dark:bg-primary-900/30 rounded-xl p-4 border border-primary-200 dark:border-primary-800 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                         <p className="text-sm text-primary-800 font-medium flex items-center gap-2">
                                             <FiShield className="text-green-500 flex-shrink-0" />
                                             You will be redirected to a secure payment page to complete the transaction.
@@ -372,43 +372,43 @@ const Checkout = () => {
 
                     {/* Right Column: Order Summary */}
                     <div className="w-full lg:w-96">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 sticky top-24">
-                            <h3 className="text-lg font-black text-gray-900 mb-4">Order Summary</h3>
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg p-6 sticky top-24">
+                            <h3 className="text-lg font-black text-gray-900 dark:text-white mb-4">Order Summary</h3>
                             <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-1">
                                 {cart.map(item => (
                                     <div key={`${item.id || item._id}-${item.size}`} className="flex gap-3">
-                                        <div className="w-14 h-14 bg-gray-50 rounded-lg border border-gray-100 p-1 flex-shrink-0">
+                                        <div className="w-14 h-14 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-700 p-1 flex-shrink-0">
                                             <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-900 line-clamp-1">{item.title}</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">{item.title}</p>
                                             <div className="flex items-center gap-2 mt-0.5">
-                                                <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Qty: {item.quantity}</p>
                                                 {item.size && (
                                                     <>
                                                         <span className="text-gray-300 text-[10px]">•</span>
-                                                        <p className="text-xs font-bold text-primary-600">Size: {item.size}</p>
+                                                        <p className="text-xs font-bold text-primary-600 dark:text-primary-400">Size: {item.size}</p>
                                                     </>
                                                 )}
                                             </div>
                                         </div>
-                                        <p className="text-sm font-bold text-gray-900 flex-shrink-0">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                                        <p className="text-sm font-bold text-gray-900 dark:text-white flex-shrink-0">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="border-t border-gray-100 pt-4 space-y-3">
+                            <div className="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
                                 {/* Coupon Section */}
-                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                    <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <FiTag className="text-primary-600" /> Apply Coupon
+                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <FiTag className="text-primary-600 dark:text-primary-400" /> Apply Coupon
                                     </h4>
                                     {!appliedCoupon ? (
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
                                                 placeholder="Enter code"
-                                                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-500 uppercase bg-white"
+                                                className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:border-primary-500 uppercase bg-white dark:bg-gray-800"
                                                 value={couponCodeInput}
                                                 onChange={(e) => setCouponCodeInput(e.target.value)}
                                                 disabled={isApplying}
@@ -422,40 +422,40 @@ const Checkout = () => {
                                             </button>
                                         </div>
                                     ) : (
-                                        <div className="flex items-center justify-between bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                                        <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/30 px-3 py-2 rounded-lg border border-green-200">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-green-700 font-bold text-sm tracking-wide">{appliedCoupon.code}</span>
+                                                <span className="text-green-700 dark:text-green-400 font-bold text-sm tracking-wide">{appliedCoupon.code}</span>
                                                 <span className="bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">APPLIED</span>
                                             </div>
-                                            <button onClick={removeCoupon} className="text-gray-500 hover:text-red-500 text-xs font-bold transition-colors">
+                                            <button onClick={removeCoupon} className="text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-red-500 text-xs font-bold transition-colors">
                                                 Remove
                                             </button>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="flex justify-between text-sm text-gray-600">
+                                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                                     <span>Subtotal</span>
                                     <span>₹{totalPrice.toLocaleString('en-IN')}</span>
                                 </div>
                                 {discountAmount > 0 && (
-                                    <div className="flex justify-between text-sm text-green-600 font-medium">
+                                    <div className="flex justify-between text-sm text-green-600 dark:text-green-400 font-medium">
                                         <span>Discount ({appliedCoupon?.code})</span>
                                         <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
                                     </div>
                                 )}
-                                <div className="flex justify-between text-sm text-gray-600">
+                                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                                     <span>Shipping</span>
                                     <span>₹100</span>
                                 </div>
-                                <div className="flex justify-between font-black text-lg text-gray-900 mt-3 pt-3 border-t border-gray-200">
+                                <div className="flex justify-between font-black text-lg text-gray-900 dark:text-white mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                                     <span>Total</span>
-                                    <span className="text-primary-600">₹{finalAmount.toLocaleString('en-IN')}</span>
+                                    <span className="text-primary-600 dark:text-primary-400">₹{finalAmount.toLocaleString('en-IN')}</span>
                                 </div>
                             </div>
 
                             <div className="mt-5 text-center">
-                                <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
+                                <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1">
                                     <FiShield className="text-green-400" /> Secure & Encrypted Checkout
                                 </p>
                             </div>

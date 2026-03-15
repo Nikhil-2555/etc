@@ -191,10 +191,10 @@ const PaymentGateway = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-                    <p className="text-gray-500 font-medium">Loading payment details...</p>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">Loading payment details...</p>
                 </div>
             </div>
         );
@@ -204,7 +204,7 @@ const PaymentGateway = () => {
     if (redirecting && selectedMethodData) {
         const Icon = selectedMethodData.icon;
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 flex items-center justify-center px-4">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
                 <div className="text-center">
                     <div className="relative mx-auto mb-8 w-28 h-28">
                         <div className="absolute inset-0 rounded-full bg-primary-500/15 animate-ping" style={{ animationDuration: '1.5s' }} />
@@ -213,14 +213,14 @@ const PaymentGateway = () => {
                             <Icon className="text-white animate-pulse" size={44} />
                         </div>
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">
+                    <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white mb-2">
                         {selectedMethodData.connectMsg}
                     </h2>
-                    <p className="text-gray-500 text-sm mb-8 max-w-sm mx-auto">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 max-w-sm mx-auto">
                         Securely initiating {selectedMethodData.name} payment for{' '}
-                        <span className="font-bold text-gray-800">₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}</span>
+                        <span className="font-bold text-gray-800 dark:text-gray-200">₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}</span>
                     </p>
-                    <div className="w-64 md:w-80 h-1.5 bg-gray-200 rounded-full overflow-hidden mx-auto mb-6">
+                    <div className="w-64 md:w-80 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mx-auto mb-6">
                         <div
                             className={`h-full bg-gradient-to-r ${selectedMethodData.color} rounded-full`}
                             style={{ animation: 'gatewayProgress 1.5s ease-in-out forwards' }}
@@ -250,12 +250,12 @@ const PaymentGateway = () => {
         const isFormValid = cardNumber.replace(/\s/g, '').length >= 13 && cardName.trim().length >= 3 && /^\d{2}\/\d{2}$/.test(cardExpiry) && /^\d{3,4}$/.test(cardCvv);
 
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 py-8 px-4">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
                 <div className="max-w-xl mx-auto">
                     {/* Back Button */}
                     <button
                         onClick={handleBackToMethods}
-                        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 font-medium mb-6 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 font-medium mb-6 transition-colors"
                     >
                         <FiArrowLeft size={16} /> Change Payment Method
                     </button>
@@ -265,11 +265,11 @@ const PaymentGateway = () => {
                         <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${selectedMethodData.color} flex items-center justify-center mx-auto mb-4 shadow-xl`}>
                             <Icon className="text-white" size={28} />
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-1">
+                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white mb-1">
                             Enter {selectedMethodData.name} Details
                         </h1>
-                        <p className="text-gray-500 text-sm">
-                            Amount: <span className="font-bold text-gray-800">₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}</span>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">
+                            Amount: <span className="font-bold text-gray-800 dark:text-gray-200">₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}</span>
                         </p>
                     </div>
 
@@ -319,11 +319,11 @@ const PaymentGateway = () => {
                     </div>
 
                     {/* Card Form */}
-                    <form onSubmit={handleCardSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 md:p-8 space-y-5">
+                    <form onSubmit={handleCardSubmit} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg p-6 md:p-8 space-y-5">
 
                         {/* Card Number */}
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1.5">Card Number</label>
+                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Card Number</label>
                             <div className="relative">
                                 <input
                                     type="text"
@@ -332,7 +332,7 @@ const PaymentGateway = () => {
                                     value={cardNumber}
                                     onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                                     maxLength={19}
-                                    className={`w-full pl-12 pr-4 py-3.5 border-2 rounded-xl text-sm font-mono tracking-wider focus:outline-none transition-all ${cardErrors.cardNumber ? 'border-red-400 bg-red-50 focus:border-red-500' : 'border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100'}`}
+                                    className={`w-full pl-12 pr-4 py-3.5 border-2 rounded-xl text-sm font-mono tracking-wider focus:outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${cardErrors.cardNumber ? 'border-red-400 bg-red-50 dark:bg-red-900/30 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900'}`}
                                 />
                                 <FiCreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                 {cardBrand && (
@@ -346,14 +346,14 @@ const PaymentGateway = () => {
 
                         {/* Cardholder Name */}
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1.5">Cardholder Name</label>
+                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Cardholder Name</label>
                             <input
                                 type="text"
                                 placeholder="JOHN DOE"
                                 value={cardName}
                                 onChange={(e) => setCardName(e.target.value.toUpperCase())}
                                 maxLength={50}
-                                className={`w-full px-4 py-3.5 border-2 rounded-xl text-sm uppercase tracking-wide focus:outline-none transition-all ${cardErrors.cardName ? 'border-red-400 bg-red-50 focus:border-red-500' : 'border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100'}`}
+                                className={`w-full px-4 py-3.5 border-2 rounded-xl text-sm uppercase tracking-wide focus:outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${cardErrors.cardName ? 'border-red-400 bg-red-50 dark:bg-red-900/30 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900'}`}
                             />
                             {cardErrors.cardName && <p className="text-xs text-red-500 mt-1 font-medium">{cardErrors.cardName}</p>}
                         </div>
@@ -361,7 +361,7 @@ const PaymentGateway = () => {
                         {/* Expiry + CVV row */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5">Expiry Date</label>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Expiry Date</label>
                                 <input
                                     type="text"
                                     inputMode="numeric"
@@ -369,12 +369,12 @@ const PaymentGateway = () => {
                                     value={cardExpiry}
                                     onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
                                     maxLength={5}
-                                    className={`w-full px-4 py-3.5 border-2 rounded-xl text-sm font-mono text-center tracking-widest focus:outline-none transition-all ${cardErrors.cardExpiry ? 'border-red-400 bg-red-50 focus:border-red-500' : 'border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100'}`}
+                                    className={`w-full px-4 py-3.5 border-2 rounded-xl text-sm font-mono text-center tracking-widest focus:outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${cardErrors.cardExpiry ? 'border-red-400 bg-red-50 dark:bg-red-900/30 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900'}`}
                                 />
                                 {cardErrors.cardExpiry && <p className="text-xs text-red-500 mt-1 font-medium">{cardErrors.cardExpiry}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1.5">CVV</label>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">CVV</label>
                                 <div className="relative">
                                     <input
                                         type={showCvv ? 'text' : 'password'}
@@ -383,7 +383,7 @@ const PaymentGateway = () => {
                                         value={cardCvv}
                                         onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
                                         maxLength={4}
-                                        className={`w-full px-4 py-3.5 border-2 rounded-xl text-sm font-mono text-center tracking-[0.3em] focus:outline-none transition-all ${cardErrors.cardCvv ? 'border-red-400 bg-red-50 focus:border-red-500' : 'border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100'}`}
+                                        className={`w-full px-4 py-3.5 border-2 rounded-xl text-sm font-mono text-center tracking-[0.3em] focus:outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${cardErrors.cardCvv ? 'border-red-400 bg-red-50 dark:bg-red-900/30 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900'}`}
                                     />
                                     <button
                                         type="button"
@@ -398,9 +398,9 @@ const PaymentGateway = () => {
                         </div>
 
                         {/* Security note */}
-                        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                        <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-xl px-4 py-3">
                             <FiShield className="text-green-500 flex-shrink-0" size={16} />
-                            <p className="text-xs text-green-700 font-medium">
+                            <p className="text-xs text-green-700 dark:text-green-400 font-medium">
                                 Your card details are encrypted and secure. This is a demo — no real charges.
                             </p>
                         </div>
@@ -426,12 +426,12 @@ const PaymentGateway = () => {
                             <FiShield className="text-green-400" size={14}/>
                             <span>256-bit SSL</span>
                         </div>
-                        <div className="w-px h-4 bg-gray-200" />
+                        <div className="w-px h-4 bg-gray-200 dark:bg-gray-700" />
                         <div className="flex items-center gap-1.5 text-xs text-gray-400">
                             <FiLock className="text-green-400" size={14}/>
                             <span>PCI DSS Compliant</span>
                         </div>
-                        <div className="w-px h-4 bg-gray-200" />
+                        <div className="w-px h-4 bg-gray-200 dark:bg-gray-700" />
                         <div className="flex items-center gap-1.5 text-xs text-gray-400">
                             <FiShield className="text-green-400" size={14}/>
                             <span>100% Secure</span>
@@ -444,39 +444,39 @@ const PaymentGateway = () => {
 
     // --- Default: Payment Method Selection ---
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 py-8 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
             <div className="max-w-2xl mx-auto">
 
                 {/* Header */}
                 <div className="text-center mb-8">
                     <button
                         onClick={() => navigate(-1)}
-                        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 font-medium mb-6 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 font-medium mb-6 transition-colors"
                     >
                         <FiArrowLeft size={16} /> Back
                     </button>
                     <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-primary-200/60">
                         <FiLock className="text-white" size={32} />
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2">
                         Secure Payment
                     </h1>
-                    <p className="text-gray-500 text-base">
+                    <p className="text-gray-500 dark:text-gray-400 text-base">
                         Select a payment method to proceed
                     </p>
                 </div>
 
                 {/* Amount Card */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-5 mb-6">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg p-5 mb-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Amount to Pay</p>
-                            <p className="text-3xl font-black text-gray-900">
+                            <p className="text-3xl font-black text-gray-900 dark:text-white">
                                 ₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                            <span className="text-xs font-mono text-gray-400 bg-gray-50 dark:bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700">
                                 Order #{orderId?.slice(-8).toUpperCase()}
                             </span>
                         </div>
@@ -485,7 +485,7 @@ const PaymentGateway = () => {
 
                 {/* Payment Methods */}
                 <div className="mb-6">
-                    <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-1">
+                    <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 px-1">
                         Choose Payment Method
                     </h2>
                     <div className="space-y-3">
@@ -496,23 +496,23 @@ const PaymentGateway = () => {
                                     key={method.id}
                                     type="button"
                                     onClick={() => handleSelectMethod(method.id)}
-                                    className={`w-full relative rounded-2xl border-2 p-5 transition-all duration-300 text-left group border-gray-200 bg-white hover:border-gray-300 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]`}
+                                    className={`w-full relative rounded-2xl border-2 p-5 transition-all duration-300 text-left group border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-300 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]`}
                                 >
                                     <div className="flex items-center gap-4">
                                         {/* Icon */}
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all bg-gray-100 text-gray-500 group-hover:bg-gradient-to-br group-hover:${method.color} group-hover:text-white group-hover:shadow-lg`}>
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 group-hover:bg-gradient-to-br group-hover:${method.color} group-hover:text-white group-hover:shadow-lg`}>
                                             <Icon size={22} />
                                         </div>
 
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-black text-base mb-0.5 text-gray-800">
+                                            <h3 className="font-black text-base mb-0.5 text-gray-800 dark:text-gray-200">
                                                 {method.name}
                                             </h3>
-                                            <p className="text-xs text-gray-500">{method.description}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{method.description}</p>
                                             <div className="flex flex-wrap gap-1.5 mt-2">
                                                 {method.tags.map(tag => (
-                                                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">{tag}</span>
+                                                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">{tag}</span>
                                                 ))}
                                             </div>
                                         </div>
@@ -535,7 +535,7 @@ const PaymentGateway = () => {
                                     {/* Method type badge */}
                                     {method.needsForm && (
                                         <div className="absolute top-3 right-3">
-                                            <span className="text-[9px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                            <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full uppercase tracking-wider">
                                                 {method.needsForm === 'upi' ? 'UPI ID Required' : 'Card Details Required'}
                                             </span>
                                         </div>
@@ -553,12 +553,12 @@ const PaymentGateway = () => {
                             <FiShield className="text-green-400" size={14}/>
                             <span>256-bit SSL</span>
                         </div>
-                        <div className="w-px h-4 bg-gray-200" />
+                        <div className="w-px h-4 bg-gray-200 dark:bg-gray-700" />
                         <div className="flex items-center gap-1.5 text-xs text-gray-400">
                             <FiLock className="text-green-400" size={14}/>
                             <span>PCI DSS Compliant</span>
                         </div>
-                        <div className="w-px h-4 bg-gray-200" />
+                        <div className="w-px h-4 bg-gray-200 dark:bg-gray-700" />
                         <div className="flex items-center gap-1.5 text-xs text-gray-400">
                             <FiShield className="text-green-400" size={14}/>
                             <span>100% Secure</span>
