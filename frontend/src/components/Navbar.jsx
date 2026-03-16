@@ -162,6 +162,8 @@ const Navbar = () => {
         { name: 'Stationery', icon: <FiGrid />, path: '/products?category=stationery' },
         { name: 'Books & Media', icon: <FiGrid />, path: '/products?category=books & media' },
         { name: 'Beauty & Personal Care', icon: <FiGrid />, path: '/products?category=beauty & personal care' },
+        { name: 'Toys & Games', icon: <FiGrid />, path: '/products?category=toys & games' },
+        { name: 'Automotive', icon: <FiGrid />, path: '/products?category=automotive' },
     ];
 
     return (

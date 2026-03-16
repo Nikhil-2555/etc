@@ -66,7 +66,7 @@ const ProductList = () => {
         setFilteredProducts(result);
     }, [products, selectedCategory, sortOrder, priceRange, searchQuery]);
 
-    const categories = ['All', 'Electronics', 'Accessories', 'Clothing', 'Furniture', 'Footwear', 'Sports', 'Home & Kitchen', 'Stationery', 'Books & Media', 'Beauty & Personal Care'];
+    const categories = ['All', 'Electronics', 'Accessories', 'Clothing', 'Furniture', 'Footwear', 'Sports', 'Home & Kitchen', 'Stationery', 'Books & Media', 'Beauty & Personal Care', 'Toys & Games', 'Automotive'];
 
     return (
         <div className="max-w-[1920px] mx-auto px-6 py-8">

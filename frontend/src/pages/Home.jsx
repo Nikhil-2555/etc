@@ -30,6 +30,8 @@ const Home = () => {
         { name: 'Sports', icon: <FiSpeaker />, color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400', slug: 'sports' },
         { name: 'Beauty & Personal Care', icon: <FiCodesandbox />, color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400', slug: 'beauty & personal care' },
         { name: 'Books & Media', icon: <FiMonitor />, color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400', slug: 'books & media' },
+        { name: 'Toys & Games', icon: <FiCodesandbox />, color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/40 dark:text-cyan-400', slug: 'toys & games' },
+        { name: 'Automotive', icon: <FiMonitor />, color: 'bg-slate-100 text-slate-600 dark:bg-slate-900/40 dark:text-slate-400', slug: 'automotive' },
     ];
 
     return (
