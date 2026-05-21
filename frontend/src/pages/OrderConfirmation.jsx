@@ -15,14 +15,6 @@ const CANCEL_REASONS = [
     { id: 'payment_issue', label: 'Payment or pricing issue', icon: '💳' },
 ];
 
-const CANCEL_REASONS = [
-    { id: 'changed_mind', label: 'Changed my mind', icon: '🤔' },
-    { id: 'found_cheaper', label: 'Found a better price elsewhere', icon: '💰' },
-    { id: 'ordered_mistake', label: 'Ordered by mistake', icon: '❌' },
-    { id: 'delivery_time', label: 'Delivery time is too long', icon: '⏳' },
-    { id: 'wrong_item', label: 'Ordered wrong item / size', icon: '📦' },
-    { id: 'payment_issue', label: 'Payment or pricing issue', icon: '💳' },
-];
 
 const OrderConfirmation = () => {
     const navigate = useNavigate();

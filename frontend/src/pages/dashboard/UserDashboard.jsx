@@ -3,9 +3,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { FiBox, FiUser, FiSettings, FiLogOut, FiCalendar, FiMail, FiMapPin, FiShoppingBag, FiInfo, FiEdit2, FiTrash2, FiSave, FiX, FiAlertTriangle, FiMessageSquare, FiDownload } from 'react-icons/fi';
+import { FiBox, FiUser, FiSettings, FiLogOut, FiCalendar, FiMail, FiMapPin, FiShoppingBag, FiInfo, FiEdit2, FiTrash2, FiSave, FiX, FiAlertTriangle, FiMessageSquare, FiDownload, FiFileText, FiEye } from 'react-icons/fi';
 import generateInvoice from '../../utils/generateInvoice';
-import { FiBox, FiUser, FiSettings, FiLogOut, FiCalendar, FiMail, FiMapPin, FiShoppingBag, FiInfo, FiEdit2, FiTrash2, FiSave, FiX, FiAlertTriangle, FiMessageSquare, FiFileText, FiEye } from 'react-icons/fi';
 import { fetchMyOrders, updateProfile as updateUserProfileAPI, deleteAccount, cancelOrder, fetchActiveCoupons, fetchProfile } from '../../services/api';
 import { toast } from 'react-hot-toast';
 

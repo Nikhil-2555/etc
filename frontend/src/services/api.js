@@ -97,13 +97,16 @@ export const simulatePayment = async (orderId) => {
 };
 
 // Stripe Payment APIs
-export const createPaymentIntent = async (amount, currency = 'inr', orderId = '') => {
+export const createPaymentIntentStripe = async (amount, currency = 'inr', orderId = '') => {
     const { data } = await api.post('/payment/create-payment-intent', { amount, currency, orderId });
     return data;
 };
 
 export const confirmStripePayment = async (paymentIntentId, orderId) => {
     const { data } = await api.post('/payment/confirm', { paymentIntentId, orderId });
+    return data;
+};
+
 export const createPaymentIntent = async (orderId) => {
     const { data } = await api.post(`/orders/${orderId}/create-payment-intent`);
     return data;
@@ -139,12 +142,6 @@ export const parseVoiceCommand = async (text) => {
     return data;
 };
 
-export const transcribeAudio = async (audioBlob) => {
-    const formData = new FormData();
-    formData.append('audio', audioBlob, 'voice_recording.webm');
-    const { data } = await api.post('/ai/transcribe', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-    });
 export const transcribeAudio = async (audioBlob) => {
     const formData = new FormData();
     // Use 'audio.webm' as a default extension for browser-recorded media

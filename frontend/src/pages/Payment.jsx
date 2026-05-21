@@ -19,7 +19,6 @@ const CheckoutForm = ({ orderId }) => {
     const stripe = useStripe();
     const elements = useElements();
     const navigate = useNavigate();
-    const { orderId } = useParams();
     const location = useLocation();
     const stateMethodId = location.state?.methodId;
     const meta = (stateMethodId && METHOD_META[stateMethodId]) ? METHOD_META[stateMethodId] : DEFAULT_META;
