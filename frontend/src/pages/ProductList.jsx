@@ -171,8 +171,22 @@ const ProductList = () => {
                 <div className="flex-1">
                     {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                            {[1, 2, 3, 4, 5, 6].map(i => (
-                                <div key={i} className="animate-pulse bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 h-96"></div>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+                                <div key={i} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 h-[420px] flex flex-col justify-between">
+                                    <div className="space-y-4">
+                                        {/* Image skeleton */}
+                                        <div className="aspect-[4/5] w-full rounded-xl shimmer-bg" />
+                                        {/* Category skeleton */}
+                                        <div className="h-3 w-1/4 rounded shimmer-bg" />
+                                        {/* Title skeleton */}
+                                        <div className="h-5 w-3/4 rounded shimmer-bg" />
+                                    </div>
+                                    {/* Price and Cart Button skeleton */}
+                                    <div className="flex justify-between items-center mt-4">
+                                        <div className="h-7 w-1/3 rounded shimmer-bg" />
+                                        <div className="h-10 w-10 rounded-xl shimmer-bg" />
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     ) : filteredProducts.length > 0 ? (
@@ -185,22 +199,28 @@ const ProductList = () => {
                                 <div className="flex flex-col gap-6 animate-auto-scroll-y">
                                     {/* First Set */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                                        {filteredProducts.map(product => (
-                                            <ProductCard key={product._id || product.id} product={product} />
+                                        {filteredProducts.map((product, idx) => (
+                                            <div key={product._id || product.id} style={{ animationDelay: `${idx * 50}ms` }} className="animate-fade-slide-up">
+                                                <ProductCard product={product} />
+                                            </div>
                                         ))}
                                     </div>
                                     {/* Second Set for seamless loop */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                                        {filteredProducts.map(product => (
-                                            <ProductCard key={(product._id || product.id) + '-dup'} product={product} />
+                                        {filteredProducts.map((product, idx) => (
+                                            <div key={(product._id || product.id) + '-dup'} style={{ animationDelay: `${idx * 50}ms` }} className="animate-fade-slide-up">
+                                                <ProductCard product={product} />
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                                {filteredProducts.map(product => (
-                                    <ProductCard key={product._id || product.id} product={product} />
+                                {filteredProducts.map((product, idx) => (
+                                    <div key={product._id || product.id} style={{ animationDelay: `${idx * 50}ms` }} className="animate-fade-slide-up">
+                                        <ProductCard product={product} />
+                                    </div>
                                 ))}
                             </div>
                         )
@@ -217,6 +237,38 @@ const ProductList = () => {
                     )}
                 </div>
             </div>
+            
+            {/* Scoped CSS animations for Shimmer and Stagger */}
+            <style dangerouslySetInnerHTML={{__html: `
+                @keyframes shimmer {
+                    0% { background-position: -200% 0; }
+                    100% { background-position: 200% 0; }
+                }
+                .shimmer-bg {
+                    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+                    background-size: 200% 100%;
+                    animation: shimmer 1.6s infinite linear;
+                }
+                .dark .shimmer-bg {
+                    background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+                    background-size: 200% 100%;
+                    animation: shimmer 1.6s infinite linear;
+                }
+                @keyframes fadeSlideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(24px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                .animate-fade-slide-up {
+                    opacity: 0;
+                    animation: fadeSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+            `}} />
         </div>
     );
 };

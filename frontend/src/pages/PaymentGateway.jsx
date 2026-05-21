@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchOrderById, createPaymentIntent, confirmStripePayment } from '../services/api';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import {
     FiCreditCard, FiShield,
     FiChevronRight, FiLock, FiArrowLeft
@@ -65,7 +65,21 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
     const navigate = useNavigate();
     const [processing, setProcessing] = useState(false);
     const [cardError, setCardError] = useState('');
-    const [cardComplete, setCardComplete] = useState(false);
+    
+    // Split Stripe elements completion states
+    const [numComplete, setNumComplete] = useState(false);
+    const [expComplete, setExpComplete] = useState(false);
+    const [cvcComplete, setCvcComplete] = useState(false);
+    const isSplitComplete = numComplete && expComplete && cvcComplete;
+
+    // Mockup states for 3D Card
+    const [cardholderName, setCardholderName] = useState('');
+    const [cardBrand, setCardBrand] = useState('unknown');
+    const [isFlipped, setIsFlipped] = useState(false);
+    const [cardNumberText, setCardNumberText] = useState('');
+    const [cardExpiryText, setCardExpiryText] = useState('');
+    const [cardCvcText, setCardCvcText] = useState('');
+    const [focusedField, setFocusedField] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -76,12 +90,15 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
 
         try {
             // Step 1: Create PaymentIntent on the backend
-            const { clientSecret } = await createPaymentIntent(orderAmount, 'inr', orderId);
+            const { clientSecret } = await createPaymentIntent(orderId);
 
             // Step 2: Confirm the card payment using Stripe.js
             const result = await stripe.confirmCardPayment(clientSecret, {
                 payment_method: {
-                    card: elements.getElement(CardElement),
+                    card: elements.getElement(CardNumberElement),
+                    billing_details: {
+                        name: cardholderName || 'Stripe Customer',
+                    }
                 },
             });
 
@@ -141,36 +158,68 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
                     </div>
                 </div>
 
-                {/* Visual Card Preview */}
-                <div className={`relative w-full max-w-md mx-auto h-48 rounded-2xl bg-gray-800 p-6 mb-8 overflow-hidden`}>
-                    {/* Background pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-4 right-4 w-32 h-32 rounded-full border-2 border-white" />
-                        <div className="absolute top-8 right-8 w-24 h-24 rounded-full border-2 border-white" />
-                        <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full border-2 border-white" />
-                    </div>
+                {/* 3D Flipping Card Preview */}
+                <div className="w-full max-w-md mx-auto aspect-[1.586/1] perspective-1000 mb-8 cursor-pointer relative" onClick={() => setIsFlipped(!isFlipped)}>
+                    <div className={`w-full h-full duration-700 transform-style-3d transition-transform relative ${isFlipped ? 'rotate-y-180' : ''}`}>
+                        
+                        {/* Front Face */}
+                        <div className="absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-950 p-6 flex flex-col justify-between text-white backface-hidden shadow-2xl border border-white/10 overflow-hidden">
+                            <div className="absolute -inset-1/2 bg-gradient-to-tr from-transparent via-white/5 to-transparent rotate-45 pointer-events-none" />
+                            
+                            <div className="flex justify-between items-start z-10">
+                                <div className="w-12 h-9 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg flex items-center justify-center shadow-md">
+                                    <div className="w-8 h-6 border border-amber-600/30 rounded-sm grid grid-cols-3 grid-rows-3 opacity-80" />
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-white/50 text-[9px] uppercase tracking-wider block font-bold">Stripe Card</span>
+                                    <span className="text-xs font-bold uppercase tracking-wider text-primary-400">Test Mode</span>
+                                </div>
+                            </div>
 
-                    {/* Chip */}
-                    <div className="relative">
-                        <div className="w-12 h-9 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-lg mb-6 flex items-center justify-center">
-                            <div className="w-8 h-5 border border-yellow-600/30 rounded-sm" />
-                        </div>
-
-                        <p className="text-white text-xl font-mono tracking-[0.2em] mb-6">
-                            •••• •••• •••• ••••
-                        </p>
-
-                        <div className="flex items-end justify-between">
-                            <div>
-                                <p className="text-white/50 text-[10px] uppercase tracking-wider mb-0.5">Secure Payment</p>
-                                <p className="text-white font-bold text-sm uppercase tracking-wide">
-                                    STRIPE TEST MODE
+                            <div className="z-10 my-auto py-2">
+                                <p className="text-white text-lg md:text-xl font-mono tracking-[0.18em]">
+                                    {cardNumberText || '•••• •••• •••• ••••'}
                                 </p>
                             </div>
-                            <div className="text-right">
-                                <p className="text-white/50 text-[10px] uppercase tracking-wider mb-0.5">{methodData.name}</p>
-                                <p className="text-white font-bold text-sm font-mono">
-                                    ₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}
+
+                            <div className="flex justify-between items-end z-10">
+                                <div className="max-w-[70%]">
+                                    <p className="text-white/40 text-[9px] uppercase tracking-widest font-bold">Card Holder</p>
+                                    <p className="text-sm font-semibold uppercase tracking-wider truncate">
+                                        {cardholderName || 'Stripe Customer'}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-white/40 text-[9px] uppercase tracking-widest font-bold">Expires</p>
+                                    <p className="text-sm font-semibold font-mono">
+                                        {cardExpiryText || 'MM/YY'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Back Face */}
+                        <div className="absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-br from-indigo-950 via-gray-900 to-black p-6 flex flex-col justify-between text-white backface-hidden rotate-y-180 shadow-2xl border border-white/10 overflow-hidden">
+                            <div className="absolute left-0 top-6 w-full h-11 bg-black/90" />
+                            
+                            <div className="mt-14 w-full space-y-2 z-10">
+                                <div className="flex justify-between items-center px-1">
+                                    <span className="text-[9px] text-white/50 uppercase tracking-wider font-semibold">Authorized Signature</span>
+                                    <span className="text-[9px] text-white/50 uppercase tracking-wider font-semibold">CVC</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="flex-1 h-9 bg-white/15 rounded-l-md flex items-center justify-start pl-3 font-serif italic text-white/70 text-xs select-none">
+                                        Stripe Test Card
+                                    </div>
+                                    <div className="w-14 h-9 bg-white text-black font-mono font-bold text-center flex items-center justify-center rounded-r-md text-base select-none">
+                                        {cardCvcText || '•••'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="text-center mt-auto z-10">
+                                <p className="text-[8px] text-white/30 font-medium">
+                                    This is a secure Stripe test card environment.
                                 </p>
                             </div>
                         </div>
@@ -179,39 +228,104 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
 
                 {/* Stripe Card Form */}
                 <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 md:p-8 space-y-5">
-
-                    {/* Stripe CardElement */}
+                    
+                    {/* Cardholder Name */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Card Details</label>
-                        <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100'}`}>
-                            <CardElement
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Cardholder Name</label>
+                        <input
+                            type="text"
+                            value={cardholderName}
+                            onChange={(e) => setCardholderName(e.target.value)}
+                            placeholder="e.g. John Doe"
+                            className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 transition-colors bg-white text-gray-900 text-sm font-medium"
+                            required
+                        />
+                    </div>
+
+                    {/* Card Number element */}
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Card Number</label>
+                        <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 bg-white'}`}>
+                            <CardNumberElement
                                 options={CARD_ELEMENT_OPTIONS}
+                                onFocus={() => { setFocusedField('number'); setIsFlipped(false); }}
                                 onChange={(e) => {
-                                    setCardComplete(e.complete);
+                                    setNumComplete(e.complete);
+                                    setCardBrand(e.brand);
+                                    if (e.complete) {
+                                        setCardNumberText('4242 4242 4242 4242');
+                                    } else if (!e.empty) {
+                                        setCardNumberText('4242 4242 •••• ••••');
+                                    } else {
+                                        setCardNumberText('');
+                                    }
                                     setCardError(e.error ? e.error.message : '');
                                 }}
                             />
                         </div>
-                        {cardError && <p className="text-xs text-red-500 mt-1.5 font-medium">{cardError}</p>}
-                        <p className="text-xs text-gray-400 mt-2">
-                            Test card: <span className="font-mono font-bold text-gray-500">4242 4242 4242 4242</span> • Any future date • Any CVC
-                        </p>
                     </div>
+
+                    {/* Expiry and CVC elements in grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Expiry Date</label>
+                            <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 bg-white'}`}>
+                                <CardExpiryElement
+                                    options={CARD_ELEMENT_OPTIONS}
+                                    onFocus={() => { setFocusedField('expiry'); setIsFlipped(false); }}
+                                    onChange={(e) => {
+                                        setExpComplete(e.complete);
+                                        if (e.complete) {
+                                            setCardExpiryText('12/28');
+                                        } else {
+                                            setCardExpiryText('');
+                                        }
+                                        setCardError(e.error ? e.error.message : '');
+                                    }}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">CVC / CVV</label>
+                            <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 bg-white'}`}>
+                                <CardCvcElement
+                                    options={CARD_ELEMENT_OPTIONS}
+                                    onFocus={() => { setFocusedField('cvc'); setIsFlipped(true); }}
+                                    onBlur={() => { setFocusedField(''); setIsFlipped(false); }}
+                                    onChange={(e) => {
+                                        setCvcComplete(e.complete);
+                                        if (e.complete) {
+                                            setCardCvcText('123');
+                                        } else {
+                                            setCardCvcText('');
+                                        }
+                                        setCardError(e.error ? e.error.message : '');
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {cardError && <p className="text-xs text-red-500 mt-1 font-medium">{cardError}</p>}
+                    
+                    <p className="text-xs text-gray-400 mt-1">
+                        Test card number: <span className="font-mono font-bold text-gray-500">4242 4242 4242 4242</span> • Any future date • Any CVC
+                    </p>
 
                     {/* Security note */}
                     <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                         <FiShield className="text-green-500 flex-shrink-0" size={16} />
                         <p className="text-xs text-green-700 font-medium">
-                            Your card details are handled securely by Stripe. We never see your full card number.
+                            Your card details are handled securely by Stripe. We never store credit credentials.
                         </p>
                     </div>
 
                     {/* Pay Button */}
                     <button
                         type="submit"
-                        disabled={!stripe || !cardComplete || processing}
+                        disabled={!stripe || !isSplitComplete || processing}
                         className={`w-full py-4 rounded-xl font-bold text-white text-lg transition-all flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] ${
-                            !stripe || !cardComplete || processing
+                            !stripe || !isSplitComplete || processing
                                 ? 'bg-gray-300 cursor-not-allowed'
                                 : 'bg-gray-900 hover:bg-primary-600'
                         }`}
@@ -231,6 +345,22 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
                             </>
                         )}
                     </button>
+
+                    {/* Local styles for 3D card flipping */}
+                    <style dangerouslySetInnerHTML={{__html: `
+                        .perspective-1000 {
+                            perspective: 1000px;
+                        }
+                        .transform-style-3d {
+                            transform-style: preserve-3d;
+                        }
+                        .backface-hidden {
+                            backface-visibility: hidden;
+                        }
+                        .rotate-y-180 {
+                            transform: rotateY(180deg);
+                        }
+                    `}} />
                 </form>
 
                 {/* Security Footer */}
@@ -340,6 +470,7 @@ const PaymentGateway = () => {
     const [orderData, setOrderData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showStripeForm, setShowStripeForm] = useState(false);
+    const redirectTimerRef = useRef(null);
 
     useEffect(() => {
         const loadOrder = async () => {

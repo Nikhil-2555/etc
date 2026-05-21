@@ -14,8 +14,26 @@ const Signup = () => {
         initialValues: { name: '', email: '', password: '', confirmPassword: '' },
         validate: values => {
             const errors = {};
-            if (values.password !== values.confirmPassword) errors.confirmPassword = 'Passwords do not match';
-            if (values.password.length < 6) errors.password = 'Password must be at least 6 characters';
+            if (!values.name) {
+                errors.name = 'Full name is required';
+            } else if (values.name.trim().length < 2) {
+                errors.name = 'Name must be at least 2 characters';
+            }
+            if (!values.email) {
+                errors.email = 'Email is required';
+            } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+                errors.email = 'Invalid email address';
+            }
+            if (!values.password) {
+                errors.password = 'Password is required';
+            } else if (values.password.length < 6) {
+                errors.password = 'Password must be at least 6 characters';
+            }
+            if (!values.confirmPassword) {
+                errors.confirmPassword = 'Please confirm your password';
+            } else if (values.password !== values.confirmPassword) {
+                errors.confirmPassword = 'Passwords do not match';
+            }
             return errors;
         },
         onSubmit: async (values) => {
@@ -203,6 +221,23 @@ const Signup = () => {
                     font-size: 0.75rem;
                     font-weight: 500;
                     margin-top: 0.375rem;
+                    animation: shakeIn 0.3s ease;
+                }
+
+                .form-input.input-error {
+                    border-color: #ef4444;
+                    background-color: #fef2f2;
+                }
+
+                .form-input.input-error:focus {
+                    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+                    border-color: #ef4444;
+                }
+
+                @keyframes shakeIn {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-4px); }
+                    75% { transform: translateX(4px); }
                 }
 
                 .signup-btn {
@@ -300,14 +335,15 @@ const Signup = () => {
                                     id="name"
                                     name="name"
                                     type="text"
-                                    required
                                     value={formik.values.name}
                                     onChange={formik.handleChange}
-                                    className="form-input"
+                                    onBlur={formik.handleBlur}
+                                    className={`form-input ${formik.touched.name && formik.errors.name ? 'input-error' : ''}`}
                                     placeholder="John Doe"
                                 />
                                 <div className="input-icon"><FiUser size={18} /></div>
                             </div>
+                            {formik.touched.name && formik.errors.name && <span className="error-message">{formik.errors.name}</span>}
                         </div>
 
                         <div className="form-group">
@@ -317,14 +353,15 @@ const Signup = () => {
                                     id="email"
                                     name="email"
                                     type="email"
-                                    required
                                     value={formik.values.email}
                                     onChange={formik.handleChange}
-                                    className="form-input"
+                                    onBlur={formik.handleBlur}
+                                    className={`form-input ${formik.touched.email && formik.errors.email ? 'input-error' : ''}`}
                                     placeholder="you@example.com"
                                 />
                                 <div className="input-icon"><FiMail size={18} /></div>
                             </div>
+                            {formik.touched.email && formik.errors.email && <span className="error-message">{formik.errors.email}</span>}
                         </div>
 
                         <div className="form-group">
@@ -334,15 +371,15 @@ const Signup = () => {
                                     id="password"
                                     name="password"
                                     type="password"
-                                    required
                                     value={formik.values.password}
                                     onChange={formik.handleChange}
-                                    className="form-input"
+                                    onBlur={formik.handleBlur}
+                                    className={`form-input ${formik.touched.password && formik.errors.password ? 'input-error' : ''}`}
                                     placeholder="Create a strong password"
                                 />
                                 <div className="input-icon"><FiLock size={18} /></div>
                             </div>
-                            {formik.errors.password && <span className="error-message">{formik.errors.password}</span>}
+                            {formik.touched.password && formik.errors.password && <span className="error-message">{formik.errors.password}</span>}
                         </div>
 
                         <div className="form-group">
@@ -352,15 +389,15 @@ const Signup = () => {
                                     id="confirmPassword"
                                     name="confirmPassword"
                                     type="password"
-                                    required
                                     value={formik.values.confirmPassword}
                                     onChange={formik.handleChange}
-                                    className="form-input"
+                                    onBlur={formik.handleBlur}
+                                    className={`form-input ${formik.touched.confirmPassword && formik.errors.confirmPassword ? 'input-error' : ''}`}
                                     placeholder="Confirm your password"
                                 />
                                 <div className="input-icon"><FiLock size={18} /></div>
                             </div>
-                            {formik.errors.confirmPassword && <span className="error-message">{formik.errors.confirmPassword}</span>}
+                            {formik.touched.confirmPassword && formik.errors.confirmPassword && <span className="error-message">{formik.errors.confirmPassword}</span>}
                         </div>
 
                         <button type="submit" className="signup-btn" disabled={isLoading}>

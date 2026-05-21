@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchOrderById, cancelOrder } from '../services/api';
-import { FiCheckCircle, FiPackage, FiTruck, FiShoppingBag, FiArrowRight, FiCopy, FiX, FiAlertTriangle, FiMessageSquare, FiDownload } from 'react-icons/fi';
+import { FiCheckCircle, FiPackage, FiTruck, FiShoppingBag, FiArrowRight, FiCopy, FiX, FiAlertTriangle, FiMessageSquare, FiDownload, FiFileText } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import generateInvoice from '../utils/generateInvoice';

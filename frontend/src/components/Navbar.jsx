@@ -1,4 +1,4 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -6,18 +6,19 @@ import { useTheme } from '../context/ThemeContext';
 import { useCompare } from '../context/CompareContext';
 import {
     FiShoppingCart, FiUser, FiLogOut, FiMenu, FiSearch, FiHeart, FiBell,
-    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle, FiLayers, FiMic
+    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle, FiLayers, FiMic, FiTrash2, FiMinus, FiPlus, FiArrowRight
 } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
 import { searchProducts, parseVoiceCommand, transcribeAudio } from '../services/api';
 
 const Navbar = () => {
-    const { totalItems } = useCart();
+    const { totalItems, cart, removeFromCart, updateQuantity, totalPrice } = useCart();
     const { totalWishlistItems } = useWishlist();
     const { compareItems } = useCompare();
     const { user, logout } = useAuth();
     const { darkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
@@ -28,6 +29,19 @@ const Navbar = () => {
     const [voiceText, setVoiceText] = useState('');
     const [voiceError, setVoiceError] = useState('');
     const [voiceStatus, setVoiceStatus] = useState(''); // 'recording', 'processing'
+    
+    // Animation and drawer states
+    const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
+    const [pulseCart, setPulseCart] = useState(false);
+    const [pulseWishlist, setPulseWishlist] = useState(false);
+    const [pulseCompare, setPulseCompare] = useState(false);
+
+    const prevCartCount = useRef(totalItems);
+    const prevWishlistCount = useRef(totalWishlistItems);
+    const prevCompareCount = useRef(compareItems.length);
+
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
     const userMenuRef = useRef(null);
@@ -50,6 +64,52 @@ const Navbar = () => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Smart Scroll visibility and close dropdowns on scroll down
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            if (currentScrollY > lastScrollY && currentScrollY > 80) {
+                setIsVisible(false); // scrolling down
+                setIsCategoryMenuOpen(false);
+                setIsUserMenuOpen(false);
+                setShowSuggestions(false);
+            } else {
+                setIsVisible(true); // scrolling up
+            }
+            setLastScrollY(currentScrollY);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [lastScrollY]);
+
+    // Badge popup notifications
+    useEffect(() => {
+        if (totalItems > prevCartCount.current) {
+            setPulseCart(true);
+            const timer = setTimeout(() => setPulseCart(false), 500);
+            return () => clearTimeout(timer);
+        }
+        prevCartCount.current = totalItems;
+    }, [totalItems]);
+
+    useEffect(() => {
+        if (totalWishlistItems > prevWishlistCount.current) {
+            setPulseWishlist(true);
+            const timer = setTimeout(() => setPulseWishlist(false), 500);
+            return () => clearTimeout(timer);
+        }
+        prevWishlistCount.current = totalWishlistItems;
+    }, [totalWishlistItems]);
+
+    useEffect(() => {
+        if (compareItems.length > prevCompareCount.current) {
+            setPulseCompare(true);
+            const timer = setTimeout(() => setPulseCompare(false), 500);
+            return () => clearTimeout(timer);
+        }
+        prevCompareCount.current = compareItems.length;
+    }, [compareItems]);
 
     useEffect(() => {
         const fetchSuggestions = async () => {
@@ -304,10 +364,37 @@ const Navbar = () => {
             <nav className="relative z-[100] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
                 <div className="max-w-[1920px] mx-auto px-6 h-20 flex items-center justify-between gap-4 md:gap-8">
 
-                    {/* Logo */}
-                    <Link to="/" className="text-2xl font-bold text-primary-600 tracking-tight flex-shrink-0">
-                        ShopFlow
-                    </Link>
+                    {/* Logo & Main Nav */}
+                    <div className="flex items-center gap-8 flex-shrink-0">
+                        <Link to="/" className="text-2xl font-bold text-primary-600 tracking-tight">
+                            ShopFlow
+                        </Link>
+                        
+                        <div className="hidden lg:flex items-center space-x-6 relative">
+                            <Link 
+                                to="/" 
+                                className={`py-2 text-sm font-medium transition-colors relative ${
+                                    location.pathname === '/' ? 'text-primary-600' : 'text-gray-600 hover:text-primary-600'
+                                }`}
+                            >
+                                Home
+                                {location.pathname === '/' && (
+                                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full animate-indicator-slide" />
+                                )}
+                            </Link>
+                            <Link 
+                                to="/products" 
+                                className={`py-2 text-sm font-medium transition-colors relative ${
+                                    location.pathname.startsWith('/products') ? 'text-primary-600' : 'text-gray-600 hover:text-primary-600'
+                                }`}
+                            >
+                                Shop
+                                {location.pathname.startsWith('/products') && (
+                                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full animate-indicator-slide" />
+                                )}
+                            </Link>
+                        </div>
+                    </div>
 
                     {/* Desktop Search Bar */}
                     <div className="hidden md:flex flex-1 max-w-2xl relative" ref={searchRef}>
@@ -413,7 +500,7 @@ const Navbar = () => {
                         <Link to="/wishlist" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 transition-colors relative">
                             <FiHeart size={22} />
                             {totalWishlistItems > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                                <span className={`absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseWishlist ? 'animate-badge-pop' : ''}`}>
                                     {totalWishlistItems}
                                 </span>
                             )}
@@ -422,7 +509,7 @@ const Navbar = () => {
                         <Link to="/compare" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 transition-colors relative" aria-label="Compare Products">
                             <FiLayers size={22} />
                             {compareItems.length > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                                <span className={`absolute -top-2 -right-2 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseCompare ? 'animate-badge-pop' : ''}`}>
                                     {compareItems.length}
                                 </span>
                             )}
@@ -437,14 +524,19 @@ const Navbar = () => {
                             </Link>
                         )}
 
-                        <Link to="/cart" className="relative text-gray-600 hover:text-primary-600 transition-colors">
+                        <button 
+                            onClick={() => setIsCartDrawerOpen(true)}
+                            id="desktop-cart-btn"
+                            className="cart-icon-target relative text-gray-600 hover:text-primary-600 transition-colors focus:outline-none"
+                            aria-label="Open Shopping Cart Drawer"
+                        >
                             <FiShoppingCart size={22} />
                             {totalItems > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                                <span className={`absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseCart ? 'animate-badge-pop' : ''}`}>
                                     {totalItems}
                                 </span>
                             )}
-                        </Link>
+                        </button>
 
                         {user ? (
                             <div className="relative" ref={userMenuRef}>
@@ -508,19 +600,24 @@ const Navbar = () => {
                         <Link to="/compare" className="relative text-gray-600 hover:text-primary-600 transition-colors">
                             <FiLayers size={24} />
                             {compareItems.length > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                                <span className={`absolute -top-2 -right-2 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseCompare ? 'animate-badge-pop' : ''}`}>
                                     {compareItems.length}
                                 </span>
                             )}
                         </Link>
-                        <Link to="/cart" className="relative text-gray-600 hover:text-primary-600 transition-colors">
+                        <button 
+                            onClick={() => setIsCartDrawerOpen(true)}
+                            id="mobile-cart-btn"
+                            className="cart-icon-target relative text-gray-600 hover:text-primary-600 transition-colors focus:outline-none"
+                            aria-label="Open Shopping Cart Drawer"
+                        >
                             <FiShoppingCart size={24} />
                             {totalItems > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                                <span className={`absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseCart ? 'animate-badge-pop' : ''}`}>
                                     {totalItems}
                                 </span>
                             )}
-                        </Link>
+                        </button>
                         <button className="text-gray-600" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                             {isMenuOpen ? <FiX size={26} /> : <FiMenu size={26} />}
                         </button>
@@ -631,6 +728,150 @@ const Navbar = () => {
                     </div>
                 )}
             </nav>
+
+            {/* Slide-Over Cart Drawer Backdrop */}
+            <div 
+                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] transition-opacity duration-300 ${
+                    isCartDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+                onClick={() => setIsCartDrawerOpen(false)}
+            />
+
+            {/* Slide-Over Cart Drawer Panel */}
+            <div 
+                className={`fixed top-0 right-0 h-screen w-full sm:max-w-md bg-white dark:bg-gray-900 shadow-2xl z-[9999] flex flex-col transition-transform duration-300 ease-out transform ${
+                    isCartDrawerOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}
+            >
+                {/* Drawer Header */}
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <FiShoppingCart className="text-primary-600" size={20} />
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Shopping Cart</h2>
+                        <span className="bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                            {totalItems} items
+                        </span>
+                    </div>
+                    <button 
+                        onClick={() => setIsCartDrawerOpen(false)}
+                        className="p-1 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                        <FiX size={20} />
+                    </button>
+                </div>
+
+                {/* Drawer Body - Cart Items */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    {cart.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                                <FiShoppingCart size={28} />
+                            </div>
+                            <p className="text-gray-900 dark:text-white font-bold mb-1">Your cart is empty</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mb-6">Start adding some items to see them here.</p>
+                            <button 
+                                onClick={() => { setIsCartDrawerOpen(false); navigate('/products'); }}
+                                className="px-6 py-2.5 bg-gray-900 dark:bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-600 transition-colors text-sm shadow-md"
+                            >
+                                Shop Products
+                            </button>
+                        </div>
+                    ) : (
+                        cart.map((item) => {
+                            const itemId = item._id || item.id;
+                            return (
+                                <div key={`${itemId}-${item.size}`} className="flex gap-4 bg-gray-50 dark:bg-gray-800/40 p-3 rounded-xl border border-gray-100/50 dark:border-gray-700/50 hover:shadow-sm transition-shadow">
+                                    <div className="w-16 h-16 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-1 flex-shrink-0 flex items-center justify-center">
+                                        <img src={item.image} alt={item.title} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">{item.title}</h4>
+                                        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-gray-500">
+                                            <span>{item.category}</span>
+                                            {item.size && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span className="font-semibold text-primary-600 dark:text-primary-400">Size {item.size}</span>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center justify-between mt-2">
+                                            <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800">
+                                                <button 
+                                                    onClick={() => updateQuantity(itemId, item.size, Math.max(1, item.quantity - 1))}
+                                                    className="p-1 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+                                                >
+                                                    <FiMinus size={10} />
+                                                </button>
+                                                <span className="px-2 font-medium text-gray-900 dark:text-white text-xs w-6 text-center">{item.quantity}</span>
+                                                <button 
+                                                    onClick={() => updateQuantity(itemId, item.size, item.quantity + 1)}
+                                                    className="p-1 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+                                                >
+                                                    <FiPlus size={10} />
+                                                </button>
+                                            </div>
+                                            <span className="text-sm font-bold text-primary-600 dark:text-primary-400">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => removeFromCart(itemId, item.size)}
+                                        className="text-gray-400 hover:text-red-500 transition-colors p-1 self-start"
+                                        title="Remove item"
+                                    >
+                                        <FiTrash2 size={15} />
+                                    </button>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+
+                {/* Drawer Footer */}
+                {cart.length > 0 && (
+                    <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/20 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-gray-500 text-sm">Estimated Total</span>
+                            <span className="text-xl font-bold text-primary-600 dark:text-primary-400">₹{totalPrice.toLocaleString('en-IN')}</span>
+                        </div>
+                        <p className="text-xs text-gray-400">Taxes, shipping, and discounts calculated at checkout.</p>
+                        <div className="space-y-2">
+                            <button
+                                onClick={() => { setIsCartDrawerOpen(false); navigate('/checkout'); }}
+                                className="w-full bg-gray-900 dark:bg-primary-600 text-white rounded-xl py-3 font-semibold text-center hover:bg-primary-600 dark:hover:bg-primary-700 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95"
+                            >
+                                Checkout <FiArrowRight size={16} />
+                            </button>
+                            <button
+                                onClick={() => { setIsCartDrawerOpen(false); navigate('/cart'); }}
+                                className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl py-2.5 font-medium text-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+                            >
+                                View Detailed Cart
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Custom Scoped Animations */}
+            <style dangerouslySetInnerHTML={{__html: `
+                @keyframes badgePop {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.4); }
+                    100% { transform: scale(1); }
+                }
+                .animate-badge-pop {
+                    animation: badgePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                @keyframes indicatorSlide {
+                    from { transform: scaleX(0); opacity: 0; }
+                    to { transform: scaleX(1); opacity: 1; }
+                }
+                .animate-indicator-slide {
+                    animation: indicatorSlide 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+                    transform-origin: center;
+                }
+            `}} />
         </div>
     );
 };

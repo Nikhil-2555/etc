@@ -31,6 +31,30 @@ const Checkout = () => {
             city: '',
             postalCode: '',
         },
+        validate: values => {
+            const errors = {};
+            if (!values.firstName.trim()) errors.firstName = 'First name is required';
+            if (!values.lastName.trim()) errors.lastName = 'Last name is required';
+            if (!values.email) {
+                errors.email = 'Email is required';
+            } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+                errors.email = 'Invalid email address';
+            }
+            if (!values.address.trim()) {
+                errors.address = 'Street address is required';
+            } else if (values.address.trim().length < 5) {
+                errors.address = 'Please enter a complete address';
+            }
+            if (!values.city.trim()) {
+                errors.city = 'City is required';
+            }
+            if (!values.postalCode.trim()) {
+                errors.postalCode = 'Postal code is required';
+            } else if (!/^[1-9][0-9]{5}$/.test(values.postalCode.trim())) {
+                errors.postalCode = 'Enter a valid 6-digit postal code';
+            }
+            return errors;
+        },
         onSubmit: () => {
             setShippingComplete(true);
             toast.success('Shipping details saved!');
@@ -173,57 +197,63 @@ const Checkout = () => {
                                                 <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">First Name</label>
                                                 <input
                                                     type="text" name="firstName"
-                                                    onChange={formik.handleChange} value={formik.values.firstName}
-                                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                                    placeholder="John" required
+                                                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.firstName}
+                                                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.firstName && formik.errors.firstName ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                    placeholder="John"
                                                 />
+                                                {formik.touched.firstName && formik.errors.firstName && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.firstName}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Last Name</label>
                                                 <input
                                                     type="text" name="lastName"
-                                                    onChange={formik.handleChange} value={formik.values.lastName}
-                                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                                    placeholder="Doe" required
+                                                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.lastName}
+                                                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.lastName && formik.errors.lastName ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                    placeholder="Doe"
                                                 />
+                                                {formik.touched.lastName && formik.errors.lastName && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.lastName}</p>}
                                             </div>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Email Address</label>
                                             <input
                                                 type="email" name="email"
-                                                onChange={formik.handleChange} value={formik.values.email}
-                                                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                                placeholder="john@example.com" required
+                                                onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.email}
+                                                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.email && formik.errors.email ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                placeholder="john@example.com"
                                             />
+                                            {formik.touched.email && formik.errors.email && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.email}</p>}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Street Address</label>
                                             <input
                                                 type="text" name="address"
-                                                onChange={formik.handleChange} value={formik.values.address}
-                                                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                                placeholder="123 Main Street" required
+                                                onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.address}
+                                                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.address && formik.errors.address ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                placeholder="123 Main Street"
                                             />
+                                            {formik.touched.address && formik.errors.address && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.address}</p>}
                                         </div>
                                         <div className="grid grid-cols-2 gap-5">
                                             <div>
                                                 <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">City</label>
                                                 <input
                                                     type="text" name="city"
-                                                    onChange={formik.handleChange} value={formik.values.city}
-                                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                                    placeholder="Mumbai" required
+                                                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.city}
+                                                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.city && formik.errors.city ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                    placeholder="Mumbai"
                                                 />
+                                                {formik.touched.city && formik.errors.city && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.city}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Postal Code</label>
                                                 <input
                                                     type="text" name="postalCode"
-                                                    onChange={formik.handleChange} value={formik.values.postalCode}
-                                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                                    placeholder="400001" required
+                                                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.postalCode}
+                                                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.postalCode && formik.errors.postalCode ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                    placeholder="400001" maxLength={6}
                                                 />
+                                                {formik.touched.postalCode && formik.errors.postalCode && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.postalCode}</p>}
                                             </div>
                                         </div>
                                         <button

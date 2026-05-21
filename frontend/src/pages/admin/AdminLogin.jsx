@@ -12,6 +12,20 @@ const AdminLogin = () => {
 
     const formik = useFormik({
         initialValues: { email: '', password: '' },
+        validate: values => {
+            const errors = {};
+            if (!values.email) {
+                errors.email = 'Email is required';
+            } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+                errors.email = 'Invalid email address';
+            }
+            if (!values.password) {
+                errors.password = 'Password is required';
+            } else if (values.password.length < 6) {
+                errors.password = 'Password must be at least 6 characters';
+            }
+            return errors;
+        },
         onSubmit: async (values) => {
             setIsLoading(true);
             try {
@@ -223,6 +237,31 @@ const AdminLogin = () => {
                     color: #64748b;
                 }
 
+                .field-error {
+                    display: block;
+                    color: #ef4444;
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                    margin-top: 0.375rem;
+                    animation: shakeIn 0.3s ease;
+                }
+
+                .form-input.input-error {
+                    border-color: #ef4444;
+                    background-color: #fef2f2;
+                }
+
+                .form-input.input-error:focus {
+                    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+                    border-color: #ef4444;
+                }
+
+                @keyframes shakeIn {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-4px); }
+                    75% { transform: translateX(4px); }
+                }
+
                 .spinner {
                     width: 18px;
                     height: 18px;
@@ -265,14 +304,15 @@ const AdminLogin = () => {
                                 <input 
                                     type="email" 
                                     name="email" 
-                                    required 
                                     value={formik.values.email} 
                                     onChange={formik.handleChange} 
-                                    className="form-input" 
+                                    onBlur={formik.handleBlur}
+                                    className={`form-input ${formik.touched.email && formik.errors.email ? 'input-error' : ''}`}
                                     placeholder="admin@shop.com" 
                                 />
                                 <div className="input-icon"><FiMail size={18} /></div>
                             </div>
+                            {formik.touched.email && formik.errors.email && <span className="field-error">{formik.errors.email}</span>}
                         </div>
 
                         <div className="form-group">
@@ -281,14 +321,15 @@ const AdminLogin = () => {
                                 <input 
                                     type="password" 
                                     name="password" 
-                                    required 
                                     value={formik.values.password} 
                                     onChange={formik.handleChange} 
-                                    className="form-input" 
+                                    onBlur={formik.handleBlur}
+                                    className={`form-input ${formik.touched.password && formik.errors.password ? 'input-error' : ''}`}
                                     placeholder="••••••••" 
                                 />
                                 <div className="input-icon"><FiLock size={18} /></div>
                             </div>
+                            {formik.touched.password && formik.errors.password && <span className="field-error">{formik.errors.password}</span>}
                         </div>
 
                         <button type="submit" className="admin-btn" disabled={isLoading}>
