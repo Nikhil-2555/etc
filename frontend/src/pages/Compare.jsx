@@ -83,16 +83,16 @@ const Compare = () => {
         return (
             <div className="min-h-[70vh] flex items-center justify-center px-4">
                 <div className="text-center max-w-md">
-                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-primary-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-100">
+                    <div className="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-primary-100">
                         <FiLayers className="text-indigo-500" size={40} />
                     </div>
-                    <h1 className="text-3xl font-black text-gray-900 mb-3">Compare Products</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-3">Compare Products</h1>
                     <p className="text-gray-500 mb-8 leading-relaxed">
                         Add products to your comparison list to see them side by side. You can compare up to 4 products at a time.
                     </p>
                     <Link
                         to="/products"
-                        className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold hover:from-primary-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-primary-600/30 active:scale-[0.98]"
+                        className="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-600 transition-colors"
                     >
                         Browse Products <FiArrowRight />
                     </Link>
@@ -111,7 +111,7 @@ const Compare = () => {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Icon className="text-primary-600" size={16} />
-                        <span className="text-sm font-black text-gray-900 uppercase tracking-wider">{title}</span>
+                        <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">{title}</span>
                         {badge && (
                             <span className="bg-primary-100 text-primary-700 text-[10px] font-bold px-2 py-0.5 rounded-full">{badge}</span>
                         )}
@@ -137,13 +137,13 @@ const Compare = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-[1600px] w-full mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                            <div className="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center text-white">
                                 <FiLayers size={20} />
                             </div>
                             Compare Products
@@ -181,7 +181,7 @@ const Compare = () => {
                                 </div>
                                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Best Price</span>
                             </div>
-                            <p className="text-sm font-black text-gray-900 line-clamp-1">{lowestPrice?.title}</p>
+                            <p className="text-sm font-bold text-gray-900 line-clamp-1">{lowestPrice?.title}</p>
                             <p className="text-green-600 font-bold text-lg">{formatPrice(lowestPrice?.price)}</p>
                         </div>
                         <div className="bg-white rounded-xl border border-amber-100 p-4 shadow-sm">
@@ -191,7 +191,7 @@ const Compare = () => {
                                 </div>
                                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Top Rated</span>
                             </div>
-                            <p className="text-sm font-black text-gray-900 line-clamp-1">{highestRated?.title}</p>
+                            <p className="text-sm font-bold text-gray-900 line-clamp-1">{highestRated?.title}</p>
                             <p className="text-amber-600 font-bold text-lg">{highestRated?.rating?.rate?.toFixed(1) || 0} ★</p>
                         </div>
                         <div className="bg-white rounded-xl border border-primary-100 p-4 shadow-sm col-span-2 md:col-span-1">
@@ -215,8 +215,8 @@ const Compare = () => {
                             {/* Product Headers */}
                             <thead>
                                 <tr className="border-b border-gray-100">
-                                    <th className="p-5 bg-gradient-to-b from-gray-50 to-white w-48 min-w-[180px] sticky left-0 z-10 border-r border-gray-100">
-                                        <span className="text-sm font-black text-gray-400 uppercase tracking-wider">Features</span>
+                                    <th className="p-5 bg-gray-50 w-48 min-w-[180px] sticky left-0 z-10 border-r border-gray-100">
+                                        <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Features</span>
                                     </th>
                                     {compareItems.map((product) => (
                                         <th key={product._id} className="p-5 text-center min-w-[220px] max-w-[260px] border-l border-gray-100 relative group">
@@ -231,12 +231,12 @@ const Compare = () => {
 
                                             {/* Best Price / Top Rated Badge */}
                                             {compareItems.length >= 2 && lowestPrice?._id === product._id && (
-                                                <div className="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                                                <div className="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                                                     BEST PRICE
                                                 </div>
                                             )}
                                             {compareItems.length >= 2 && highestRated?._id === product._id && lowestPrice?._id !== product._id && (
-                                                <div className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                                                <div className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                                                     TOP RATED
                                                 </div>
                                             )}
@@ -315,7 +315,7 @@ const Compare = () => {
                                                     ? 'bg-green-50'
                                                     : ''
                                                     }`}>
-                                                    <span className={`text-lg font-black ${compareItems.length >= 2 && lowestPrice?._id === product._id
+                                                    <span className={`text-lg font-bold ${compareItems.length >= 2 && lowestPrice?._id === product._id
                                                         ? 'text-green-600'
                                                         : 'text-gray-900'
                                                         }`}>
@@ -356,7 +356,7 @@ const Compare = () => {
                                                 return (
                                                     <td key={product._id} className="px-4 py-4 text-center border-l border-gray-100">
                                                         {savings > 0 ? (
-                                                            <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-black px-2.5 py-1 rounded-full">
+                                                            <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">
                                                                 <FiZap size={10} /> {savings}% OFF
                                                             </span>
                                                         ) : (
@@ -567,7 +567,7 @@ const Compare = () => {
                                             <div className="flex flex-col gap-2">
                                                 <button
                                                     onClick={() => handleAddToCart(product)}
-                                                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white py-2.5 rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+                                                    className="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-primary-600 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
                                                 >
                                                     <FiShoppingCart size={14} />
                                                     {product.sizes && product.sizes.length > 0 ? 'Select Size' : 'Add to Cart'}

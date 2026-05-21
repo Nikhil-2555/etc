@@ -122,14 +122,10 @@ const AIChatWidget = () => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setIsOpen(true)}
-                        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 text-white rounded-full shadow-2xl flex items-center justify-center hover:shadow-primary-500/40 transition-shadow group"
+                        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-700 transition-colors"
                         aria-label="Open AI Shopping Assistant"
                     >
-                        <FiMessageCircle size={28} className="group-hover:hidden" />
-                        <FiCpu size={28} className="hidden group-hover:block animate-pulse" />
-
-                        {/* Pulse ring */}
-                        <span className="absolute w-full h-full rounded-full bg-primary-500 animate-ping opacity-20" />
+                        <FiMessageCircle size={24} />
                     </motion.button>
                 )}
             </AnimatePresence>
@@ -142,18 +138,18 @@ const AIChatWidget = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        className="fixed bottom-6 right-6 z-50 w-[600px] max-w-[calc(100vw-2rem)] h-[800px] max-h-[calc(100vh-3rem)] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden"
+                        className="fixed bottom-6 right-6 z-50 w-[600px] max-w-[calc(100vw-2rem)] h-[800px] max-h-[calc(100vh-3rem)] bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-5 py-4 flex items-center justify-between flex-shrink-0">
+                        <div className="bg-primary-600 px-5 py-4 flex items-center justify-between flex-shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
                                     <FiCpu className="text-white" size={20} />
                                 </div>
                                 <div>
                                     <h3 className="text-white font-bold text-sm">ShopFlow AI</h3>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                                        <span className="w-2 h-2 rounded-full bg-green-400" />
                                         <span className="text-white/80 text-xs">Shopping Assistant</span>
                                     </div>
                                 </div>
@@ -186,7 +182,7 @@ const AIChatWidget = () => {
                                         {/* Avatar */}
                                         <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center mt-1 ${msg.role === 'user'
                                             ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400'
-                                            : 'bg-gradient-to-br from-primary-500 to-primary-700 text-white'
+                                            : 'bg-primary-600 text-white'
                                             }`}>
                                             {msg.role === 'user' ? <FiUser size={14} /> : <FiCpu size={14} />}
                                         </div>
@@ -215,7 +211,7 @@ const AIChatWidget = () => {
                                     className="flex justify-start"
                                 >
                                     <div className="flex gap-2 max-w-[85%]">
-                                        <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700 text-white mt-1">
+                                        <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center bg-primary-600 text-white mt-1">
                                             <FiCpu size={14} className="animate-spin" />
                                         </div>
                                         <div className="bg-gray-100 dark:bg-gray-800 px-5 py-4 rounded-2xl rounded-bl-md">

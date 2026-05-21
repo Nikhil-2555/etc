@@ -47,7 +47,7 @@ const ProductCard = ({ product }) => {
     };
 
     return (
-        <div className="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100 dark:border-gray-700 relative">
+        <div className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden border border-gray-100 dark:border-gray-700 relative">
             <Link to={`/products/${product._id || product.id}`} className="block relative aspect-[4/5] overflow-hidden bg-gray-50 dark:bg-gray-700">
                 <img
                     src={product.image}

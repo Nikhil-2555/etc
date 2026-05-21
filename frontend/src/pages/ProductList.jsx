@@ -11,15 +11,29 @@ const ProductList = () => {
     const [searchParams] = useSearchParams();
     const categoryParam = searchParams.get('category');
     const searchParam = searchParams.get('search');
+    const minPriceParam = searchParams.get('minPrice');
+    const maxPriceParam = searchParams.get('maxPrice');
+    const sortParam = searchParams.get('sort');
+
     const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'All');
-    const [sortOrder, setSortOrder] = useState('popular');
-    const [priceRange, setPriceRange] = useState([0, 200000]);
+    const [sortOrder, setSortOrder] = useState(sortParam || 'popular');
+    const [priceRange, setPriceRange] = useState([
+        minPriceParam ? parseInt(minPriceParam) : 0, 
+        maxPriceParam ? parseInt(maxPriceParam) : 200000
+    ]);
     const [searchQuery, setSearchQuery] = useState(searchParam || '');
 
     useEffect(() => {
         if (categoryParam) setSelectedCategory(categoryParam);
         if (searchParam !== null) setSearchQuery(searchParam);
-    }, [categoryParam, searchParam]);
+        if (sortParam) setSortOrder(sortParam);
+        if (minPriceParam || maxPriceParam) {
+            setPriceRange([
+                minPriceParam ? parseInt(minPriceParam) : 0, 
+                maxPriceParam ? parseInt(maxPriceParam) : 200000
+            ]);
+        }
+    }, [categoryParam, searchParam, sortParam, minPriceParam, maxPriceParam]);
     const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
@@ -162,11 +176,34 @@ const ProductList = () => {
                             ))}
                         </div>
                     ) : filteredProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                            {filteredProducts.map(product => (
-                                <ProductCard key={product._id || product.id} product={product} />
-                            ))}
-                        </div>
+                        selectedCategory === 'All' && filteredProducts.length > 3 ? (
+                            <div className="overflow-hidden h-[80vh] min-h-[600px] relative rounded-2xl">
+                                {/* Gradient fades for top and bottom edges */}
+                                <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-gray-50 dark:from-gray-900 to-transparent z-10 pointer-events-none"></div>
+                                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-gray-50 dark:from-gray-900 to-transparent z-10 pointer-events-none"></div>
+                                
+                                <div className="flex flex-col gap-6 animate-auto-scroll-y">
+                                    {/* First Set */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                                        {filteredProducts.map(product => (
+                                            <ProductCard key={product._id || product.id} product={product} />
+                                        ))}
+                                    </div>
+                                    {/* Second Set for seamless loop */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                                        {filteredProducts.map(product => (
+                                            <ProductCard key={(product._id || product.id) + '-dup'} product={product} />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                                {filteredProducts.map(product => (
+                                    <ProductCard key={product._id || product.id} product={product} />
+                                ))}
+                            </div>
+                        )
                     ) : (
                         <div className="text-center py-20 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
                             <p className="text-gray-500 dark:text-gray-400 text-lg">No products found matching your criteria.</p>

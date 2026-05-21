@@ -6,10 +6,10 @@ import { useTheme } from '../context/ThemeContext';
 import { useCompare } from '../context/CompareContext';
 import {
     FiShoppingCart, FiUser, FiLogOut, FiMenu, FiSearch, FiHeart, FiBell,
-    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle, FiLayers
+    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle, FiLayers, FiMic
 } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
-import { searchProducts } from '../services/api';
+import { searchProducts, parseVoiceCommand, transcribeAudio } from '../services/api';
 
 const Navbar = () => {
     const { totalItems } = useCart();
@@ -24,6 +24,12 @@ const Navbar = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const [voiceText, setVoiceText] = useState('');
+    const [voiceError, setVoiceError] = useState('');
+    const [voiceStatus, setVoiceStatus] = useState(''); // 'recording', 'processing'
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
     const userMenuRef = useRef(null);
     const categoryMenuRef = useRef(null);
     const searchRef = useRef(null);
@@ -74,6 +80,156 @@ const Navbar = () => {
         }
     };
 
+    // Stop voice recording
+    const stopListening = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
+        } else {
+            setIsListening(false);
+            setVoiceStatus('');
+        }
+    };
+
+    // Voice Search Handler using MediaRecorder + GROQ Whisper
+    const handleVoiceSearch = async () => {
+        // If already listening, stop
+        if (isListening) {
+            stopListening();
+            return;
+        }
+
+        // Check if MediaRecorder is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            setVoiceError('Voice search is not supported in this browser.');
+            setTimeout(() => setVoiceError(''), 4000);
+            return;
+        }
+
+        setVoiceText('');
+        setVoiceError('');
+        setVoiceStatus('recording');
+        audioChunksRef.current = [];
+
+        try {
+            // Request microphone access
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            const mediaRecorder = new MediaRecorder(stream, {
+                mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? 'audio/webm;codecs=opus'
+                    : 'audio/webm'
+            });
+            mediaRecorderRef.current = mediaRecorder;
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstart = () => {
+                console.log('Voice recording started');
+                setIsListening(true);
+            };
+
+            mediaRecorder.onstop = async () => {
+                console.log('Voice recording stopped');
+                // Stop all mic tracks
+                stream.getTracks().forEach(track => track.stop());
+
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+
+                if (audioBlob.size < 1000) {
+                    // Too short/empty recording
+                    setIsListening(false);
+                    setVoiceStatus('');
+                    setVoiceError('Recording too short. Please try again and speak clearly.');
+                    setTimeout(() => setVoiceError(''), 4000);
+                    return;
+                }
+
+                setVoiceStatus('processing');
+                setVoiceText('Processing your voice...');
+
+                try {
+                    // Send audio to backend for GROQ Whisper transcription
+                    const result = await transcribeAudio(audioBlob);
+                    const transcript = result.text?.trim();
+
+                    if (!transcript) {
+                        setVoiceError('Could not understand. Please try again.');
+                        setTimeout(() => setVoiceError(''), 4000);
+                        setIsListening(false);
+                        setVoiceStatus('');
+                        return;
+                    }
+
+                    console.log('Whisper transcription:', transcript);
+                    setVoiceText(transcript);
+                    setSearchQuery(transcript);
+
+                    // Parse the voice command using AI
+                    try {
+                        const parsed = await parseVoiceCommand(transcript);
+                        const params = new URLSearchParams();
+                        if (parsed.query) params.set('search', parsed.query);
+                        if (parsed.maxPrice) params.set('maxPrice', parsed.maxPrice);
+                        if (parsed.minPrice) params.set('minPrice', parsed.minPrice);
+                        if (parsed.category) params.set('category', parsed.category);
+                        if (parsed.sortBy) params.set('sort', parsed.sortBy);
+                        navigate(`/products?${params.toString()}`);
+                        setIsMenuOpen(false);
+                        setShowSuggestions(false);
+                    } catch (err) {
+                        console.log('AI parse failed, using raw transcript:', err);
+                        navigate(`/products?search=${encodeURIComponent(transcript)}`);
+                        setIsMenuOpen(false);
+                    }
+                } catch (err) {
+                    console.error('Transcription failed:', err);
+                    const errorMessage = err.response?.data?.message || 'Voice transcription failed. Please try again.';
+                    setVoiceError(errorMessage);
+                    setTimeout(() => setVoiceError(''), 7000); // 7 seconds so they can read the API key error
+                } finally {
+                    setIsListening(false);
+                    setVoiceStatus('');
+                }
+            };
+
+            mediaRecorder.onerror = (event) => {
+                console.error('MediaRecorder error:', event.error);
+                stream.getTracks().forEach(track => track.stop());
+                setIsListening(false);
+                setVoiceStatus('');
+                setVoiceError('Recording failed. Please try again.');
+                setTimeout(() => setVoiceError(''), 4000);
+            };
+
+            // Start recording
+            mediaRecorder.start();
+
+            // Auto-stop after 10 seconds
+            setTimeout(() => {
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            }, 10000);
+
+        } catch (err) {
+            console.error('Microphone access error:', err);
+            setIsListening(false);
+            setVoiceStatus('');
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                setVoiceError('Microphone access denied. Please allow mic access in browser settings.');
+            } else if (err.name === 'NotFoundError') {
+                setVoiceError('No microphone found. Please connect a microphone.');
+            } else {
+                setVoiceError('Failed to access microphone. Please try again.');
+            }
+            setTimeout(() => setVoiceError(''), 5000);
+        }
+    };
+
     const categories = [
         { name: 'Electronics', icon: <FiGrid />, path: '/products?category=electronics' },
         { name: 'Accessories', icon: <FiGrid />, path: '/products?category=accessories' },
@@ -89,6 +245,57 @@ const Navbar = () => {
 
     return (
         <div className="navbar-sticky relative z-[100]">
+
+            {/* Voice Listening Overlay */}
+            {isListening && (
+                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center" onClick={voiceStatus === 'recording' ? stopListening : undefined}>
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 flex flex-col items-center gap-5 shadow-2xl animate-fade-in max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative">
+                            <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg ${
+                                    voiceStatus === 'processing' 
+                                        ? 'bg-amber-500' 
+                                        : 'bg-primary-600'
+                            }`}>
+                                {voiceStatus === 'processing' ? (
+                                    <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <FiMic size={40} className="text-white" />
+                                )}
+                            </div>
+                            {voiceStatus === 'recording' && (
+                                <>
+                                    <div className="absolute inset-0 rounded-full bg-primary-400 opacity-50 animate-ping" />
+                                    <div className="absolute -inset-2 rounded-full border-4 border-primary-300 opacity-40 animate-pulse" />
+                                </>
+                            )}
+                        </div>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">
+                            {voiceStatus === 'processing' ? 'Transcribing...' : 'Listening...'}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                            {voiceStatus === 'processing' 
+                                ? 'Converting your speech to text using AI' 
+                                : 'Speak now, e.g. "Show laptops under 50000"'}
+                        </p>
+                        {voiceText && <p className="text-sm font-medium text-primary-600 bg-primary-50 dark:bg-primary-900/30 dark:text-primary-300 px-4 py-2 rounded-full">"{voiceText}"</p>}
+                        {voiceStatus === 'recording' && (
+                            <button 
+                                onClick={stopListening}
+                                className="mt-2 px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-medium transition-colors shadow-md"
+                            >
+                                Stop Recording
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Voice Error Toast */}
+            {voiceError && (
+                <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[201] bg-red-500 text-white px-6 py-3 rounded-xl shadow-xl text-sm font-medium animate-fade-in flex items-center gap-2">
+                    <FiMic size={16} /> {voiceError}
+                </div>
+            )}
 
 
             {/* Main Navbar */}
@@ -111,8 +318,20 @@ const Navbar = () => {
                                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                                 className="w-full pl-5 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:border-primary-500 focus:bg-white transition-all text-sm"
                             />
-                            <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors">
+                            <button type="submit" className="absolute right-10 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors">
                                 <FiSearch size={16} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleVoiceSearch}
+                                className={`absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${
+                                    isListening
+                                        ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-primary-100 hover:text-primary-600'
+                                }`}
+                                title="Voice Search"
+                            >
+                                <FiMic size={16} />
                             </button>
                         </form>
 
@@ -318,8 +537,20 @@ const Navbar = () => {
                                         onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                                         className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 transition-all"
                                     />
-                                    <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                    <button type="submit" className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400">
                                         <FiSearch size={20} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleVoiceSearch}
+                                        className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-all duration-200 ${
+                                            isListening
+                                                ? 'bg-red-500 text-white animate-pulse'
+                                                : 'text-gray-400 hover:text-primary-600'
+                                        }`}
+                                        title="Voice Search"
+                                    >
+                                        <FiMic size={20} />
                                     </button>
                                 </form>
                                 {/* Search Suggestions Dropdown Mobile */}

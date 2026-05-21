@@ -210,8 +210,19 @@ router.patch('/:id/cancel', protect, async (req, res) => {
         order.status = 'cancelled';
         order.orderStatus = 'Cancelled';
         order.cancelledAt = Date.now();
+        order.cancellationReason = req.body.reason || 'No reason provided';
 
         const updatedOrder = await order.save();
+
+        // Emit Real-Time Notification for Order Cancelled
+        if (req.app.locals.io) {
+            req.app.locals.io.to(req.user._id.toString()).emit('notification', {
+                title: 'Order Cancelled',
+                message: `Your order #${order._id.toString().slice(-8).toUpperCase()} has been cancelled.`,
+                type: 'warning'
+            });
+        }
+
         res.json(updatedOrder);
     } catch (error) {
         res.status(500).json({ message: 'Error cancelling order', error: error.message });

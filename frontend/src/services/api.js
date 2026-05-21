@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: '/api',
 });
 
 // Add token to requests
@@ -96,13 +96,24 @@ export const simulatePayment = async (orderId) => {
     return data;
 };
 
+// Stripe Payment APIs
+export const createPaymentIntent = async (amount, currency = 'inr', orderId = '') => {
+    const { data } = await api.post('/payment/create-payment-intent', { amount, currency, orderId });
+    return data;
+};
+
+export const confirmStripePayment = async (paymentIntentId, orderId) => {
+    const { data } = await api.post('/payment/confirm', { paymentIntentId, orderId });
+    return data;
+};
+
 export const fetchOrderById = async (orderId) => {
     const { data } = await api.get(`/orders/${orderId}`);
     return data;
 };
 
-export const cancelOrder = async (id) => {
-    const { data } = await api.patch(`/orders/${id}/cancel`);
+export const cancelOrder = async (id, reason) => {
+    const { data } = await api.patch(`/orders/${id}/cancel`, { reason });
     return data;
 };
 
@@ -118,6 +129,20 @@ export const getAIRecommendations = async (message, conversationHistory = []) =>
 
 export const getSmartRecommendations = async (productId, cartItems = []) => {
     const { data } = await api.post('/ai/recommendations', { productId, cartItems });
+    return data;
+};
+
+export const parseVoiceCommand = async (text) => {
+    const { data } = await api.post('/ai/parse-voice-command', { text });
+    return data;
+};
+
+export const transcribeAudio = async (audioBlob) => {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'voice_recording.webm');
+    const { data } = await api.post('/ai/transcribe', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return data;
 };
 

@@ -193,7 +193,7 @@ const ProductDetail = () => {
                     <div className="flex items-center gap-3 mb-10">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">You Might Also Like</h2>
                         <span className={`text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 ${recsAIPowered
-                            ? 'bg-gradient-to-r from-primary-100 to-purple-100 dark:from-primary-900/40 dark:to-purple-900/40 text-primary-700 dark:text-primary-300'
+                            ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                             }`}>
                             <FiCpu size={12} />

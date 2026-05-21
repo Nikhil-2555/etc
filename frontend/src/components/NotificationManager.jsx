@@ -9,8 +9,10 @@ const NotificationManager = () => {
     const { user } = useAuth();
 
     useEffect(() => {
-        // Only initialize socket once when component mounts
-        socket = io('http://localhost:5000', {
+        if (!user) return;
+
+        // Connect through Vite proxy instead of directly to backend
+        socket = io('/', {
             withCredentials: true,
         });
 

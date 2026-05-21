@@ -68,7 +68,7 @@ const Checkout = () => {
                 toast.success('Order placed successfully! 🎉');
                 navigate(`/order-confirmation/${createdOrder._id}`);
             } else {
-                navigate(`/payment/processing/${createdOrder._id}`);
+                navigate(`/payment/${createdOrder._id}`);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to place order');
@@ -106,7 +106,7 @@ const Checkout = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary-50/30 py-12 px-4">
+        <div className="min-h-screen bg-gray-50 py-12 px-4">
             <div className="max-w-6xl mx-auto">
                 {/* Progress Steps */}
                 <div className="flex items-center justify-center gap-0 mb-12">
@@ -117,10 +117,10 @@ const Checkout = () => {
                     ].map((step, i) => (
                         <div key={step.num} className="flex items-center">
                             <div className="flex flex-col items-center">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black transition-all duration-500 ${step.done
-                                        ? 'bg-green-500 text-white shadow-lg shadow-green-200'
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${step.done
+                                        ? 'bg-green-500 text-white'
                                         : (step.num === 1 && !shippingComplete) || (step.num === 2 && shippingComplete)
-                                            ? 'bg-primary-600 text-white shadow-lg shadow-primary-200'
+                                            ? 'bg-primary-600 text-white'
                                             : 'bg-gray-200 text-gray-500'
                                     }`}>
                                     {step.done ? <FiCheckCircle size={18} /> : step.num}
@@ -142,7 +142,7 @@ const Checkout = () => {
                         <div className={`bg-white rounded-2xl border transition-all duration-300 ${shippingComplete ? 'border-green-200 shadow-sm' : 'border-gray-100 shadow-lg'}`}>
                             <div className="p-6 md:p-8">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-black text-gray-900 flex items-center gap-3">
+                                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
                                         <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${shippingComplete ? 'bg-green-500 text-white' : 'bg-primary-100 text-primary-600'}`}>
                                             {shippingComplete ? <FiCheckCircle /> : '1'}
                                         </span>
@@ -228,7 +228,7 @@ const Checkout = () => {
                                         </div>
                                         <button
                                             type="submit"
-                                            className="w-full bg-gray-900 text-white rounded-xl py-4 font-bold text-base hover:bg-primary-600 transition-all shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] mt-2"
+                                            className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-semibold text-base hover:bg-primary-600 transition-colors flex items-center justify-center gap-2 mt-2"
                                         >
                                             Save & Continue <FiArrowRight />
                                         </button>
@@ -241,7 +241,7 @@ const Checkout = () => {
                         <div className={`bg-white rounded-2xl border transition-all duration-500 ${shippingComplete ? 'border-gray-100 shadow-lg opacity-100 translate-y-0' : 'border-gray-100 shadow-sm opacity-50 pointer-events-none translate-y-2'
                             }`}>
                             <div className="p-6 md:p-8">
-                                <h2 className="text-xl font-black text-gray-900 flex items-center gap-3 mb-6">
+                                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3 mb-6">
                                     <span className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-bold">2</span>
                                     Select Payment Method
                                 </h2>
@@ -251,9 +251,9 @@ const Checkout = () => {
                                     <button
                                         type="button"
                                         onClick={() => setSelectedPayment('online')}
-                                        className={`relative rounded-2xl border-2 p-6 transition-all duration-300 text-left group hover:shadow-lg ${selectedPayment === 'online'
-                                                ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-indigo-50 shadow-lg shadow-primary-100'
-                                                : 'border-gray-200 bg-white hover:border-primary-300'
+                                        className={`relative rounded-xl border-2 p-6 transition-all duration-200 text-left group ${selectedPayment === 'online'
+                                                ? 'border-primary-500 bg-primary-50'
+                                                : 'border-gray-200 bg-white hover:border-gray-300'
                                             }`}
                                     >
                                         {selectedPayment === 'online' && (
@@ -261,13 +261,13 @@ const Checkout = () => {
                                                 <FiCheckCircle className="text-primary-600" size={20} />
                                             </div>
                                         )}
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all ${selectedPayment === 'online'
-                                                ? 'bg-gradient-to-br from-primary-500 to-indigo-600 text-white shadow-lg shadow-primary-200'
-                                                : 'bg-primary-100 text-primary-600'
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all ${selectedPayment === 'online'
+                                                ? 'bg-primary-600 text-white'
+                                                : 'bg-primary-50 text-primary-600'
                                             }`}>
                                             <FiCreditCard size={24} />
                                         </div>
-                                        <h3 className={`font-black text-base mb-1 ${selectedPayment === 'online' ? 'text-primary-700' : 'text-gray-800'}`}>
+                                        <h3 className={`font-bold text-base mb-1 ${selectedPayment === 'online' ? 'text-primary-700' : 'text-gray-800'}`}>
                                             Online Payment
                                         </h3>
                                         <p className="text-xs text-gray-500">Credit Card, Debit Card, UPI, Net Banking</p>
@@ -285,9 +285,9 @@ const Checkout = () => {
                                     <button
                                         type="button"
                                         onClick={() => setSelectedPayment('cod')}
-                                        className={`relative rounded-2xl border-2 p-6 transition-all duration-300 text-left group hover:shadow-lg ${selectedPayment === 'cod'
-                                                ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 shadow-lg shadow-amber-100'
-                                                : 'border-gray-200 bg-white hover:border-amber-300'
+                                        className={`relative rounded-xl border-2 p-6 transition-all duration-200 text-left group ${selectedPayment === 'cod'
+                                                ? 'border-amber-400 bg-amber-50'
+                                                : 'border-gray-200 bg-white hover:border-gray-300'
                                             }`}
                                     >
                                         {selectedPayment === 'cod' && (
@@ -295,13 +295,13 @@ const Checkout = () => {
                                                 <FiCheckCircle className="text-amber-600" size={20} />
                                             </div>
                                         )}
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all ${selectedPayment === 'cod'
-                                                ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-200'
-                                                : 'bg-amber-100 text-amber-600'
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all ${selectedPayment === 'cod'
+                                                ? 'bg-amber-500 text-white'
+                                                : 'bg-amber-50 text-amber-600'
                                             }`}>
                                             <FiTruck size={24} />
                                         </div>
-                                        <h3 className={`font-black text-base mb-1 ${selectedPayment === 'cod' ? 'text-amber-700' : 'text-gray-800'}`}>
+                                        <h3 className={`font-bold text-base mb-1 ${selectedPayment === 'cod' ? 'text-amber-700' : 'text-gray-800'}`}>
                                             Cash on Delivery
                                         </h3>
                                         <p className="text-xs text-gray-500">Pay when your order arrives at your doorstep</p>
@@ -339,11 +339,11 @@ const Checkout = () => {
                                     onClick={handlePlaceOrder}
                                     disabled={!selectedPayment || isPlacingOrder}
                                     id="place-order-btn"
-                                    className={`w-full py-4 rounded-xl font-black text-white text-lg transition-all flex items-center justify-center gap-2 shadow-lg mt-2 ${!selectedPayment || isPlacingOrder
-                                            ? 'bg-gray-300 cursor-not-allowed shadow-none'
+                                    className={`w-full py-3.5 rounded-xl font-semibold text-white text-base transition-colors flex items-center justify-center gap-2 mt-2 ${!selectedPayment || isPlacingOrder
+                                            ? 'bg-gray-300 cursor-not-allowed'
                                             : selectedPayment === 'cod'
-                                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 hover:shadow-amber-500/30 active:scale-[0.98]'
-                                                : 'bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 hover:shadow-primary-600/30 active:scale-[0.98]'
+                                                ? 'bg-amber-500 hover:bg-amber-600'
+                                                : 'bg-gray-900 hover:bg-primary-600'
                                         }`}
                                 >
                                     {isPlacingOrder ? (
@@ -373,7 +373,7 @@ const Checkout = () => {
                     {/* Right Column: Order Summary */}
                     <div className="w-full lg:w-96">
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 sticky top-24">
-                            <h3 className="text-lg font-black text-gray-900 mb-4">Order Summary</h3>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h3>
                             <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-1">
                                 {cart.map(item => (
                                     <div key={`${item.id || item._id}-${item.size}`} className="flex gap-3">
@@ -448,7 +448,7 @@ const Checkout = () => {
                                     <span>Shipping</span>
                                     <span>₹100</span>
                                 </div>
-                                <div className="flex justify-between font-black text-lg text-gray-900 mt-3 pt-3 border-t border-gray-200">
+                                <div className="flex justify-between font-bold text-lg text-gray-900 mt-3 pt-3 border-t border-gray-200">
                                     <span>Total</span>
                                     <span className="text-primary-600">₹{finalAmount.toLocaleString('en-IN')}</span>
                                 </div>

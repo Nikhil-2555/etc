@@ -9,11 +9,11 @@ html {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f8fafc;
 }
 
 .dark ::-webkit-scrollbar-track {
@@ -21,51 +21,30 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #94a3b8;
-  border-radius: 4px;
+  background: #cbd5e1;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #94a3b8;
 }
 
 /* Selection highlight */
 ::selection {
-  background: #6366f1;
+  background: #4f46e5;
   color: white;
 }
 
 /* Page transition animation */
 .page-enter {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(4px);
 }
 
 .page-enter-active {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 300ms ease, transform 300ms ease;
-}
-
-/* Gradient text utility */
-.gradient-text {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Glass card utility */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.dark .glass {
-  background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: opacity 200ms ease, transform 200ms ease;
 }
 
 /* Shimmer loading animation */

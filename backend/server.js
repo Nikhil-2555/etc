@@ -10,6 +10,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const couponRoutes = require('./routes/couponRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 connectDB();
 
@@ -20,7 +21,7 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5100', 'http://127.0.0.1:5100', 'http://localhost:5101', 'http://127.0.0.1:5101'],
+        origin: ['http://localhost:5100', 'http://127.0.0.1:5100', 'http://localhost:5101', 'http://127.0.0.1:5101', 'https://localhost:5100', 'https://127.0.0.1:5100'],
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         credentials: true
     }
@@ -55,6 +56,8 @@ const allowedOrigins = [
     'http://127.0.0.1:5100',
     'http://localhost:5101',
     'http://127.0.0.1:5101',
+    'https://localhost:5100',
+    'https://127.0.0.1:5100'
 ];
 app.use(cors({
     origin: function (origin, callback) {
@@ -74,6 +77,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/coupons', couponRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

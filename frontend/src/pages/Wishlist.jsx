@@ -53,7 +53,7 @@ const Wishlist = () => {
                             />
                             <button
                                 onClick={() => removeFromWishlist(product._id || product.id)}
-                                className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full text-red-500 shadow-sm hover:bg-red-50 transition-colors z-10"
+                                className="absolute top-3 right-3 p-2 bg-white rounded-full text-red-500 shadow-sm hover:bg-red-50 transition-colors z-10"
                                 title="Remove from wishlist"
                             >
                                 <FiTrash2 size={18} />

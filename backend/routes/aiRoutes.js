@@ -1,10 +1,85 @@
 const express = require('express');
 const router = express.Router();
 const Groq = require('groq-sdk');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 const Product = require('../models/Product');
 
 // Initialize Groq
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// Configure multer for audio uploads (store in temp directory)
+const uploadDir = path.join(__dirname, '..', 'temp_uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => cb(null, `voice_${Date.now()}_${file.originalname}`)
+});
+const upload = multer({
+    storage,
+    limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max
+    fileFilter: (req, file, cb) => {
+        const allowed = ['audio/webm', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/ogg', 'audio/mp4', 'audio/m4a', 'audio/flac', 'video/webm'];
+        if (allowed.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error(`Unsupported audio format: ${file.mimetype}`));
+        }
+    }
+});
+
+// @desc    Transcribe audio using GROQ Whisper
+// @route   POST /api/ai/transcribe
+router.post('/transcribe', upload.single('audio'), async (req, res) => {
+    let filePath = null;
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No audio file provided' });
+        }
+
+        filePath = req.file.path;
+
+        if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'YOUR_GROQ_API_KEY_HERE') {
+            return res.status(503).json({ message: 'AI service is not configured' });
+        }
+
+        // Send audio to GROQ Whisper for transcription
+        const transcription = await groq.audio.transcriptions.create({
+            file: fs.createReadStream(filePath),
+            model: 'whisper-large-v3-turbo',
+            language: 'en',
+            response_format: 'json',
+        });
+
+        const text = transcription.text || '';
+        console.log('Whisper transcription:', text);
+
+        res.json({ text, success: true });
+
+    } catch (error) {
+        console.error('Transcription Error:', error.message);
+        
+        let errorMessage = 'Failed to transcribe audio';
+        if (error.status === 401 || error.message.includes('API')) {
+            errorMessage = 'GROQ API key is invalid or expired. Please check backend .env file.';
+        }
+        
+        res.status(500).json({
+            message: errorMessage,
+            error: error.message,
+        });
+    } finally {
+        // Clean up the temp file
+        if (filePath && fs.existsSync(filePath)) {
+            fs.unlink(filePath, (err) => {
+                if (err) console.error('Failed to delete temp audio file:', err);
+            });
+        }
+    }
+});
 
 // System prompt that makes the AI act as a shopping assistant
 const SYSTEM_PROMPT = `You are "ShopFlow AI", a friendly and knowledgeable shopping assistant for the ShopFlow e-commerce store.
@@ -220,5 +295,135 @@ Only use IDs from the catalog above.`;
         }
     }
 });
+
+// @desc    Parse voice command into structured search parameters
+// @route   POST /api/ai/parse-voice-command
+router.post('/parse-voice-command', async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        if (!text || text.trim().length === 0) {
+            return res.status(400).json({ message: 'Voice text is required' });
+        }
+
+        // Fallback: basic regex parsing if Groq is not configured
+        if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'YOUR_GROQ_API_KEY_HERE') {
+            const fallback = basicVoiceParse(text);
+            return res.json(fallback);
+        }
+
+        const prompt = `You are a voice command parser for an e-commerce store called ShopFlow.
+The user spoke the following command via voice search:
+"${text}"
+
+Parse this into a structured JSON object with the following fields:
+- "query": the main product search keyword(s) (e.g. "laptops", "running shoes", "headphones"). Extract only the product name/type.
+- "maxPrice": if the user mentioned a price limit (e.g. "under 50000", "below 20000", "less than 10000"), extract the number. If no price mentioned, set to null.
+- "minPrice": if the user mentioned a minimum price (e.g. "above 5000", "over 10000"), extract the number. If no min price mentioned, set to null.
+- "category": if the command clearly maps to one of these categories, include it: Electronics, Accessories, Clothing, Furniture, Footwear, Sports, Home & Kitchen, Stationery, Books & Media, Beauty & Personal Care. If unsure, set to null.
+- "sortBy": if the user mentioned sorting (e.g. "cheapest", "highest rated", "most expensive"), set to one of: "price-low-high", "price-high-low", "rating". If not mentioned, set to null.
+
+IMPORTANT: Respond ONLY with valid JSON, nothing else. No markdown, no explanation.
+Example input: "Show me laptops under 50000"
+Example output: {"query":"laptops","maxPrice":50000,"minPrice":null,"category":"Electronics","sortBy":null}`;
+
+        const chatCompletion = await groq.chat.completions.create({
+            messages: [{ role: 'user', content: prompt }],
+            model: 'llama-3.3-70b-versatile',
+        });
+
+        const responseText = chatCompletion.choices[0]?.message?.content?.trim() || '{}';
+
+        let parsed = {};
+        try {
+            const jsonMatch = responseText.match(/\{.*\}/s);
+            if (jsonMatch) {
+                parsed = JSON.parse(jsonMatch[0]);
+            }
+        } catch (parseError) {
+            console.error('Failed to parse AI voice command response:', responseText);
+            parsed = basicVoiceParse(text);
+        }
+
+        res.json({
+            query: parsed.query || text,
+            maxPrice: parsed.maxPrice || null,
+            minPrice: parsed.minPrice || null,
+            category: parsed.category || null,
+            sortBy: parsed.sortBy || null,
+            originalText: text,
+            aiPowered: true,
+        });
+
+    } catch (error) {
+        console.error('Voice Command Parse Error:', error.message);
+        // Fallback to basic parsing
+        const fallback = basicVoiceParse(req.body.text || '');
+        res.json({ ...fallback, aiPowered: false });
+    }
+});
+
+// Basic regex-based voice command parser (fallback)
+function basicVoiceParse(text) {
+    const lower = text.toLowerCase();
+    let query = text;
+    let maxPrice = null;
+    let minPrice = null;
+    let category = null;
+    let sortBy = null;
+
+    // Extract price limits
+    const underMatch = lower.match(/(?:under|below|less than|within|upto|up to|max)\s*(?:₹|rs\.?|inr)?\s*(\d+)/);
+    if (underMatch) {
+        maxPrice = parseInt(underMatch[1]);
+        query = text.replace(underMatch[0], '').trim();
+    }
+
+    const aboveMatch = lower.match(/(?:above|over|more than|min|minimum|starting)\s*(?:₹|rs\.?|inr)?\s*(\d+)/);
+    if (aboveMatch) {
+        minPrice = parseInt(aboveMatch[1]);
+        query = query.replace(aboveMatch[0], '').trim();
+    }
+
+    // Remove common filler words
+    query = query.replace(/\b(show|show me|find|search|search for|get|i want|i need|looking for|look for)\b/gi, '').trim();
+    // Remove trailing/leading punctuation
+    query = query.replace(/^[\s,.-]+|[\s,.-]+$/g, '').trim();
+
+    // Try to detect category
+    const categoryMap = {
+        'electronics': 'Electronics', 'electronic': 'Electronics',
+        'accessories': 'Accessories', 'accessory': 'Accessories',
+        'clothing': 'Clothing', 'clothes': 'Clothing', 'fashion': 'Clothing',
+        'furniture': 'Furniture',
+        'footwear': 'Footwear', 'shoes': 'Footwear', 'shoe': 'Footwear',
+        'sports': 'Sports', 'sport': 'Sports',
+        'kitchen': 'Home & Kitchen', 'home': 'Home & Kitchen',
+        'stationery': 'Stationery',
+        'books': 'Books & Media', 'book': 'Books & Media',
+        'beauty': 'Beauty & Personal Care', 'personal care': 'Beauty & Personal Care',
+    };
+    for (const [keyword, cat] of Object.entries(categoryMap)) {
+        if (lower.includes(keyword)) {
+            category = cat;
+            break;
+        }
+    }
+
+    // Detect sorting
+    if (lower.includes('cheapest') || lower.includes('lowest price')) sortBy = 'price-low-high';
+    else if (lower.includes('expensive') || lower.includes('highest price')) sortBy = 'price-high-low';
+    else if (lower.includes('top rated') || lower.includes('best rated') || lower.includes('highest rated')) sortBy = 'rating';
+
+    return {
+        query: query || text,
+        maxPrice,
+        minPrice,
+        category,
+        sortBy,
+        originalText: text,
+        aiPowered: false,
+    };
+}
 
 module.exports = router;

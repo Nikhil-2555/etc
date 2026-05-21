@@ -1,87 +1,92 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { simulatePayment } from '../services/api';
-import { FiShield } from 'react-icons/fi';
+import { FiShield, FiSmartphone, FiCreditCard, FiGlobe } from 'react-icons/fi';
+
+const METHOD_META = {
+    upi: { label: 'UPI', icon: FiSmartphone, steps: ['Connecting to UPI gateway…', 'Verifying merchant…', 'Authorizing payment…', 'Confirming…'] },
+    credit: { label: 'Credit Card', icon: FiCreditCard, steps: ['Connecting to gateway…', 'Verifying card…', '3D Secure check…', 'Authorizing…'] },
+    debit: { label: 'Debit Card', icon: FiCreditCard, steps: ['Connecting to bank…', 'Verifying card…', 'Contacting bank…', 'Confirming…'] },
+    netbanking: { label: 'Net Banking', icon: FiGlobe, steps: ['Connecting to portal…', 'Authenticating…', 'Processing…', 'Confirming…'] },
+};
+
+const DEFAULT_META = { label: 'Payment', icon: FiCreditCard, steps: ['Connecting…', 'Verifying…', 'Processing…', 'Confirming…'] };
 
 const ProcessingPayment = () => {
     const navigate = useNavigate();
     const { orderId } = useParams();
+    const location = useLocation();
+    const stateMethodId = location.state?.methodId;
+    const meta = (stateMethodId && METHOD_META[stateMethodId]) ? METHOD_META[stateMethodId] : DEFAULT_META;
+    const Icon = meta.icon;
+
+    const [stepIndex, setStepIndex] = useState(0);
     const [dots, setDots] = useState('');
 
     useEffect(() => {
-        // Animate dots
-        const dotInterval = setInterval(() => {
-            setDots(prev => prev.length >= 3 ? '' : prev + '.');
-        }, 500);
+        const dotInterval = setInterval(() => setDots(prev => prev.length >= 3 ? '' : prev + '.'), 400);
+        const stepInterval = setInterval(() => setStepIndex(prev => prev < meta.steps.length - 1 ? prev + 1 : prev), 600);
 
-        // Simulate payment after 2 seconds
         const paymentTimer = setTimeout(async () => {
             try {
                 const result = await simulatePayment(orderId);
+                clearInterval(dotInterval);
+                clearInterval(stepInterval);
                 if (result.success) {
                     navigate(`/payment/success/${orderId}?txn=${result.transactionId}`, { replace: true });
                 } else {
                     navigate(`/payment/failed/${orderId}`, { replace: true });
                 }
-            } catch (error) {
+            } catch {
                 navigate(`/payment/failed/${orderId}`, { replace: true });
             }
-        }, 2000);
+        }, 2500);
 
-        return () => {
-            clearInterval(dotInterval);
-            clearTimeout(paymentTimer);
-        };
+        return () => { clearInterval(dotInterval); clearInterval(stepInterval); clearTimeout(paymentTimer); };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [orderId, navigate]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-primary-950 to-indigo-950 flex items-center justify-center px-4">
-            <div className="text-center">
-                {/* Animated Payment Icon */}
-                <div className="relative mx-auto mb-10 w-32 h-32">
-                    {/* Outer ring pulse */}
-                    <div className="absolute inset-0 rounded-full bg-primary-500/20 animate-ping" style={{ animationDuration: '2s' }} />
-                    <div className="absolute inset-2 rounded-full bg-primary-500/10 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
-                    {/* Main circle */}
-                    <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center shadow-2xl shadow-primary-500/30">
-                        {/* Card icon with animation */}
-                        <svg className="w-14 h-14 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                        </svg>
-                    </div>
+        <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+            <div className="text-center w-full max-w-sm mx-auto">
+                {/* Icon */}
+                <div className="mx-auto mb-8 w-24 h-24 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
+                    <Icon className="text-primary-400 animate-pulse" size={40} />
                 </div>
 
-                {/* Processing Text */}
-                <h1 className="text-3xl md:text-4xl font-black text-white mb-3">
-                    Processing Payment{dots}
-                </h1>
-                <p className="text-primary-200 text-base md:text-lg mb-8 max-w-md mx-auto">
-                    Please wait while we securely process your payment. Do not close or refresh this page.
-                </p>
+                <div className="inline-flex items-center gap-2 bg-gray-800 border border-gray-700 text-gray-300 text-xs font-semibold uppercase tracking-wider px-4 py-1.5 rounded-full mb-5">
+                    <Icon size={12} /> {meta.label}
+                </div>
+
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Processing{dots}</h1>
+                <p className="text-gray-400 text-sm mb-1 h-5">{meta.steps[stepIndex]}</p>
+                <p className="text-gray-500 text-xs mb-8">Please wait while we securely process your payment.</p>
 
                 {/* Progress bar */}
-                <div className="w-64 md:w-80 h-1.5 bg-white/10 rounded-full overflow-hidden mx-auto mb-8">
-                    <div
-                        className="h-full bg-gradient-to-r from-primary-400 to-indigo-400 rounded-full"
-                        style={{
-                            animation: 'progressFill 2s ease-in-out forwards'
-                        }}
-                    />
+                <div className="w-72 md:w-80 h-1.5 bg-gray-800 rounded-full overflow-hidden mx-auto mb-8">
+                    <div className="h-full bg-primary-500 rounded-full" style={{ animation: 'progressFill 2.5s ease-in-out forwards' }} />
                 </div>
 
-                {/* Security Badge */}
-                <div className="flex items-center justify-center gap-2 text-primary-300/80 text-sm">
-                    <FiShield className="text-green-400" />
-                    <span>256-bit SSL Encrypted • Secure Transaction</span>
+                {/* Step Dots */}
+                <div className="flex items-center justify-center gap-2 mb-8">
+                    {meta.steps.map((_, i) => (
+                        <div key={i} className={`rounded-full transition-all duration-300 ${i <= stepIndex ? 'w-5 h-1.5 bg-primary-500' : 'w-1.5 h-1.5 bg-gray-700'}`} />
+                    ))}
                 </div>
+
+                <div className="flex items-center justify-center gap-2 text-gray-500 text-xs">
+                    <FiShield className="text-green-500" size={14} />
+                    <span>256-bit SSL Encrypted</span>
+                </div>
+                <p className="text-gray-600 text-[10px] mt-3">Do not close or refresh this page</p>
             </div>
 
-            {/* CSS Animation for progress bar */}
             <style>{`
                 @keyframes progressFill {
                     0% { width: 0%; }
-                    50% { width: 60%; }
-                    80% { width: 85%; }
+                    30% { width: 40%; }
+                    60% { width: 70%; }
+                    85% { width: 90%; }
                     100% { width: 100%; }
                 }
             `}</style>

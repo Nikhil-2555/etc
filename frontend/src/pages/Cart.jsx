@@ -13,7 +13,7 @@ const Cart = () => {
                 </div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Your cart is empty</h2>
                 <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">Looks like you haven't added anything to your cart yet. Browse our products to find something you love.</p>
-                <Link to="/products" className="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg hover:shadow-primary-600/30">
+                <Link to="/products" className="inline-flex items-center gap-2 px-8 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-primary-600 transition-colors">
                     <FiArrowLeft /> Start Shopping
                 </Link>
             </div>
@@ -130,7 +130,7 @@ const Cart = () => {
                         </div>
                     </div>
 
-                    <Link to="/checkout" className="w-full bg-gray-900 text-white rounded-xl py-4 font-bold text-lg hover:bg-primary-600 transition-all shadow-lg flex items-center justify-center gap-2 group">
+                    <Link to="/checkout" className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-semibold text-base hover:bg-primary-600 transition-colors flex items-center justify-center gap-2">
                         Checkout <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
                     </Link>
 
