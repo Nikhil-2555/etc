@@ -13,6 +13,7 @@ const productSchema = mongoose.Schema({
     },
     stock: { type: Number, default: 100 },
     sizes: { type: [String], default: [] },
+    features: { type: [String], default: [] },
 }, {
     timestamps: true,
 });

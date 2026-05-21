@@ -15,6 +15,15 @@ const CANCEL_REASONS = [
     { id: 'payment_issue', label: 'Payment or pricing issue', icon: '💳' },
 ];
 
+const CANCEL_REASONS = [
+    { id: 'changed_mind', label: 'Changed my mind', icon: '🤔' },
+    { id: 'found_cheaper', label: 'Found a better price elsewhere', icon: '💰' },
+    { id: 'ordered_mistake', label: 'Ordered by mistake', icon: '❌' },
+    { id: 'delivery_time', label: 'Delivery time is too long', icon: '⏳' },
+    { id: 'wrong_item', label: 'Ordered wrong item / size', icon: '📦' },
+    { id: 'payment_issue', label: 'Payment or pricing issue', icon: '💳' },
+];
+
 const OrderConfirmation = () => {
     const navigate = useNavigate();
     const { orderId } = useParams();
@@ -384,6 +393,12 @@ const OrderConfirmation = () => {
                                 className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3.5 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2"
                             >
                                 <FiShoppingBag size={16} /> Continue Shopping
+                            </button>
+                            <button
+                                onClick={() => navigate(`/receipt/${order._id}`)}
+                                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                            >
+                                <FiFileText size={16} /> Download Receipt
                             </button>
                             <button
                                 onClick={() => navigate('/dashboard')}

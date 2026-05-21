@@ -355,6 +355,10 @@ const PaymentGateway = () => {
             }
         };
         loadOrder();
+
+        return () => {
+            if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+        };
     }, [orderId]);
 
     // Handle method selection

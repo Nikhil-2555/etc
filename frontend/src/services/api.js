@@ -104,6 +104,8 @@ export const createPaymentIntent = async (amount, currency = 'inr', orderId = ''
 
 export const confirmStripePayment = async (paymentIntentId, orderId) => {
     const { data } = await api.post('/payment/confirm', { paymentIntentId, orderId });
+export const createPaymentIntent = async (orderId) => {
+    const { data } = await api.post(`/orders/${orderId}/create-payment-intent`);
     return data;
 };
 
@@ -143,6 +145,14 @@ export const transcribeAudio = async (audioBlob) => {
     const { data } = await api.post('/ai/transcribe', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
+export const transcribeAudio = async (audioBlob) => {
+    const formData = new FormData();
+    // Use 'audio.webm' as a default extension for browser-recorded media
+    formData.append('audio', audioBlob, 'audio.webm');
+    
+    // We send it as multipart/form-data, but we let Axios set the Content-Type automatically 
+    // so it includes the correct boundary parameter.
+    const { data } = await api.post('/ai/transcribe', formData);
     return data;
 };
 

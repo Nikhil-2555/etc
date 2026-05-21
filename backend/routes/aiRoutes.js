@@ -9,7 +9,7 @@ const Product = require('../models/Product');
 // Initialize Groq
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// Configure multer for audio uploads (store in temp directory)
+        // Configure multer for audio uploads (store in temp directory)
 const uploadDir = path.join(__dirname, '..', 'temp_uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -83,24 +83,55 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
 
 // System prompt that makes the AI act as a shopping assistant
 const SYSTEM_PROMPT = `You are "ShopFlow AI", a friendly and knowledgeable shopping assistant for the ShopFlow e-commerce store.
+// System prompt that makes the AI act as a shopping assistant — STRICT shop-only mode
+const SYSTEM_PROMPT = `You are "ShopMate AI", a friendly shopping assistant exclusively for the ShopMate e-commerce store.
 
-Your responsibilities:
-- Help customers find products based on their needs, preferences, and budget
-- Provide product recommendations and comparisons
-- Answer questions about products, categories, sizing, and shopping
-- Suggest gift ideas based on occasions and recipient descriptions
-- Be enthusiastic but honest — don't oversell
+══════════════════════════════════════════
+🛍️  YOUR ONLY PURPOSE — SHOPPING HELP
+══════════════════════════════════════════
+You are ONLY allowed to help with topics directly related to shopping on ShopMate, including:
+  • Finding or recommending products from our catalog
+  • Comparing prices, ratings, sizes, or features of products
+  • Suggesting gifts for occasions or recipients
+  • Answering questions about product categories, availability, or stock
+  • Helping users find deals, budget picks, or trending items
+  • Questions about orders, cart, wishlist, or checkout (general guidance)
 
-Guidelines:
-- Keep responses concise (2-4 short paragraphs max)
+══════════════════════════════════════════
+🚫  STRICTLY FORBIDDEN — REFUSE THESE
+══════════════════════════════════════════
+You must NEVER fulfill requests for:
+  • Writing, editing, or explaining any kind of code (Python, JavaScript, HTML, SQL, etc.)
+  • Programming tutorials, algorithms, or debugging help
+  • Essays, stories, poems, or creative writing
+  • Math problems, science questions, or homework help
+  • News, politics, history, geography, or general knowledge
+  • Medical, legal, or financial advice
+  • Recipes, cooking tips, or lifestyle advice
+  • Anything unrelated to shopping on ShopMate
+
+When a user asks about ANY forbidden topic, you MUST respond with a friendly but firm refusal. Use this exact structure:
+  1. Acknowledge their question briefly (one sentence).
+  2. Explain you can only help with ShopMate shopping.
+  3. Offer a relevant shopping alternative or a quick prompt they can try.
+
+Example refusal for "write Python code":
+"That's a coding request, and I'm only set up to help you shop on ShopMate! 🛍️ 
+I can't write code, but I *can* help you find great tech accessories, gadgets, or any product in our store. 
+Want me to suggest some popular electronics or budget-friendly picks?"
+
+══════════════════════════════════════════
+✅  RESPONSE STYLE RULES
+══════════════════════════════════════════
+- Keep responses concise (2-4 short paragraphs or a short bullet list)
 - Use bullet points for product suggestions
-- Include the product name and price when recommending specific products from our catalog
-- If you recommend products from our catalog, mention them by their exact title
-- Use ₹ (Indian Rupees) for all prices
-- Be warm, helpful, and conversational
-- If asked about something unrelated to shopping/products, politely redirect to how you can help with shopping
+- Include the product name and price (₹ Indian Rupees) for catalog items
+- Be warm, enthusiastic, and conversational
+- Never pretend you can help with off-topic tasks
+- If the user persists on off-topic subjects, kindly repeat that you are a shopping-only assistant
 
-You will be provided with the current product catalog data. Use it to make accurate, specific recommendations.`;
+You will be provided with the current product catalog. Use it for accurate, specific recommendations.`;
+
 
 // @desc    AI Chat - Shopping Assistant
 // @route   POST /api/ai/chat
@@ -425,5 +456,72 @@ function basicVoiceParse(text) {
         aiPowered: false,
     };
 }
+
+// Configure Multer for audio uploads
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, '..', 'uploads');
+        if (!fs.existsSync(uploadDir)){
+            fs.mkdirSync(uploadDir);
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, `audio-${Date.now()}.webm`);
+    }
+});
+const upload = multer({ storage: storage });
+
+// @desc    Transcribe Audio using Groq Whisper
+// @route   POST /api/ai/transcribe
+router.post('/transcribe', upload.single('audio'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No audio file provided' });
+        }
+
+        if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'YOUR_GROQ_API_KEY_HERE') {
+            fs.unlinkSync(req.file.path); // Clean up
+            return res.status(503).json({ message: 'AI service is not configured' });
+        }
+
+        // Use Groq Whisper API for transcription
+        const transcription = await groq.audio.transcriptions.create({
+            file: fs.createReadStream(req.file.path),
+            model: "whisper-large-v3-turbo",
+            response_format: "json",
+            temperature: 0.0
+        });
+
+        // Clean up temp file
+        try {
+            fs.unlinkSync(req.file.path);
+        } catch (e) {
+            console.error('Failed to cleanup audio file:', e);
+        }
+
+        res.json({
+            text: transcription.text,
+            success: true
+        });
+
+    } catch (error) {
+        console.error('Transcription Error:', error);
+        
+        // Clean up temp file on error
+        if (req.file && fs.existsSync(req.file.path)) {
+            try { fs.unlinkSync(req.file.path); } catch (e) {}
+        }
+
+        res.status(500).json({ 
+            message: 'Failed to transcribe audio', 
+            error: error.message 
+        });
+    }
+});
 
 module.exports = router;

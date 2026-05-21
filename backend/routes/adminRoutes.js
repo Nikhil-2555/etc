@@ -543,6 +543,7 @@ router.patch('/orders/:id/status', protect, admin, async (req, res) => {
             return res.status(404).json({ message: 'Order not found' });
         }
 
+        const previousStatus = order.status;
         order.status = status;
 
         // Sync legacy flags
@@ -560,6 +561,17 @@ router.patch('/orders/:id/status', protect, admin, async (req, res) => {
         }
 
         const updatedOrder = await order.save();
+
+        // If the admin cancelled the order (and it wasn't cancelled before), restore stock
+        if (status === 'cancelled' && previousStatus !== 'cancelled') {
+            for (const item of updatedOrder.orderItems) {
+                const product = await Product.findById(item.product);
+                if (product && typeof product.stock === 'number') {
+                    product.stock += item.quantity;
+                    await product.save();
+                }
+            }
+        }
 
         // Emit Real-Time Notification for Order Shipped/Delivered
         if (req.app.locals.io && (status === 'shipped' || status === 'delivered')) {

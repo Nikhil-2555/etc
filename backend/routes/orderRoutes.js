@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // @desc Create new order
@@ -45,6 +46,16 @@ router.post('/', protect, async (req, res) => {
 
         const createdOrder = await order.save();
 
+        // Update Product Stock
+        for (const item of createdOrder.orderItems) {
+            const product = await Product.findById(item.product);
+            if (product && typeof product.stock === 'number') {
+                product.stock -= item.quantity;
+                if (product.stock < 0) product.stock = 0;
+                await product.save();
+            }
+        }
+
         // Update User Reward Points
         const user = await require('../models/User').findById(req.user._id);
         if (user) {
@@ -62,6 +73,40 @@ router.post('/', protect, async (req, res) => {
         }
 
         res.status(201).json(createdOrder);
+    }
+});
+
+// @desc Create Stripe PaymentIntent for an order
+// @route POST /api/orders/:id/create-payment-intent
+router.post('/:id/create-payment-intent', protect, async (req, res) => {
+    try {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Ensure user owns the order
+        if (order.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Amount must be in the smallest currency unit (paise for INR)
+        const amountInPaise = Math.round(order.totalPrice * 100);
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amountInPaise,
+            currency: 'inr',
+            metadata: {
+                orderId: order._id.toString(),
+            },
+        });
+
+        res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+        console.error('Stripe PaymentIntent error:', error.message);
+        res.status(500).json({ message: 'Failed to create payment intent', error: error.message });
     }
 });
 
@@ -213,6 +258,15 @@ router.patch('/:id/cancel', protect, async (req, res) => {
         order.cancellationReason = req.body.reason || 'No reason provided';
 
         const updatedOrder = await order.save();
+
+        // Restore Product Stock on Cancellation
+        for (const item of updatedOrder.orderItems) {
+            const product = await Product.findById(item.product);
+            if (product && typeof product.stock === 'number') {
+                product.stock += item.quantity;
+                await product.save();
+            }
+        }
 
         // Emit Real-Time Notification for Order Cancelled
         if (req.app.locals.io) {

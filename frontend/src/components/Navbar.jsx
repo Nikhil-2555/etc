@@ -30,185 +30,11 @@ const Navbar = () => {
     const [voiceStatus, setVoiceStatus] = useState(''); // 'recording', 'processing'
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
-    const userMenuRef = useRef(null);
-    const categoryMenuRef = useRef(null);
-    const searchRef = useRef(null);
-
-    // Close dropdowns when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-                setIsUserMenuOpen(false);
-            }
-            if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target)) {
-                setIsCategoryMenuOpen(false);
-            }
-            if (searchRef.current && !searchRef.current.contains(event.target)) {
-                setShowSuggestions(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    useEffect(() => {
-        const fetchSuggestions = async () => {
-            if (searchQuery.trim().length >= 2) {
-                try {
-                    const data = await searchProducts(searchQuery);
-                    setSuggestions(data);
-                    setShowSuggestions(true);
-                } catch (error) {
-                    console.error('Error fetching suggestions:', error);
-                }
-            } else {
-                setSuggestions([]);
-                setShowSuggestions(false);
-            }
-        };
-
-        const debounceTimer = setTimeout(fetchSuggestions, 300);
-        return () => clearTimeout(debounceTimer);
-    }, [searchQuery]);
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        if (searchQuery.trim()) {
-            navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
-            setIsMenuOpen(false);
-            setShowSuggestions(false);
-        }
-    };
-
-    // Stop voice recording
-    const stopListening = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-            mediaRecorderRef.current.stop();
-        } else {
-            setIsListening(false);
-            setVoiceStatus('');
-        }
-    };
-
-    // Voice Search Handler using MediaRecorder + GROQ Whisper
-    const handleVoiceSearch = async () => {
-        // If already listening, stop
-        if (isListening) {
-            stopListening();
-            return;
-        }
-
-        // Check if MediaRecorder is supported
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            setVoiceError('Voice search is not supported in this browser.');
-            setTimeout(() => setVoiceError(''), 4000);
-            return;
-        }
-
-        setVoiceText('');
-        setVoiceError('');
-        setVoiceStatus('recording');
-        audioChunksRef.current = [];
-
-        try {
-            // Request microphone access
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-            const mediaRecorder = new MediaRecorder(stream, {
-                mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-                    ? 'audio/webm;codecs=opus'
-                    : 'audio/webm'
-            });
-            mediaRecorderRef.current = mediaRecorder;
-
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunksRef.current.push(event.data);
                 }
             };
 
             mediaRecorder.onstart = () => {
                 console.log('Voice recording started');
-                setIsListening(true);
-            };
-
-            mediaRecorder.onstop = async () => {
-                console.log('Voice recording stopped');
-                // Stop all mic tracks
-                stream.getTracks().forEach(track => track.stop());
-
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-
-                if (audioBlob.size < 1000) {
-                    // Too short/empty recording
-                    setIsListening(false);
-                    setVoiceStatus('');
-                    setVoiceError('Recording too short. Please try again and speak clearly.');
-                    setTimeout(() => setVoiceError(''), 4000);
-                    return;
-                }
-
-                setVoiceStatus('processing');
-                setVoiceText('Processing your voice...');
-
-                try {
-                    // Send audio to backend for GROQ Whisper transcription
-                    const result = await transcribeAudio(audioBlob);
-                    const transcript = result.text?.trim();
-
-                    if (!transcript) {
-                        setVoiceError('Could not understand. Please try again.');
-                        setTimeout(() => setVoiceError(''), 4000);
-                        setIsListening(false);
-                        setVoiceStatus('');
-                        return;
-                    }
-
-                    console.log('Whisper transcription:', transcript);
-                    setVoiceText(transcript);
-                    setSearchQuery(transcript);
-
-                    // Parse the voice command using AI
-                    try {
-                        const parsed = await parseVoiceCommand(transcript);
-                        const params = new URLSearchParams();
-                        if (parsed.query) params.set('search', parsed.query);
-                        if (parsed.maxPrice) params.set('maxPrice', parsed.maxPrice);
-                        if (parsed.minPrice) params.set('minPrice', parsed.minPrice);
-                        if (parsed.category) params.set('category', parsed.category);
-                        if (parsed.sortBy) params.set('sort', parsed.sortBy);
-                        navigate(`/products?${params.toString()}`);
-                        setIsMenuOpen(false);
-                        setShowSuggestions(false);
-                    } catch (err) {
-                        console.log('AI parse failed, using raw transcript:', err);
-                        navigate(`/products?search=${encodeURIComponent(transcript)}`);
-                        setIsMenuOpen(false);
-                    }
-                } catch (err) {
-                    console.error('Transcription failed:', err);
-                    const errorMessage = err.response?.data?.message || 'Voice transcription failed. Please try again.';
-                    setVoiceError(errorMessage);
-                    setTimeout(() => setVoiceError(''), 7000); // 7 seconds so they can read the API key error
-                } finally {
-                    setIsListening(false);
-                    setVoiceStatus('');
-                }
-            };
-
-            mediaRecorder.onerror = (event) => {
-                console.error('MediaRecorder error:', event.error);
-                stream.getTracks().forEach(track => track.stop());
-                setIsListening(false);
-                setVoiceStatus('');
-                setVoiceError('Recording failed. Please try again.');
-                setTimeout(() => setVoiceError(''), 4000);
-            };
-
-            // Start recording
-            mediaRecorder.start();
-
-            // Auto-stop after 10 seconds
             setTimeout(() => {
                 if (mediaRecorder.state === 'recording') {
                     mediaRecorder.stop();
@@ -241,6 +67,8 @@ const Navbar = () => {
         { name: 'Stationery', icon: <FiGrid />, path: '/products?category=stationery' },
         { name: 'Books & Media', icon: <FiGrid />, path: '/products?category=books & media' },
         { name: 'Beauty & Personal Care', icon: <FiGrid />, path: '/products?category=beauty & personal care' },
+        { name: 'Toys & Games', icon: <FiGrid />, path: '/products?category=toys & games' },
+        { name: 'Automotive', icon: <FiGrid />, path: '/products?category=automotive' },
     ];
 
     return (
@@ -309,14 +137,16 @@ const Navbar = () => {
 
                     {/* Desktop Search Bar */}
                     <div className="hidden md:flex flex-1 max-w-2xl relative" ref={searchRef}>
-                        <form onSubmit={handleSearch} className="w-full relative">
+                        <form onSubmit={handleSearch} className="w-full relative flex items-center">
                             <input
                                 type="text"
-                                placeholder="Search for products, brands and more..."
+                                placeholder={isListening ? '🎤 Listening... speak now' : 'Search for products, brands and more...'}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                                className="w-full pl-5 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:border-primary-500 focus:bg-white transition-all text-sm"
+                                className={`w-full pl-5 pr-24 py-2.5 bg-gray-50 border rounded-full focus:outline-none focus:border-primary-500 focus:bg-white transition-all text-sm ${
+                                    isListening ? 'border-red-400 ring-2 ring-red-200 bg-red-50/30' : 'border-gray-200'
+                                }`}
                             />
                             <button type="submit" className="absolute right-10 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors">
                                 <FiSearch size={16} />
@@ -531,11 +361,13 @@ const Navbar = () => {
                                 <form onSubmit={handleSearch} className="relative">
                                     <input
                                         type="text"
-                                        placeholder="Search products..."
+                                        placeholder={isListening ? '🎤 Listening...' : 'Search products...'}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                                        className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 transition-all"
+                                        className={`w-full pl-4 pr-20 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
+                                            isListening ? 'border-red-400 ring-2 ring-red-200 bg-red-50/30' : 'border-gray-200'
+                                        }`}
                                     />
                                     <button type="submit" className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400">
                                         <FiSearch size={20} />

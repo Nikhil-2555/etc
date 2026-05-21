@@ -104,7 +104,13 @@ const ProductDetail = () => {
                             <span className="ml-1 font-bold text-amber-700">{product?.rating?.rate || 0}</span>
                             <span className="text-gray-400 text-sm ml-1">({product?.rating?.count || 0} reviews)</span>
                         </div>
-                        <span className="text-green-600 text-sm font-medium bg-green-50 px-3 py-1 rounded-lg">In Stock</span>
+                        {product.stock > 0 ? (
+                            <span className={`text-sm font-medium px-3 py-1 rounded-lg ${product.stock <= 10 ? 'text-red-600 bg-red-50 dark:bg-red-900/30' : product.stock <= 50 ? 'text-amber-600 bg-amber-50 dark:bg-amber-900/30' : 'text-green-600 bg-green-50 dark:bg-green-900/30'}`}>
+                                {product.stock <= 10 ? `Only ${product.stock} left!` : product.stock <= 50 ? `${product.stock} in stock` : 'In Stock'}
+                            </span>
+                        ) : (
+                            <span className="text-red-600 text-sm font-medium bg-red-50 dark:bg-red-900/30 px-3 py-1 rounded-lg">Out of Stock</span>
+                        )}
                     </div>
 
                     <div className="mb-8">
@@ -112,9 +118,22 @@ const ProductDetail = () => {
                         <span className="text-lg text-gray-400 dark:text-gray-500 line-through ml-3 font-medium">₹{(product.price * 1.2).toLocaleString('en-IN')}</span>
                     </div>
 
-                    <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed text-lg">
-                        {product.description} This premium product is designed to meet your highest expectations. Crafted with precision and care, it offers durability, style, and functionality in one package.
+                    <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed text-lg">
+                        {product.description}
                     </p>
+
+                    {product.features && product.features.length > 0 && (
+                        <div className="mb-8">
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3">Smart Features</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {product.features.map((feature, idx) => (
+                                    <span key={idx} className="px-3 py-1.5 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs font-semibold rounded-full border border-primary-100 dark:border-primary-800">
+                                        {feature}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {product.sizes && product.sizes.length > 0 && (
                         <div className="mb-8">
