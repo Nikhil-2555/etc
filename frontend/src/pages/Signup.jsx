@@ -3,158 +3,386 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { FiMail, FiLock, FiUser, FiShoppingBag, FiArrowRight } from 'react-icons/fi';
+import { useState } from 'react';
 
 const Signup = () => {
     const { register } = useAuth();
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
 
     const formik = useFormik({
-        initialValues: {
-            name: '',
-            email: '',
-            password: '',
-            confirmPassword: ''
-        },
+        initialValues: { name: '', email: '', password: '', confirmPassword: '' },
         validate: values => {
             const errors = {};
-            if (values.password !== values.confirmPassword) {
-                errors.confirmPassword = 'Passwords do not match';
-            }
-            if (values.password.length < 6) {
-                errors.password = 'Password must be at least 6 characters';
-            }
+            if (values.password !== values.confirmPassword) errors.confirmPassword = 'Passwords do not match';
+            if (values.password.length < 6) errors.password = 'Password must be at least 6 characters';
             return errors;
         },
         onSubmit: async (values) => {
+            setIsLoading(true);
             try {
                 await register(values.name, values.email, values.password);
                 toast.success('Account created successfully!');
                 navigate('/');
             } catch (error) {
                 toast.error('Failed to create account. Please try again.');
-            }
+            } finally { setIsLoading(false); }
         }
     });
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-            <div className="w-full max-w-[420px]">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <Link to="/" className="inline-flex items-center gap-2 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center">
-                            <FiShoppingBag size={20} className="text-white" />
-                        </div>
-                        <span className="text-2xl font-bold text-gray-900 tracking-tight">ShopFlow</span>
-                    </Link>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                        Create Account
-                    </h2>
-                    <p className="text-sm text-gray-500">
-                        Join us and start shopping smarter today
-                    </p>
-                </div>
+        <div className="signup-page">
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap');
 
-                {/* Card */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-                    <form className="space-y-4" onSubmit={formik.handleSubmit}>
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                Full Name
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <FiUser size={18} />
-                                </div>
+                .signup-page {
+                    min-height: 100vh;
+                    display: flex;
+                    font-family: 'Inter', sans-serif;
+                    background-color: #f3f4f6;
+                }
+
+                .signup-left {
+                    display: none;
+                }
+
+                .signup-right {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 2rem;
+                    background-color: #ffffff;
+                }
+
+                @media (min-width: 1024px) {
+                    .signup-left {
+                        display: flex;
+                        flex: 1.2;
+                        background-image: url('https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=2000&auto=format&fit=crop');
+                        background-size: cover;
+                        background-position: center;
+                        position: relative;
+                        align-items: flex-end;
+                        padding: 4rem;
+                        color: white;
+                    }
+                    
+                    .signup-left::before {
+                        content: '';
+                        position: absolute;
+                        inset: 0;
+                        background: linear-gradient(to top, rgba(17, 24, 39, 0.95) 0%, rgba(17, 24, 39, 0.4) 50%, rgba(17, 24, 39, 0.1) 100%);
+                    }
+
+                    .signup-left-content {
+                        position: relative;
+                        z-index: 10;
+                        max-width: 500px;
+                    }
+
+                    .signup-left-title {
+                        font-family: 'Sora', sans-serif;
+                        font-size: 3rem;
+                        font-weight: 700;
+                        margin-bottom: 1rem;
+                        line-height: 1.1;
+                        letter-spacing: -0.02em;
+                    }
+
+                    .signup-left-desc {
+                        font-size: 1.125rem;
+                        color: #e5e7eb;
+                        line-height: 1.6;
+                    }
+                }
+
+                .signup-container {
+                    width: 100%;
+                    max-width: 440px;
+                }
+
+                .signup-header {
+                    margin-bottom: 2rem;
+                }
+
+                .signup-logo {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    text-decoration: none;
+                    margin-bottom: 1.5rem;
+                }
+
+                .signup-logo-icon {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 12px;
+                    background-color: #111827;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                }
+
+                .signup-logo-text {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: #111827;
+                }
+
+                .signup-title {
+                    font-size: 2rem;
+                    font-weight: 700;
+                    color: #111827;
+                    margin-bottom: 0.5rem;
+                    letter-spacing: -0.02em;
+                }
+
+                .signup-subtitle {
+                    font-size: 1rem;
+                    color: #4b5563;
+                }
+
+                .form-group {
+                    margin-bottom: 1.25rem;
+                }
+
+                .form-label {
+                    display: block;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: #374151;
+                    margin-bottom: 0.5rem;
+                }
+
+                .input-wrapper {
+                    position: relative;
+                }
+
+                .input-icon {
+                    position: absolute;
+                    top: 50%;
+                    left: 1rem;
+                    transform: translateY(-50%);
+                    color: #9ca3af;
+                    pointer-events: none;
+                    transition: color 0.2s ease;
+                }
+
+                .form-input {
+                    width: 100%;
+                    padding: 0.875rem 1rem 0.875rem 2.75rem;
+                    background: #ffffff;
+                    border: 1px solid #d1d5db;
+                    border-radius: 8px;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.95rem;
+                    color: #111827;
+                    transition: all 0.2s ease;
+                }
+
+                .form-input:hover {
+                    border-color: #9ca3af;
+                }
+
+                .form-input:focus {
+                    outline: none;
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+                }
+
+                .form-input:focus + .input-icon,
+                .input-wrapper:focus-within .input-icon {
+                    color: #2563eb;
+                }
+
+                .error-message {
+                    display: block;
+                    color: #ef4444;
+                    font-size: 0.75rem;
+                    font-weight: 500;
+                    margin-top: 0.375rem;
+                }
+
+                .signup-btn {
+                    width: 100%;
+                    padding: 0.875rem;
+                    background: #111827;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 0.5rem;
+                    cursor: pointer;
+                    margin-top: 1.5rem;
+                    transition: background-color 0.2s ease;
+                }
+
+                .signup-btn:hover:not(:disabled) {
+                    background: #1f2937;
+                }
+
+                .signup-btn:disabled {
+                    background: #9ca3af;
+                    cursor: not-allowed;
+                }
+
+                .signup-footer {
+                    margin-top: 1.5rem;
+                    text-align: center;
+                }
+
+                .signup-footer-text {
+                    font-size: 0.95rem;
+                    color: #4b5563;
+                }
+
+                .signup-footer-link {
+                    font-weight: 600;
+                    color: #2563eb;
+                    text-decoration: none;
+                    margin-left: 0.25rem;
+                }
+
+                .signup-footer-link:hover {
+                    text-decoration: underline;
+                }
+
+                .spinner {
+                    width: 18px;
+                    height: 18px;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    border-top-color: white;
+                    border-radius: 50%;
+                    animation: spin 0.6s linear infinite;
+                }
+
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+
+                @media (max-width: 480px) {
+                    .signup-title { font-size: 1.5rem; }
+                }
+            `}</style>
+
+            <div className="signup-left">
+                <div className="signup-left-content">
+                    <h1 className="signup-left-title">Start Your Journey.</h1>
+                    <p className="signup-left-desc">Join millions of shoppers discovering unique products and personalized deals every day.</p>
+                </div>
+            </div>
+
+            <div className="signup-right">
+                <div className="signup-container">
+                    <div className="signup-header">
+                        <Link to="/" className="signup-logo">
+                            <div className="signup-logo-icon">
+                                <FiShoppingBag size={22} />
+                            </div>
+                            <span className="signup-logo-text">ShopFlow</span>
+                        </Link>
+                        <h2 className="signup-title">Create Account</h2>
+                        <p className="signup-subtitle">Join us and start shopping smarter today</p>
+                    </div>
+
+                    <form onSubmit={formik.handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="name" className="form-label">Full Name</label>
+                            <div className="input-wrapper">
                                 <input
-                                    id="name" name="name" type="text" required
-                                    value={formik.values.name} onChange={formik.handleChange}
-                                    className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                                    id="name"
+                                    name="name"
+                                    type="text"
+                                    required
+                                    value={formik.values.name}
+                                    onChange={formik.handleChange}
+                                    className="form-input"
                                     placeholder="John Doe"
                                 />
+                                <div className="input-icon"><FiUser size={18} /></div>
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <FiMail size={18} />
-                                </div>
+                        <div className="form-group">
+                            <label htmlFor="email" className="form-label">Email Address</label>
+                            <div className="input-wrapper">
                                 <input
-                                    id="email" name="email" type="email" required
-                                    value={formik.values.email} onChange={formik.handleChange}
-                                    className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    required
+                                    value={formik.values.email}
+                                    onChange={formik.handleChange}
+                                    className="form-input"
                                     placeholder="you@example.com"
                                 />
+                                <div className="input-icon"><FiMail size={18} /></div>
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <FiLock size={18} />
-                                </div>
+                        <div className="form-group">
+                            <label htmlFor="password" className="form-label">Password</label>
+                            <div className="input-wrapper">
                                 <input
-                                    id="password" name="password" type="password" required
-                                    value={formik.values.password} onChange={formik.handleChange}
-                                    className={`block w-full pl-11 pr-4 py-3 bg-white border ${formik.errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-500/20'} rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all text-sm`}
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    required
+                                    value={formik.values.password}
+                                    onChange={formik.handleChange}
+                                    className="form-input"
                                     placeholder="Create a strong password"
                                 />
+                                <div className="input-icon"><FiLock size={18} /></div>
                             </div>
-                            {formik.errors.password && <p className="mt-1 text-xs text-red-500 ml-1">{formik.errors.password}</p>}
+                            {formik.errors.password && <span className="error-message">{formik.errors.password}</span>}
                         </div>
 
-                        <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                Confirm Password
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <FiLock size={18} />
-                                </div>
+                        <div className="form-group">
+                            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                            <div className="input-wrapper">
                                 <input
-                                    id="confirmPassword" name="confirmPassword" type="password" required
-                                    value={formik.values.confirmPassword} onChange={formik.handleChange}
-                                    className={`block w-full pl-11 pr-4 py-3 bg-white border ${formik.errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-500/20'} rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all text-sm`}
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    type="password"
+                                    required
+                                    value={formik.values.confirmPassword}
+                                    onChange={formik.handleChange}
+                                    className="form-input"
                                     placeholder="Confirm your password"
                                 />
+                                <div className="input-icon"><FiLock size={18} /></div>
                             </div>
-                            {formik.errors.confirmPassword && <p className="mt-1 text-xs text-red-500 ml-1">{formik.errors.confirmPassword}</p>}
+                            {formik.errors.confirmPassword && <span className="error-message">{formik.errors.confirmPassword}</span>}
                         </div>
 
-                        <div className="flex items-start pt-1">
-                            <input
-                                id="terms" name="terms" type="checkbox" required
-                                className="h-4 w-4 border-gray-300 rounded text-primary-600 focus:ring-primary-500 cursor-pointer mt-0.5"
-                            />
-                            <label htmlFor="terms" className="ml-2 block text-sm text-gray-500 cursor-pointer">
-                                I agree to the <a href="#" className="font-medium text-primary-600 hover:text-primary-700">Terms of Service</a> and <a href="#" className="font-medium text-primary-600 hover:text-primary-700">Privacy Policy</a>
-                            </label>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="w-full flex items-center justify-center gap-2 py-3 px-4 mt-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-primary-600 transition-colors shadow-sm"
-                        >
-                            Create Account
-                            <FiArrowRight size={16} />
+                        <button type="submit" className="signup-btn" disabled={isLoading}>
+                            {isLoading ? (
+                                <div className="spinner" />
+                            ) : (
+                                <>
+                                    Create Account
+                                    <FiArrowRight size={18} />
+                                </>
+                            )}
                         </button>
                     </form>
-                </div>
 
-                <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-500">
-                        Already have an account?{' '}
-                        <Link to="/login" className="font-semibold text-primary-600 hover:text-primary-700 transition-colors">
-                            Sign in instead
-                        </Link>
-                    </p>
+                    <div className="signup-footer">
+                        <p className="signup-footer-text">
+                            Already have an account?
+                            <Link to="/login" className="signup-footer-link">
+                                Sign in instead
+                            </Link>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

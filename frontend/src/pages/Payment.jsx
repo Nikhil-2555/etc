@@ -12,12 +12,8 @@ const METHOD_META = {
 
 const DEFAULT_META = { label: 'Payment', icon: FiCreditCard, steps: ['Connecting…', 'Verifying…', 'Processing…', 'Confirming…'] };
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
-
-// Inner checkout form component (must be inside <Elements>)
-const CheckoutForm = ({ orderId }) => {
-    const stripe = useStripe();
-    const elements = useElements();
+const ProcessingPayment = () => {
+    const { orderId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const stateMethodId = location.state?.methodId;

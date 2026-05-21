@@ -30,11 +30,185 @@ const Navbar = () => {
     const [voiceStatus, setVoiceStatus] = useState(''); // 'recording', 'processing'
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
+    const userMenuRef = useRef(null);
+    const categoryMenuRef = useRef(null);
+    const searchRef = useRef(null);
+
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setIsUserMenuOpen(false);
+            }
+            if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target)) {
+                setIsCategoryMenuOpen(false);
+            }
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowSuggestions(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            if (searchQuery.trim().length >= 2) {
+                try {
+                    const data = await searchProducts(searchQuery);
+                    setSuggestions(data);
+                    setShowSuggestions(true);
+                } catch (error) {
+                    console.error('Error fetching suggestions:', error);
+                }
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        };
+
+        const debounceTimer = setTimeout(fetchSuggestions, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [searchQuery]);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+            setIsMenuOpen(false);
+            setShowSuggestions(false);
+        }
+    };
+
+    // Stop voice recording
+    const stopListening = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
+        } else {
+            setIsListening(false);
+            setVoiceStatus('');
+        }
+    };
+
+    // Voice Search Handler using MediaRecorder + GROQ Whisper
+    const handleVoiceSearch = async () => {
+        // If already listening, stop
+        if (isListening) {
+            stopListening();
+            return;
+        }
+
+        // Check if MediaRecorder is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            setVoiceError('Voice search is not supported in this browser.');
+            setTimeout(() => setVoiceError(''), 4000);
+            return;
+        }
+
+        setVoiceText('');
+        setVoiceError('');
+        setVoiceStatus('recording');
+        audioChunksRef.current = [];
+
+        try {
+            // Request microphone access
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            const mediaRecorder = new MediaRecorder(stream, {
+                mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? 'audio/webm;codecs=opus'
+                    : 'audio/webm'
+            });
+            mediaRecorderRef.current = mediaRecorder;
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
                 }
             };
 
             mediaRecorder.onstart = () => {
                 console.log('Voice recording started');
+                setIsListening(true);
+            };
+
+            mediaRecorder.onstop = async () => {
+                console.log('Voice recording stopped');
+                // Stop all mic tracks
+                stream.getTracks().forEach(track => track.stop());
+
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+
+                if (audioBlob.size < 1000) {
+                    // Too short/empty recording
+                    setIsListening(false);
+                    setVoiceStatus('');
+                    setVoiceError('Recording too short. Please try again and speak clearly.');
+                    setTimeout(() => setVoiceError(''), 4000);
+                    return;
+                }
+
+                setVoiceStatus('processing');
+                setVoiceText('Processing your voice...');
+
+                try {
+                    // Send audio to backend for GROQ Whisper transcription
+                    const result = await transcribeAudio(audioBlob);
+                    const transcript = result.text?.trim();
+
+                    if (!transcript) {
+                        setVoiceError('Could not understand. Please try again.');
+                        setTimeout(() => setVoiceError(''), 4000);
+                        setIsListening(false);
+                        setVoiceStatus('');
+                        return;
+                    }
+
+                    console.log('Whisper transcription:', transcript);
+                    setVoiceText(transcript);
+                    setSearchQuery(transcript);
+
+                    // Parse the voice command using AI
+                    try {
+                        const parsed = await parseVoiceCommand(transcript);
+                        const params = new URLSearchParams();
+                        if (parsed.query) params.set('search', parsed.query);
+                        if (parsed.maxPrice) params.set('maxPrice', parsed.maxPrice);
+                        if (parsed.minPrice) params.set('minPrice', parsed.minPrice);
+                        if (parsed.category) params.set('category', parsed.category);
+                        if (parsed.sortBy) params.set('sort', parsed.sortBy);
+                        navigate(`/products?${params.toString()}`);
+                        setIsMenuOpen(false);
+                        setShowSuggestions(false);
+                    } catch (err) {
+                        console.log('AI parse failed, using raw transcript:', err);
+                        navigate(`/products?search=${encodeURIComponent(transcript)}`);
+                        setIsMenuOpen(false);
+                    }
+                } catch (err) {
+                    console.error('Transcription failed:', err);
+                    const errorMessage = err.response?.data?.message || 'Voice transcription failed. Please try again.';
+                    setVoiceError(errorMessage);
+                    setTimeout(() => setVoiceError(''), 7000);
+                } finally {
+                    setIsListening(false);
+                    setVoiceStatus('');
+                }
+            };
+
+            mediaRecorder.onerror = (event) => {
+                console.error('MediaRecorder error:', event.error);
+                stream.getTracks().forEach(track => track.stop());
+                setIsListening(false);
+                setVoiceStatus('');
+                setVoiceError('Recording failed. Please try again.');
+                setTimeout(() => setVoiceError(''), 4000);
+            };
+
+            // Start recording
+            mediaRecorder.start();
+
+            // Auto-stop after 10 seconds
             setTimeout(() => {
                 if (mediaRecorder.state === 'recording') {
                     mediaRecorder.stop();

@@ -3,10 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { FiMail, FiLock, FiShoppingBag, FiArrowRight } from 'react-icons/fi';
+import { useState } from 'react';
 
 const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
 
     const formik = useFormik({
         initialValues: {
@@ -14,6 +16,7 @@ const Login = () => {
             password: 'password123'
         },
         onSubmit: async (values) => {
+            setIsLoading(true);
             try {
                 const userData = await login(values.email, values.password);
                 toast.success('Successfully logged in!');
@@ -25,41 +28,349 @@ const Login = () => {
                 }
             } catch (error) {
                 toast.error('Failed to login. Please try again.');
+            } finally {
+                setIsLoading(false);
             }
         }
     });
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-            <div className="w-full max-w-[420px]">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <Link to="/" className="inline-flex items-center gap-2 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center">
-                            <FiShoppingBag size={20} className="text-white" />
-                        </div>
-                        <span className="text-2xl font-bold text-gray-900 tracking-tight">ShopFlow</span>
-                    </Link>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                        Welcome Back
-                    </h2>
-                    <p className="text-sm text-gray-500">
-                        Sign in to continue your shopping journey
-                    </p>
-                </div>
+        <div className="login-page">
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap');
 
-                {/* Card */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-                    {/* Demo Quick Login */}
-                    <div className="mb-6 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest text-center mb-2">Quick Demo Access</p>
-                        <div className="flex gap-2">
+                .login-page {
+                    min-height: 100vh;
+                    display: flex;
+                    font-family: 'Inter', sans-serif;
+                    background-color: #f3f4f6;
+                }
+
+                .login-left {
+                    display: none;
+                }
+
+                .login-right {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 2rem;
+                    background-color: #ffffff;
+                }
+
+                @media (min-width: 1024px) {
+                    .login-left {
+                        display: flex;
+                        flex: 1.2;
+                        background-image: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2000&auto=format&fit=crop');
+                        background-size: cover;
+                        background-position: center;
+                        position: relative;
+                        align-items: flex-end;
+                        padding: 4rem;
+                        color: white;
+                    }
+                    
+                    .login-left::before {
+                        content: '';
+                        position: absolute;
+                        inset: 0;
+                        background: linear-gradient(to top, rgba(17, 24, 39, 0.95) 0%, rgba(17, 24, 39, 0.4) 50%, rgba(17, 24, 39, 0.1) 100%);
+                    }
+
+                    .login-left-content {
+                        position: relative;
+                        z-index: 10;
+                        max-width: 500px;
+                    }
+
+                    .login-left-title {
+                        font-family: 'Sora', sans-serif;
+                        font-size: 3rem;
+                        font-weight: 700;
+                        margin-bottom: 1rem;
+                        line-height: 1.1;
+                        letter-spacing: -0.02em;
+                    }
+
+                    .login-left-desc {
+                        font-size: 1.125rem;
+                        color: #e5e7eb;
+                        line-height: 1.6;
+                    }
+                }
+
+                .login-container {
+                    width: 100%;
+                    max-width: 440px;
+                }
+
+                .login-header {
+                    margin-bottom: 2.5rem;
+                }
+
+                .login-logo {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    text-decoration: none;
+                    margin-bottom: 1.5rem;
+                }
+
+                .login-logo-icon {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 12px;
+                    background-color: #111827;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                }
+
+                .login-logo-text {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: #111827;
+                }
+
+                .login-title {
+                    font-size: 2rem;
+                    font-weight: 700;
+                    color: #111827;
+                    margin-bottom: 0.5rem;
+                    letter-spacing: -0.02em;
+                }
+
+                .login-subtitle {
+                    font-size: 1rem;
+                    color: #4b5563;
+                }
+
+                .demo-section {
+                    margin-bottom: 2rem;
+                }
+
+                .demo-label {
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    color: #9ca3af;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    margin-bottom: 0.75rem;
+                }
+
+                .demo-buttons {
+                    display: flex;
+                    gap: 0.5rem;
+                }
+
+                .demo-btn {
+                    flex: 1;
+                    padding: 0.625rem 0.5rem;
+                    background: #f9fafb;
+                    color: #4b5563;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.8125rem;
+                    font-weight: 600;
+                    border-radius: 8px;
+                    border: 1px solid #e5e7eb;
+                    cursor: pointer;
+                    text-transform: capitalize;
+                    transition: all 0.2s ease;
+                }
+
+                .demo-btn:hover {
+                    border-color: #2563eb;
+                    color: #2563eb;
+                    background: #eff6ff;
+                }
+
+                .form-group {
+                    margin-bottom: 1.25rem;
+                }
+
+                .form-label {
+                    display: block;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: #374151;
+                    margin-bottom: 0.5rem;
+                }
+
+                .input-wrapper {
+                    position: relative;
+                }
+
+                .input-icon {
+                    position: absolute;
+                    top: 50%;
+                    left: 1rem;
+                    transform: translateY(-50%);
+                    color: #9ca3af;
+                    pointer-events: none;
+                    transition: color 0.2s ease;
+                }
+
+                .form-input {
+                    width: 100%;
+                    padding: 0.875rem 1rem 0.875rem 2.75rem;
+                    background: #ffffff;
+                    border: 1px solid #d1d5db;
+                    border-radius: 8px;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.95rem;
+                    color: #111827;
+                    transition: all 0.2s ease;
+                }
+
+                .form-input:hover {
+                    border-color: #9ca3af;
+                }
+
+                .form-input:focus {
+                    outline: none;
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+                }
+
+                .form-input:focus + .input-icon,
+                .input-wrapper:focus-within .input-icon {
+                    color: #2563eb;
+                }
+
+                .form-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 1.5rem;
+                    margin-top: 0.5rem;
+                }
+
+                .remember-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    cursor: pointer;
+                }
+
+                .remember-checkbox {
+                    width: 1rem;
+                    height: 1rem;
+                    border-radius: 4px;
+                    border: 1px solid #d1d5db;
+                    accent-color: #2563eb;
+                    cursor: pointer;
+                }
+
+                .remember-text {
+                    font-size: 0.875rem;
+                    color: #4b5563;
+                }
+
+                .forgot-link {
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: #2563eb;
+                    text-decoration: none;
+                }
+
+                .forgot-link:hover {
+                    text-decoration: underline;
+                }
+
+                .login-btn {
+                    width: 100%;
+                    padding: 0.875rem;
+                    background: #111827;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 0.5rem;
+                    cursor: pointer;
+                    transition: background-color 0.2s ease;
+                }
+
+                .login-btn:hover:not(:disabled) {
+                    background: #1f2937;
+                }
+
+                .login-btn:disabled {
+                    background: #9ca3af;
+                    cursor: not-allowed;
+                }
+
+                .login-footer {
+                    margin-top: 2rem;
+                    text-align: center;
+                }
+
+                .login-footer-text {
+                    font-size: 0.95rem;
+                    color: #4b5563;
+                }
+
+                .login-footer-link {
+                    font-weight: 600;
+                    color: #2563eb;
+                    text-decoration: none;
+                    margin-left: 0.25rem;
+                }
+
+                .login-footer-link:hover {
+                    text-decoration: underline;
+                }
+
+                .spinner {
+                    width: 18px;
+                    height: 18px;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    border-top-color: white;
+                    border-radius: 50%;
+                    animation: spin 0.6s linear infinite;
+                }
+
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
+
+            <div className="login-left">
+                <div className="login-left-content">
+                    <h1 className="login-left-title">Premium Goods, Effortless Experience.</h1>
+                    <p className="login-left-desc">Join ShopFlow to discover curated products, seamless checkout, and exclusive member benefits designed just for you.</p>
+                </div>
+            </div>
+
+            <div className="login-right">
+                <div className="login-container">
+                    <div className="login-header">
+                        <Link to="/" className="login-logo">
+                            <div className="login-logo-icon">
+                                <FiShoppingBag size={22} />
+                            </div>
+                            <span className="login-logo-text">ShopFlow</span>
+                        </Link>
+                        <h2 className="login-title">Welcome Back</h2>
+                        <p className="login-subtitle">Sign in to your account to continue</p>
+                    </div>
+
+                    <div className="demo-section">
+                        <p className="demo-label">Quick Demo Access</p>
+                        <div className="demo-buttons">
                             {['admin', 'manager', 'user'].map((role) => (
                                 <button
                                     key={role}
                                     type="button"
                                     onClick={() => formik.setValues({ email: `${role}@shop.com`, password: 'password123' })}
-                                    className="flex-1 py-1.5 px-2 bg-white text-gray-600 text-xs font-medium rounded-lg border border-gray-200 hover:border-primary-300 hover:text-primary-600 transition-colors capitalize"
+                                    className="demo-btn"
                                 >
                                     {role}
                                 </button>
@@ -67,16 +378,10 @@ const Login = () => {
                         </div>
                     </div>
 
-                    {/* Form */}
-                    <form className="space-y-5" onSubmit={formik.handleSubmit}>
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <FiMail size={18} />
-                                </div>
+                    <form onSubmit={formik.handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="email" className="form-label">Email Address</label>
+                            <div className="input-wrapper">
                                 <input
                                     id="email"
                                     name="email"
@@ -84,20 +389,18 @@ const Login = () => {
                                     required
                                     value={formik.values.email}
                                     onChange={formik.handleChange}
-                                    className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                                    className="form-input"
                                     placeholder="you@example.com"
                                 />
+                                <div className="input-icon">
+                                    <FiMail size={18} />
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <FiLock size={18} />
-                                </div>
+                        <div className="form-group">
+                            <label htmlFor="password" className="form-label">Password</label>
+                            <div className="input-wrapper">
                                 <input
                                     id="password"
                                     name="password"
@@ -105,46 +408,48 @@ const Login = () => {
                                     required
                                     value={formik.values.password}
                                     onChange={formik.handleChange}
-                                    className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                                    className="form-input"
                                     placeholder="Enter your password"
                                 />
+                                <div className="input-icon">
+                                    <FiLock size={18} />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
+                        <div className="form-row">
+                            <label className="remember-label">
                                 <input
                                     id="remember-me"
                                     name="remember-me"
                                     type="checkbox"
-                                    className="h-4 w-4 border-gray-300 rounded text-primary-600 focus:ring-primary-500 cursor-pointer"
+                                    className="remember-checkbox"
                                 />
-                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-500 cursor-pointer">
-                                    Remember me
-                                </label>
-                            </div>
-                            <a href="#" className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">
-                                Forgot password?
-                            </a>
+                                <span className="remember-text">Remember me</span>
+                            </label>
+                            <a href="#" className="forgot-link">Forgot password?</a>
                         </div>
 
-                        <button
-                            type="submit"
-                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-primary-600 transition-colors shadow-sm"
-                        >
-                            Log In
-                            <FiArrowRight size={16} />
+                        <button type="submit" className="login-btn" disabled={isLoading}>
+                            {isLoading ? (
+                                <div className="spinner" />
+                            ) : (
+                                <>
+                                    Log In
+                                    <FiArrowRight size={18} />
+                                </>
+                            )}
                         </button>
                     </form>
-                </div>
 
-                <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-500">
-                        Don't have an account?{' '}
-                        <Link to="/signup" className="font-semibold text-primary-600 hover:text-primary-700 transition-colors">
-                            Create account
-                        </Link>
-                    </p>
+                    <div className="login-footer">
+                        <p className="login-footer-text">
+                            Don't have an account?
+                            <Link to="/signup" className="login-footer-link">
+                                Create account
+                            </Link>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

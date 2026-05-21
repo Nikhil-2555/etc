@@ -188,16 +188,12 @@ const UserDashboard = () => {
                 <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg w-full max-w-lg overflow-hidden">
                     {/* Header */}
                     <div className="bg-red-500 px-6 py-5 text-white">
-                <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-red-500 to-rose-600 px-6 py-5 text-white">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                                 <FiAlertTriangle size={20} />
                             </div>
                             <div>
                                 <h3 className="text-lg font-bold">Cancel Order</h3>
-                                <h3 className="text-lg font-black">Cancel Order</h3>
                                 <p className="text-red-100 text-sm">
                                     Order #{cancelModal.orderId?.slice(-8).toUpperCase()} • {cancellingOrder ? formatCurrency(cancellingOrder.totalPrice) : ''}
                                 </p>
@@ -290,7 +286,6 @@ const UserDashboard = () => {
                             className={`flex-1 py-3 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${isCancelling || (!selectedReason) || (selectedReason === 'other' && !customReason.trim())
                                 ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
                                 : 'bg-red-500 hover:bg-red-600'
-                                : 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 shadow-lg hover:shadow-red-500/30'
                                 }`}
                         >
                             {isCancelling ? (
@@ -369,8 +364,11 @@ const UserDashboard = () => {
                                     </span>
 
                                     <div className="flex items-center gap-2">
-                                        <button className="text-primary-600 hover:text-primary-800 dark:hover:text-primary-400 text-sm font-bold transition-colors">
-                                            View Details
+                                        <button
+                                            onClick={() => navigate(`/order-confirmation/${order._id}`)}
+                                            className="text-primary-600 hover:text-primary-800 dark:hover:text-primary-400 text-sm font-bold transition-colors flex items-center gap-1"
+                                        >
+                                            <FiEye size={14} /> View Details
                                         </button>
                                         <button
                                             onClick={() => generateInvoice(order, user)}
@@ -378,11 +376,6 @@ const UserDashboard = () => {
                                             title="Download Invoice PDF"
                                         >
                                             <FiDownload size={14} /> Invoice
-                                        <button
-                                            onClick={() => navigate(`/order-confirmation/${order._id}`)}
-                                            className="text-primary-600 hover:text-primary-800 dark:hover:text-primary-400 text-sm font-bold transition-colors flex items-center gap-1"
-                                        >
-                                            <FiEye size={14} /> View Details
                                         </button>
                                         <span className="text-gray-200 dark:text-gray-600">|</span>
                                         <button
