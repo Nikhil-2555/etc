@@ -43,7 +43,8 @@ const Signup = () => {
                 toast.success('Account created successfully!');
                 navigate('/');
             } catch (error) {
-                toast.error('Failed to create account. Please try again.');
+                const msg = error?.message || 'Failed to create account. Please try again.';
+                toast.error(msg);
             } finally { setIsLoading(false); }
         }
     });

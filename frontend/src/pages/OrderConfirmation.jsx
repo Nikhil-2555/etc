@@ -127,7 +127,10 @@ const OrderConfirmation = () => {
     const canCancel = !isCancelled && (order.status === 'pending' || order.status === 'processing');
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 lg:px-8">
+        <div className="w-full bg-[#fafafc] dark:bg-gray-950 py-4 lg:py-6 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300 flex items-center min-h-[calc(100vh-300px)]">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-200/40 dark:bg-indigo-900/20 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200/40 dark:bg-blue-900/20 rounded-full blur-[120px] pointer-events-none" />
             {/* Cancel Reason Modal */}
             {showCancelModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -189,16 +192,17 @@ const OrderConfirmation = () => {
                 </div>
             )}
 
-            <div className="max-w-7xl mx-auto">
-                {/* Header — Full Width */}
-                <div className="text-center mb-8">
+            <div className="max-w-[2000px] mx-auto relative z-10 w-full">
+                <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl rounded-[2rem] border border-white/80 dark:border-gray-800/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-5 md:p-8">
+                    {/* Header — Full Width */}
+                    <div className="text-center mb-6 border-b border-gray-100 dark:border-gray-700/50/50 dark:border-gray-800/50 pb-5">
                     {isCancelled ? (
                         <div className="flex items-center justify-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center border border-red-100">
                                 <FiX className="text-red-500" size={24} />
                             </div>
                             <div className="text-left">
-                                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Order Cancelled</h1>
+                                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Order Cancelled</h1>
                                 <p className="text-gray-500 text-sm">This order has been cancelled.</p>
                             </div>
                         </div>
@@ -208,8 +212,8 @@ const OrderConfirmation = () => {
                                 <FiCheckCircle className="text-green-500" size={24} />
                             </div>
                             <div className="text-left">
-                                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Order Confirmed!</h1>
-                                <p className="text-gray-500 text-sm">
+                                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white dark:text-white">Order Confirmed!</h1>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm">
                                     {order.paymentMethod === 'COD' ? 'Pay when your order arrives.' : 'Your payment has been processed.'}
                                 </p>
                             </div>
@@ -235,19 +239,40 @@ const OrderConfirmation = () => {
                     </div>
                 )}
 
-                {/* ═══════ TWO COLUMN LAYOUT ═══════ */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+                {/* ═══════ THREE COLUMN LAYOUT ═══════ */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-8 items-stretch">
 
-                    {/* ══ LEFT COLUMN — Order Items (3/5 width) ══ */}
-                    <div className="lg:col-span-3 space-y-6">
+                    {/* ══ PROMOTIONAL BANNER (Left Space) ══ */}
+                    <div className="hidden lg:block lg:col-span-3 xl:col-span-3">
+                        <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden h-full relative group cursor-pointer min-h-[300px]">
+                            <img 
+                                src="/images/promo_banner.png" 
+                                alt="Exclusive Offers" 
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent flex flex-col justify-end p-6 md:p-8">
+                                <div className="bg-white/20 backdrop-blur-md w-fit px-3 py-1 rounded-full text-white text-[10px] font-bold uppercase tracking-widest mb-3 border border-white/30">
+                                    Special Offer
+                                </div>
+                                <h3 className="text-white font-bold text-2xl md:text-3xl mb-2 leading-tight">Thank You!</h3>
+                                <p className="text-white/80 text-sm mb-6 leading-relaxed">Unlock exclusive discounts on your next purchase. Join our VIP club today and get 20% off.</p>
+                                <button className="bg-white/20 backdrop-blur-md text-white border border-white/30 py-3.5 px-4 rounded-xl font-semibold text-sm hover:bg-white hover:text-gray-900 dark:text-white transition-all duration-300 w-full shadow-lg">
+                                    Join VIP Club
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ══ CENTER COLUMN — Order Items ══ */}
+                    <div className="lg:col-span-5 xl:col-span-5 space-y-4">
                         {/* Order ID + Payment Badge Bar */}
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
+                        <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden">
+                            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-800/80">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Order ID</p>
                                         <div className="flex items-center gap-2">
-                                            <p className="text-base font-mono font-bold text-gray-900">#{order._id.slice(-8).toUpperCase()}</p>
+                                            <p className="text-base font-mono font-bold text-gray-900 dark:text-white">#{order._id.slice(-8).toUpperCase()}</p>
                                             <button onClick={copyOrderId} className="text-gray-400 hover:text-primary-600 transition-colors" title="Copy full ID">
                                                 <FiCopy size={14} />
                                             </button>
@@ -259,11 +284,11 @@ const OrderConfirmation = () => {
 
                             {/* Transaction ID (for online payments) */}
                             {order.transactionId && (
-                                <div className="px-6 py-3 bg-green-50/50 border-b border-gray-100">
+                                <div className="px-6 py-3 bg-green-50/50 border-b border-gray-100 dark:border-gray-700/50">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Transaction ID</p>
-                                            <p className="text-sm font-mono font-bold text-gray-900">{order.transactionId}</p>
+                                            <p className="text-sm font-mono font-bold text-gray-900 dark:text-white">{order.transactionId}</p>
                                         </div>
                                         <div className="flex items-center gap-1 bg-green-100 px-2 py-1 rounded-full">
                                             <FiCheckCircle className="text-green-600" size={12} />
@@ -274,19 +299,19 @@ const OrderConfirmation = () => {
                             )}
 
                             {/* Items Ordered */}
-                            <div className="px-6 py-5">
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <div className="px-6 py-5 flex flex-col">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2 flex-shrink-0">
                                     <FiPackage size={14} className="text-gray-400" /> Items Ordered
                                     <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[10px] font-bold">{order.orderItems.length}</span>
                                 </h3>
-                                <div className="space-y-0 divide-y divide-gray-50">
+                                <div className="space-y-0 divide-y divide-gray-50 dark:divide-gray-700/50 overflow-y-auto max-h-[160px] scrollbar-thin pr-2">
                                     {order.orderItems.map((item, i) => (
                                         <div key={i} className="flex gap-4 items-center py-3 first:pt-0 last:pb-0">
-                                            <div className="w-20 h-20 bg-gray-50 rounded-xl border border-gray-100 p-2 flex-shrink-0 group hover:border-primary-200 transition-colors">
+                                            <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800/80 rounded-xl border border-gray-100 dark:border-gray-700/50 p-2 flex-shrink-0 group hover:border-primary-200 transition-colors">
                                                 <img src={item.image} alt={item.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug">{item.title}</p>
+                                                <p className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2 leading-snug">{item.title}</p>
                                                 <div className="flex items-center gap-2 mt-1.5">
                                                     <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-bold">Qty: {item.quantity}</span>
                                                     {item.size && (
@@ -294,7 +319,7 @@ const OrderConfirmation = () => {
                                                     )}
                                                 </div>
                                             </div>
-                                            <p className="text-base font-bold text-gray-900 flex-shrink-0">{formatCurrency(item.price * item.quantity)}</p>
+                                            <p className="text-base font-bold text-gray-900 dark:text-white flex-shrink-0">{formatCurrency(item.price * item.quantity)}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -302,14 +327,14 @@ const OrderConfirmation = () => {
                         </div>
                     </div>
 
-                    {/* ══ RIGHT COLUMN — Order Summary & Actions (2/5 width) ══ */}
-                    <div className="lg:col-span-2 space-y-5">
+                    {/* ══ RIGHT COLUMN — Order Summary & Actions ══ */}
+                    <div className="lg:col-span-4 xl:col-span-4 space-y-3 lg:pl-2 xl:pl-4 lg:border-l border-gray-100 dark:border-gray-700/50/50 flex flex-col justify-between">
                         {/* Order Info Cards */}
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
+                        <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden">
+                            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-800/80">
                                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Order Summary</h3>
                             </div>
-                            <div className="divide-y divide-gray-50">
+                            <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
                                 {[
                                     { label: 'Date', value: new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) },
                                     { label: 'Payment', value: order.paymentMethod },
@@ -323,7 +348,7 @@ const OrderConfirmation = () => {
                                             order.status === 'shipped' ? 'text-blue-600' :
                                             order.status === 'processing' ? 'text-indigo-600' :
                                             'text-amber-600'
-                                        ) : 'text-gray-900'}`}>{item.value}</p>
+                                        ) : 'text-gray-900 dark:text-white'}`}>{item.value}</p>
                                     </div>
                                 ))}
                             </div>
@@ -331,14 +356,14 @@ const OrderConfirmation = () => {
 
                         {/* Shipping Address */}
                         {order.shippingAddress && (
-                            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                                <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
+                            <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden">
+                                <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-800/80">
                                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                         <FiTruck size={14} className="text-gray-400" /> Shipping Address
                                     </h3>
                                 </div>
                                 <div className="px-5 py-4">
-                                    <p className="text-sm text-gray-700 leading-relaxed">
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                                         {order.shippingAddress.address}<br />
                                         {order.shippingAddress.city} — {order.shippingAddress.postalCode}<br />
                                         <span className="text-gray-500">{order.shippingAddress.country}</span>
@@ -348,8 +373,8 @@ const OrderConfirmation = () => {
                         )}
 
                         {/* Price Breakdown */}
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
+                        <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden">
+                            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-800/80">
                                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Price Details</h3>
                             </div>
                             <div className="px-5 py-4">
@@ -364,7 +389,7 @@ const OrderConfirmation = () => {
                                         <span>Shipping</span>
                                         <span>₹100</span>
                                     </div>
-                                    <div className="flex justify-between font-bold text-lg text-gray-900 pt-3 border-t border-gray-200">
+                                    <div className="flex justify-between font-bold text-lg text-gray-900 dark:text-white pt-3 border-t border-gray-200 dark:border-gray-700">
                                         <span>Total Paid</span>
                                         <span className="text-primary-600">{formatCurrency(order.totalPrice)}</span>
                                     </div>
@@ -373,43 +398,26 @@ const OrderConfirmation = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => generateInvoice(order, user)}
-                                className="w-full bg-gray-900 hover:bg-gray-800 text-white py-3.5 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2"
-                            >
-                                <FiDownload size={16} /> Download Receipt
+                        <div className="grid grid-cols-3 gap-2 mt-1">
+                            <button onClick={() => navigate(`/receipt/${order._id}`)} className="col-span-3 bg-gray-900 text-white py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-1.5 shadow-md hover:bg-gray-800 transition-colors">
+                                <FiFileText size={14} /> View Receipt
                             </button>
-                            <button
-                                onClick={() => navigate('/products')}
-                                className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3.5 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2"
-                            >
-                                <FiShoppingBag size={16} /> Continue Shopping
+                            <button onClick={() => navigate('/products')} className="col-span-1 bg-primary-600 text-white py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-1.5 shadow-sm hover:bg-primary-700 transition-colors">
+                                <FiShoppingBag size={14} /> Shop
                             </button>
-                            <button
-                                onClick={() => navigate(`/receipt/${order._id}`)}
-                                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-                            >
-                                <FiFileText size={16} /> Download Receipt
+                            <button onClick={() => navigate('/dashboard')} className="col-span-1 bg-white border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-2.5 rounded-xl font-bold text-[13px] flex items-center justify-center gap-1.5 shadow-sm hover:bg-primary-50 transition-colors">
+                                <FiPackage size={14} /> Orders
                             </button>
-                            <button
-                                onClick={() => navigate('/dashboard')}
-                                className="w-full bg-white border-2 border-gray-200 hover:border-primary-300 text-gray-700 hover:text-primary-700 py-3.5 rounded-xl font-bold text-sm hover:bg-primary-50 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-                            >
-                                <FiPackage size={16} /> View My Orders <FiArrowRight size={14} />
-                            </button>
-
-                            {/* Cancel Order Button */}
-                            {canCancel && (
-                                <button
-                                    onClick={openCancelModal}
-                                    className="w-full bg-white border-2 border-red-200 hover:border-red-400 text-red-600 hover:text-red-700 py-3.5 rounded-xl font-bold text-sm hover:bg-red-50 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-                                >
-                                    <FiX size={16} /> Cancel This Order
+                            {canCancel ? (
+                                <button onClick={openCancelModal} className="col-span-1 bg-white border border-red-200 text-red-600 py-2.5 rounded-xl font-bold text-[13px] flex items-center justify-center gap-1.5 shadow-sm hover:bg-red-50 transition-colors">
+                                    <FiX size={14} /> Cancel
                                 </button>
+                            ) : (
+                                <div className="col-span-1"></div>
                             )}
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </div>

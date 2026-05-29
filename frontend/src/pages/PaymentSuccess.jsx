@@ -103,46 +103,50 @@ const PaymentSuccess = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 relative overflow-hidden">
+        <div className="min-h-screen bg-[#fafafc] dark:bg-gray-950 flex items-center justify-center px-4 relative overflow-hidden transition-colors duration-300">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-200/40 dark:bg-indigo-900/20 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-green-200/40 dark:bg-green-900/20 rounded-full blur-[120px] pointer-events-none" />
+
             {/* Confetti Canvas Container */}
             <canvas id="confetti-canvas" className="absolute inset-0 w-full h-full pointer-events-none z-40" />
 
-            <div className="text-center max-w-lg w-full z-10 bg-white p-8 md:p-12 rounded-3xl border border-gray-100 shadow-xl relative">
+            <div className="text-center max-w-lg w-full z-10 bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl p-8 md:p-12 rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] relative">
                 {/* SVG Drawing Checkmark Circle */}
-                <div className="mx-auto mb-8 w-24 h-24 rounded-full bg-green-50 flex items-center justify-center border border-green-100/50 shadow-inner">
+                <div className="mx-auto mb-8 w-24 h-24 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center border border-green-100/50 dark:border-green-800/50 shadow-inner">
                     <svg className="w-16 h-16 stroke-green-500 fill-none" viewBox="0 0 52 52">
                         <circle className="circle-draw" cx="26" cy="26" r="24" stroke="currentColor" strokeWidth="3" />
                         <path className="check-draw" d="M15 27l7.5 7.5 16.5-16.5" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </div>
 
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
-                <p className="text-gray-500 text-sm md:text-base mb-8">Thank you for your order. We've verified your transaction.</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">Payment Successful!</h1>
+                <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base mb-8">Thank you for your order. We've verified your transaction.</p>
 
-                <div className="bg-gray-50/60 dark:bg-gray-800/10 rounded-2xl border border-gray-150 p-6 mb-8 text-left space-y-4">
+                <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-2xl border border-white/80 dark:border-gray-700/50 shadow-sm p-6 mb-8 text-left space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">Transaction Reference</p>
-                            <p className="text-sm font-mono font-bold text-gray-900">{transactionId}</p>
+                            <p className="text-sm font-mono font-bold text-gray-900 dark:text-gray-100">{transactionId}</p>
                         </div>
-                        <button onClick={copyTxnId} className="p-2 rounded-xl bg-white hover:bg-primary-50 text-gray-400 hover:text-primary-600 transition-colors border border-gray-250 shadow-sm" title="Copy Transaction Reference">
+                        <button onClick={copyTxnId} className="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors border border-gray-250 dark:border-gray-600 shadow-sm" title="Copy Transaction Reference">
                             <FiCopy size={15} />
                         </button>
                     </div>
-                    <div className="h-px bg-gray-200" />
+                    <div className="h-px bg-gray-200 dark:bg-gray-700" />
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">Order Identification</p>
-                            <p className="text-sm font-mono font-bold text-gray-700">#{orderId?.slice(-8).toUpperCase()}</p>
+                            <p className="text-sm font-mono font-bold text-gray-700 dark:text-gray-300">#{orderId?.slice(-8).toUpperCase()}</p>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-green-50/80 px-3 py-1.5 rounded-full border border-green-100">
+                        <div className="flex items-center gap-1.5 bg-green-50/80 dark:bg-green-900/30 px-3 py-1.5 rounded-full border border-green-100 dark:border-green-800/50">
                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-xs font-semibold text-green-600">Settled</span>
+                            <span className="text-xs font-semibold text-green-600 dark:text-green-400">Settled</span>
                         </div>
                     </div>
                 </div>
 
-                <button onClick={() => navigate(`/order-confirmation/${orderId}`)} className="w-full bg-gray-900 hover:bg-primary-600 text-white py-3.5 rounded-xl font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 mb-4 shadow-md">
+                <button onClick={() => navigate(`/order-confirmation/${orderId}`)} className="w-full bg-gray-900 dark:bg-primary-600 hover:bg-primary-600 dark:hover:bg-primary-700 text-white py-4 rounded-xl font-semibold transition-all hover:-translate-y-0.5 active:scale-[0.99] flex items-center justify-center gap-2 mb-5 shadow-[0_8px_20px_rgb(0,0,0,0.15)]">
                     View Order Details <FiArrowRight size={16} />
                 </button>
 

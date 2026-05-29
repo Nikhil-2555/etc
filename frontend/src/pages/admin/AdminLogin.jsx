@@ -6,7 +6,7 @@ import { FiLock, FiShield, FiArrowRight, FiMail } from 'react-icons/fi';
 import { useState } from 'react';
 
 const AdminLogin = () => {
-    const { login } = useAuth();
+    const { login, logout } = useAuth();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -34,10 +34,13 @@ const AdminLogin = () => {
                     toast.success('Welcome back, Admin!');
                     navigate('/admin');
                 } else {
+                    // Log out the non-admin user so they don't stay in a bad state
+                    logout();
                     toast.error('Access Denied: You do not have admin privileges.');
                 }
             } catch (error) {
-                toast.error('Invalid admin credentials.');
+                const msg = error?.message || 'Invalid admin credentials.';
+                toast.error(msg);
             } finally { setIsLoading(false); }
         }
     });
@@ -277,6 +280,39 @@ const AdminLogin = () => {
 
                 @media (max-width: 480px) {
                     .admin-title { font-size: 1.5rem; }
+                }
+
+                .dark .admin-right {
+                    background-color: #0f172a;
+                }
+                .dark .admin-title {
+                    color: #ffffff;
+                }
+                .dark .admin-subtitle {
+                    color: #cbd5e1;
+                }
+                .dark .form-label {
+                    color: #e2e8f0;
+                }
+                .dark .form-input {
+                    background: #1e293b;
+                    border-color: #334155;
+                    color: #ffffff;
+                }
+                .dark .form-input:focus {
+                    border-color: #6366f1;
+                    background: #0f172a;
+                    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+                }
+                .dark .form-input:focus + .input-icon,
+                .dark .input-wrapper:focus-within .input-icon {
+                    color: #6366f1;
+                }
+                .dark .admin-btn {
+                    background: #6366f1;
+                }
+                .dark .admin-divider {
+                    border-color: #334155;
                 }
             `}</style>
 

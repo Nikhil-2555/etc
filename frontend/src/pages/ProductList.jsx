@@ -104,7 +104,7 @@ const ProductList = () => {
 
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="md:hidden flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+                        className="md:hidden flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                         <FiFilter /> Filters
                     </button>
@@ -143,7 +143,7 @@ const ProductList = () => {
                                             onChange={() => setSelectedCategory(cat)}
                                             className="accent-primary-600 w-4 h-4"
                                         />
-                                        <span className={`text-sm ${selectedCategory === cat ? 'text-primary-600 font-medium' : 'text-gray-600 group-hover:text-primary-600 transition-colors'}`}>{cat}</span>
+                                        <span className={`text-sm ${selectedCategory === cat ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors'}`}>{cat}</span>
                                     </label>
                                 ))}
                             </div>
@@ -152,16 +152,16 @@ const ProductList = () => {
                         <div>
                             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Price Range</h3>
                             <div className="flex items-center space-x-4 mb-4">
-                                <span className="text-sm text-gray-500">₹{priceRange[0]}</span>
+                                <span className="text-sm text-gray-500 dark:text-gray-400">₹{priceRange[0]}</span>
                                 <input
                                     type="range"
                                     min="0"
                                     max="200000"
                                     value={priceRange[1]}
                                     onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                                    className="w-full accent-primary-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                    className="w-full accent-primary-600 h-1 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                                 />
-                                <span className="text-sm text-gray-500">₹{priceRange[1]}</span>
+                                <span className="text-sm text-gray-500 dark:text-gray-400">₹{priceRange[1]}</span>
                             </div>
                         </div>
                     </div>

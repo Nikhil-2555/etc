@@ -21,7 +21,7 @@ const Cart = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 py-12 min-h-screen">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Shopping Cart ({totalItems} items)</h1>
 
             <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -29,7 +29,7 @@ const Cart = () => {
                 <div className="flex-1 w-full bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm uppercase tracking-wider">
+                            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-sm uppercase tracking-wider">
                                 <tr>
                                     <th className="px-6 py-4 font-medium">Product</th>
                                     <th className="px-6 py-4 font-medium text-center">Quantity</th>
@@ -38,24 +38,24 @@ const Cart = () => {
                                     <th className="px-6 py-4"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                 {cart.map(item => {
                                     const itemId = item._id || item.id;
                                     return (
-                                        <tr key={`${itemId}-${item.size}`} className="group hover:bg-gray-50/50 transition-colors">
+                                        <tr key={`${itemId}-${item.size}`} className="group hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-20 h-20 rounded-xl bg-gray-50 border border-gray-100 p-2 flex-shrink-0">
+                                                    <div className="w-20 h-20 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 p-2 flex-shrink-0">
                                                         <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
                                                     </div>
                                                     <div>
                                                         <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1 max-w-[150px] md:max-w-xs">{item.title}</h3>
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <p className="text-sm text-gray-500">{item.category}</p>
+                                                            <p className="text-sm text-gray-500 dark:text-gray-400">{item.category}</p>
                                                             {item.size && (
                                                                 <>
-                                                                    <span className="text-gray-300">•</span>
-                                                                    <span className="text-sm font-bold text-primary-600 bg-primary-50 px-2 rounded">Size: {item.size}</span>
+                                                                    <span className="text-gray-300 dark:text-gray-600">•</span>
+                                                                    <span className="text-sm font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 rounded">Size: {item.size}</span>
                                                                 </>
                                                             )}
                                                         </div>
@@ -63,28 +63,28 @@ const Cart = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center justify-center border border-gray-200 rounded-lg w-fit mx-auto bg-white">
+                                                <div className="flex items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg w-fit mx-auto bg-white dark:bg-gray-800">
                                                     <button
                                                         onClick={() => updateQuantity(itemId, item.size, Math.max(1, item.quantity - 1))}
-                                                        className="p-2 hover:bg-gray-50 text-gray-500 transition-colors"
+                                                        className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
                                                     >
                                                         <FiMinus size={14} />
                                                     </button>
-                                                    <span className="px-3 font-medium text-gray-900 text-sm w-8 text-center">{item.quantity}</span>
+                                                    <span className="px-3 font-medium text-gray-900 dark:text-gray-100 text-sm w-8 text-center">{item.quantity}</span>
                                                     <button
                                                         onClick={() => updateQuantity(itemId, item.size, item.quantity + 1)}
-                                                        className="p-2 hover:bg-gray-50 text-gray-500 transition-colors"
+                                                        className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
                                                     >
                                                         <FiPlus size={14} />
                                                     </button>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">₹{item.price.toLocaleString('en-IN')}</td>
-                                            <td className="px-6 py-4 text-right font-bold text-primary-600">₹{(item.price * item.quantity).toLocaleString('en-IN')}</td>
+                                            <td className="px-6 py-4 text-right font-bold text-primary-600 dark:text-primary-400">₹{(item.price * item.quantity).toLocaleString('en-IN')}</td>
                                             <td className="px-6 py-4 text-right">
                                                 <button
                                                     onClick={() => removeFromCart(itemId, item.size)}
-                                                    className="text-gray-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-lg"
+                                                    className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
                                                 >
                                                     <FiTrash2 size={18} />
                                                 </button>
@@ -96,9 +96,9 @@ const Cart = () => {
                         </table>
                     </div>
 
-                    <div className="p-6 border-t border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <div className="p-6 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-700/50">
                         <button onClick={clearCart} className="text-red-500 text-sm font-medium hover:underline">Clear Cart</button>
-                        <Link to="/products" className="text-primary-600 font-medium hover:underline flex items-center gap-1">
+                        <Link to="/products" className="text-primary-600 dark:text-primary-400 font-medium hover:underline flex items-center gap-1">
                             Continue Shopping <FiArrowRight />
                         </Link>
                     </div>
@@ -109,24 +109,24 @@ const Cart = () => {
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Order Summary</h3>
 
                     <div className="space-y-4 mb-6 text-sm">
-                        <div className="flex justify-between text-gray-600">
+                        <div className="flex justify-between text-gray-600 dark:text-gray-400">
                             <span>Subtotal</span>
                             <span className="font-medium text-gray-900 dark:text-white">₹{totalPrice.toLocaleString('en-IN')}</span>
                         </div>
-                        <div className="flex justify-between text-gray-600">
+                        <div className="flex justify-between text-gray-600 dark:text-gray-400">
                             <span>Shipping estimate</span>
                             <span className="font-medium text-gray-900 dark:text-white">₹100</span>
                         </div>
-                        <div className="flex justify-between text-gray-600">
+                        <div className="flex justify-between text-gray-600 dark:text-gray-400">
                             <span>Tax estimate (18% GST)</span>
                             <span className="font-medium text-gray-900 dark:text-white">₹{(totalPrice * 0.18).toLocaleString('en-IN')}</span>
                         </div>
                     </div>
 
-                    <div className="border-t border-gray-100 pt-6 mb-8">
+                    <div className="border-t border-gray-100 dark:border-gray-700 pt-6 mb-8">
                         <div className="flex justify-between items-end">
                             <span className="font-bold text-lg text-gray-900 dark:text-white">Order Total</span>
-                            <span className="font-bold text-2xl text-primary-600">₹{(totalPrice + 100 + totalPrice * 0.18).toLocaleString('en-IN')}</span>
+                            <span className="font-bold text-2xl text-primary-600 dark:text-primary-400">₹{(totalPrice + 100 + totalPrice * 0.18).toLocaleString('en-IN')}</span>
                         </div>
                     </div>
 

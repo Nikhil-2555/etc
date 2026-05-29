@@ -21,8 +21,8 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5100', 'http://127.0.0.1:5100', 'http://localhost:5101', 'http://127.0.0.1:5101', 'https://localhost:5100', 'https://127.0.0.1:5100'],
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        origin: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         credentials: true
     }
 });
@@ -49,6 +49,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // CORS — whitelist frontend origin
 const allowedOrigins = [
@@ -61,12 +62,8 @@ const allowedOrigins = [
 ];
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (mobile apps, curl, etc.)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        return callback(new Error('Not allowed by CORS'));
+        // Reflect the exact origin back to allow all origins with credentials
+        callback(null, true);
     },
     credentials: true,
 }));

@@ -16,9 +16,7 @@ const Checkout = () => {
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [discountAmount, setDiscountAmount] = useState(0);
     const [isApplying, setIsApplying] = useState(false);
-    const [selectedPayment, setSelectedPayment] = useState('');
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-    const [shippingComplete, setShippingComplete] = useState(false);
 
     const finalAmount = Math.max(0, totalPrice - discountAmount) + 100;
 
@@ -55,51 +53,37 @@ const Checkout = () => {
             }
             return errors;
         },
-        onSubmit: () => {
-            setShippingComplete(true);
-            toast.success('Shipping details saved!');
+        onSubmit: async (values) => {
+            setIsPlacingOrder(true);
+            try {
+                const orderData = {
+                    orderItems: cart,
+                    shippingAddress: {
+                        address: values.address,
+                        city: values.city,
+                        postalCode: values.postalCode,
+                        country: 'India'
+                    },
+                    paymentMethod: 'Online',
+                    paymentStatus: 'Pending',
+                    orderStatus: 'Placed',
+                    totalPrice: finalAmount,
+                    couponCode: appliedCoupon ? appliedCoupon.code : null,
+                    discountAmount: discountAmount
+                };
+
+                const createdOrder = await createOrder(orderData);
+                clearCart();
+                
+                toast.success('Order placed! Redirecting to payment...');
+                navigate(`/payment/${createdOrder._id}`);
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'Failed to place order');
+            } finally {
+                setIsPlacingOrder(false);
+            }
         }
     });
-
-    const handlePlaceOrder = async () => {
-        if (!selectedPayment) {
-            toast.error('Please select a payment method');
-            return;
-        }
-
-        setIsPlacingOrder(true);
-        try {
-            const orderData = {
-                orderItems: cart,
-                shippingAddress: {
-                    address: formik.values.address,
-                    city: formik.values.city,
-                    postalCode: formik.values.postalCode,
-                    country: 'India'
-                },
-                paymentMethod: selectedPayment === 'online' ? 'Online' : 'COD',
-                paymentStatus: selectedPayment === 'cod' ? 'Pending' : 'Pending',
-                orderStatus: 'Placed',
-                totalPrice: finalAmount,
-                couponCode: appliedCoupon ? appliedCoupon.code : null,
-                discountAmount: discountAmount
-            };
-
-            const createdOrder = await createOrder(orderData);
-            clearCart();
-
-            if (selectedPayment === 'cod') {
-                toast.success('Order placed successfully! 🎉');
-                navigate(`/order-confirmation/${createdOrder._id}`);
-            } else {
-                navigate(`/payment/${createdOrder._id}`);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to place order');
-        } finally {
-            setIsPlacingOrder(false);
-        }
-    };
 
     const handleApplyCoupon = async () => {
         if (!couponCodeInput.trim()) return;
@@ -130,68 +114,26 @@ const Checkout = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4">
-            <div className="max-w-6xl mx-auto">
-                {/* Progress Steps */}
-                <div className="flex items-center justify-center gap-0 mb-12">
-                    {[
-                        { num: 1, label: 'Shipping', done: shippingComplete },
-                        { num: 2, label: 'Payment', done: false },
-                        { num: 3, label: 'Confirmation', done: false },
-                    ].map((step, i) => (
-                        <div key={step.num} className="flex items-center">
-                            <div className="flex flex-col items-center">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${step.done
-                                        ? 'bg-green-500 text-white'
-                                        : (step.num === 1 && !shippingComplete) || (step.num === 2 && shippingComplete)
-                                            ? 'bg-primary-600 text-white'
-                                            : 'bg-gray-200 text-gray-500'
-                                    }`}>
-                                    {step.done ? <FiCheckCircle size={18} /> : step.num}
-                                </div>
-                                <span className={`text-xs mt-2 font-bold ${step.done ? 'text-green-600 dark:text-green-400' : (step.num === 1 && !shippingComplete) || (step.num === 2 && shippingComplete) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'
-                                    }`}>{step.label}</span>
-                            </div>
-                            {i < 2 && (
-                                <div className={`w-20 md:w-32 h-0.5 mx-2 mb-5 transition-all duration-500 ${step.done ? 'bg-green-400' : 'bg-gray-200'}`} />
-                            )}
-                        </div>
-                    ))}
-                </div>
+        <div className="min-h-screen bg-[#fafafc] dark:bg-gray-950 py-24 px-4 sm:px-8 lg:px-12 xl:px-16 relative overflow-hidden transition-colors duration-300">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-200/40 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200/40 rounded-full blur-[120px] pointer-events-none" />
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Left Column: Shipping + Payment */}
-                    <div className="flex-1 space-y-6">
-                        {/* Step 1: Shipping Information */}
-                        <div className={`bg-white dark:bg-gray-800 rounded-2xl border transition-all duration-300 ${shippingComplete ? 'border-green-200 shadow-sm' : 'border-gray-100 dark:border-gray-700 shadow-lg'}`}>
-                            <div className="p-6 md:p-8">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${shippingComplete ? 'bg-green-500 text-white' : 'bg-primary-100 text-primary-600'}`}>
-                                            {shippingComplete ? <FiCheckCircle /> : '1'}
-                                        </span>
-                                        Shipping Information
-                                    </h2>
-                                    {shippingComplete && (
-                                        <button
-                                            onClick={() => setShippingComplete(false)}
-                                            className="text-sm text-primary-600 dark:text-primary-400 font-bold hover:underline"
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </div>
+            <div className="max-w-[2000px] mx-auto relative z-10">
+                <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-8">Secure Checkout</h1>
 
-                                {shippingComplete ? (
-                                    <div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-4 border border-green-100 dark:border-green-800">
-                                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                                            <strong>{formik.values.firstName} {formik.values.lastName}</strong><br />
-                                            {formik.values.address}, {formik.values.city} - {formik.values.postalCode}<br />
-                                            <span className="text-gray-500 dark:text-gray-400 dark:text-gray-500">{formik.values.email}</span>
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <form onSubmit={formik.handleSubmit} className="space-y-5">
+                <div className="flex flex-col xl:flex-row gap-8 xl:gap-12">
+                    {/* Left Column: Shipping */}
+                    <div className="flex-1">
+                        <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-8 md:p-12">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3 mb-8 tracking-tight">
+                                <span className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary-600 to-indigo-500 text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-indigo-200/50">
+                                    <FiTruck size={20} />
+                                </span>
+                                Shipping Information
+                            </h2>
+
+                            <form className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div>
                                                 <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">First Name</label>
@@ -256,154 +198,14 @@ const Checkout = () => {
                                                 {formik.touched.postalCode && formik.errors.postalCode && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.postalCode}</p>}
                                             </div>
                                         </div>
-                                        <button
-                                            type="submit"
-                                            className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-semibold text-base hover:bg-primary-600 transition-colors flex items-center justify-center gap-2 mt-2"
-                                        >
-                                            Save & Continue <FiArrowRight />
-                                        </button>
                                     </form>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Step 2: Payment Method */}
-                        <div className={`bg-white dark:bg-gray-800 rounded-2xl border transition-all duration-500 ${shippingComplete ? 'border-gray-100 dark:border-gray-700 shadow-lg opacity-100 translate-y-0' : 'border-gray-100 dark:border-gray-700 shadow-sm opacity-50 pointer-events-none translate-y-2'
-                            }`}>
-                            <div className="p-6 md:p-8">
-                                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3 mb-6">
-                                    <span className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-bold">2</span>
-                                    Select Payment Method
-                                </h2>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                    {/* Online Payment Card */}
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedPayment('online')}
-                                        className={`relative rounded-xl border-2 p-6 transition-all duration-200 text-left group ${selectedPayment === 'online'
-                                                ? 'border-primary-500 bg-primary-50'
-                                                : 'border-gray-200 bg-white hover:border-gray-300'
-                                            }`}
-                                    >
-                                        {selectedPayment === 'online' && (
-                                            <div className="absolute top-3 right-3">
-                                                <FiCheckCircle className="text-primary-600 dark:text-primary-400" size={20} />
-                                            </div>
-                                        )}
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all ${selectedPayment === 'online'
-                                                ? 'bg-primary-600 text-white'
-                                                : 'bg-primary-50 text-primary-600'
-                                            }`}>
-                                            <FiCreditCard size={24} />
-                                        </div>
-                                        <h3 className={`font-bold text-base mb-1 ${selectedPayment === 'online' ? 'text-primary-700' : 'text-gray-800'}`}>
-                                            Online Payment
-                                        </h3>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Credit Card, Debit Card</p>
-                                        <div className="flex gap-1.5 mt-3">
-                                            {['Visa', 'MasterCard', 'RuPay'].map(tag => (
-                                                <span key={tag} className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${selectedPayment === 'online'
-                                                        ? 'bg-primary-100 text-primary-700 dark:text-primary-400'
-                                                        : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 dark:text-gray-500'
-                                                    }`}>{tag}</span>
-                                            ))}
-                                        </div>
-                                    </button>
-
-                                    {/* COD Card */}
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedPayment('cod')}
-                                        className={`relative rounded-xl border-2 p-6 transition-all duration-200 text-left group ${selectedPayment === 'cod'
-                                                ? 'border-amber-400 bg-amber-50'
-                                                : 'border-gray-200 bg-white hover:border-gray-300'
-                                            }`}
-                                    >
-                                        {selectedPayment === 'cod' && (
-                                            <div className="absolute top-3 right-3">
-                                                <FiCheckCircle className="text-amber-600 dark:text-amber-400" size={20} />
-                                            </div>
-                                        )}
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all ${selectedPayment === 'cod'
-                                                ? 'bg-amber-500 text-white'
-                                                : 'bg-amber-50 text-amber-600'
-                                            }`}>
-                                            <FiTruck size={24} />
-                                        </div>
-                                        <h3 className={`font-bold text-base mb-1 ${selectedPayment === 'cod' ? 'text-amber-700' : 'text-gray-800'}`}>
-                                            Cash on Delivery
-                                        </h3>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Pay when your order arrives at your doorstep</p>
-                                        <div className="flex gap-1.5 mt-3">
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${selectedPayment === 'cod'
-                                                    ? 'bg-amber-100 text-amber-700 dark:text-amber-400'
-                                                    : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 dark:text-gray-500'
-                                                }`}>No extra charges</span>
-                                        </div>
-                                    </button>
-                                </div>
-
-                                {/* COD Info */}
-                                {selectedPayment === 'cod' && (
-                                    <div className="bg-amber-50 dark:bg-amber-900/30 rounded-xl p-4 border border-amber-200 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <p className="text-sm text-amber-800 font-medium flex items-center gap-2">
-                                            <FiPackage className="text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                                            You will pay <strong>₹{finalAmount.toLocaleString('en-IN')}</strong> in cash when the order is delivered.
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Online Info */}
-                                {selectedPayment === 'online' && (
-                                    <div className="bg-primary-50 dark:bg-primary-900/30 rounded-xl p-4 border border-primary-200 dark:border-primary-800 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <p className="text-sm text-primary-800 font-medium flex items-center gap-2">
-                                            <FiShield className="text-green-500 flex-shrink-0" />
-                                            You will be redirected to a secure payment page to complete the transaction.
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Place Order Button */}
-                                <button
-                                    onClick={handlePlaceOrder}
-                                    disabled={!selectedPayment || isPlacingOrder}
-                                    id="place-order-btn"
-                                    className={`w-full py-3.5 rounded-xl font-semibold text-white text-base transition-colors flex items-center justify-center gap-2 mt-2 ${!selectedPayment || isPlacingOrder
-                                            ? 'bg-gray-300 cursor-not-allowed'
-                                            : selectedPayment === 'cod'
-                                                ? 'bg-amber-500 hover:bg-amber-600'
-                                                : 'bg-gray-900 hover:bg-primary-600'
-                                        }`}
-                                >
-                                    {isPlacingOrder ? (
-                                        <>
-                                            <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                            </svg>
-                                            Placing Order…
-                                        </>
-                                    ) : selectedPayment === 'cod' ? (
-                                        <>
-                                            <FiPackage size={18} /> Place Order (COD)
-                                        </>
-                                    ) : selectedPayment === 'online' ? (
-                                        <>
-                                            <FiCreditCard size={18} /> Pay ₹{finalAmount.toLocaleString('en-IN')} Now
-                                        </>
-                                    ) : (
-                                        'Select a Payment Method'
-                                    )}
-                                </button>
-                            </div>
                         </div>
                     </div>
 
                     {/* Right Column: Order Summary */}
-                    <div className="w-full lg:w-96">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 sticky top-24">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h3>
+                    <div className="w-full xl:w-[450px]">
+                        <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-8 md:p-10 sticky top-32">
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 tracking-tight">Order Summary</h3>
                             <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-1">
                                 {cart.map(item => (
                                     <div key={`${item.id || item._id}-${item.size}`} className="flex gap-3">
@@ -446,7 +248,7 @@ const Checkout = () => {
                                             <button
                                                 onClick={handleApplyCoupon}
                                                 disabled={isApplying || !couponCodeInput}
-                                                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 disabled:bg-gray-400 transition-colors"
+                                                className="bg-gray-900 dark:bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 dark:hover:bg-primary-700 disabled:bg-gray-400 transition-colors"
                                             >
                                                 {isApplying ? '...' : 'Apply'}
                                             </button>
@@ -478,13 +280,38 @@ const Checkout = () => {
                                     <span>Shipping</span>
                                     <span>₹100</span>
                                 </div>
-                                <div className="flex justify-between font-bold text-lg text-gray-900 mt-3 pt-3 border-t border-gray-200">
+                                <div className="flex justify-between font-bold text-xl text-gray-900 dark:text-gray-100 mt-5 pt-5 border-t border-gray-200 dark:border-gray-700/50">
                                     <span>Total</span>
                                     <span className="text-primary-600 dark:text-primary-400">₹{finalAmount.toLocaleString('en-IN')}</span>
                                 </div>
                             </div>
+                            
+                            {/* Unified Action Button */}
+                            <button
+                                onClick={formik.submitForm}
+                                disabled={isPlacingOrder}
+                                className={`w-full mt-8 py-4 rounded-2xl font-bold text-white text-[15px] transition-all flex items-center justify-center gap-2 shadow-lg ${
+                                    isPlacingOrder
+                                        ? 'bg-gray-300 cursor-not-allowed shadow-none'
+                                        : 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-primary-600 hover:to-indigo-600 shadow-gray-900/20 hover:shadow-primary-500/30 hover:-translate-y-0.5'
+                                }`}
+                            >
+                                {isPlacingOrder ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                        Processing Order...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FiCreditCard size={18} /> Pay ₹{finalAmount.toLocaleString('en-IN')} Securely
+                                    </>
+                                )}
+                            </button>
 
-                            <div className="mt-5 text-center">
+                            <div className="mt-6 text-center">
                                 <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1">
                                     <FiShield className="text-green-400" /> Secure & Encrypted Checkout
                                 </p>

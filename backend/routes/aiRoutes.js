@@ -7,7 +7,7 @@ const path = require('path');
 const Product = require('../models/Product');
 
 // Initialize Groq
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.trim() : '' });
 
         // Configure multer for audio uploads (store in temp directory)
 const uploadDir = path.join(__dirname, '..', 'temp_uploads');
@@ -124,6 +124,7 @@ Want me to suggest some popular electronics or budget-friendly picks?"
 - Keep responses concise (2-4 short paragraphs or a short bullet list)
 - Use bullet points for product suggestions
 - Include the product name and price (₹ Indian Rupees) for catalog items
+- CRITICAL: Whenever you recommend a specific product, you MUST include its image using Markdown syntax: ![Product Name](Image_URL)
 - Be warm, enthusiastic, and conversational
 - Never pretend you can help with off-topic tasks
 - If the user persists on off-topic subjects, kindly repeat that you are a shopping-only assistant
@@ -149,10 +150,26 @@ router.post('/chat', async (req, res) => {
         }
 
         // Fetch current product catalog for context
-        const products = await Product.find({}).select('title price category description rating stock sizes').lean();
+        const allProducts = await Product.find({}).select('title price category image').lean();
 
-        const catalogSummary = products.map(p =>
-            `• ${p.title} — ₹${p.price} (${p.category})${p.stock <= 0 ? ' [OUT OF STOCK]' : ''}${p.sizes?.length ? ` [Sizes: ${p.sizes.join(', ')}]` : ''} — Rating: ${p.rating?.rate || 'N/A'}/5`
+        // Filter products to keep context size under Groq's 12000 TPM limit
+        const userQuery = message.toLowerCase();
+        let relevantProducts = allProducts.filter(p => 
+            p.title.toLowerCase().includes(userQuery) || 
+            p.category.toLowerCase().includes(userQuery) ||
+            userQuery.split(' ').some(word => word.length > 3 && p.title.toLowerCase().includes(word))
+        );
+        
+        // Fallback: if no matches, just send the first 40 products
+        if (relevantProducts.length === 0) {
+            relevantProducts = allProducts.slice(0, 40);
+        } else {
+            // Cap at 40 products to avoid rate limit
+            relevantProducts = relevantProducts.slice(0, 40);
+        }
+
+        const catalogSummary = relevantProducts.map(p =>
+            `• ${p.title} — ₹${p.price} (${p.category}) — Image_URL: ${p.image || ''}`
         ).join('\n');
 
         // Build conversation for Groq
@@ -199,7 +216,7 @@ router.post('/chat', async (req, res) => {
 
         res.status(500).json({
             message: 'AI service temporarily unavailable',
-            reply: "I'm having a little trouble right now. Please try again in a moment! 🔄"
+            reply: `I'm having a little trouble right now. Please try again in a moment! 🔄 (Error: ${error.message})`
         });
     }
 });
@@ -227,24 +244,39 @@ router.post('/recommendations', async (req, res) => {
         }
 
         // Get all products for context
-        const products = await Product.find({}).lean();
+        const allProducts = await Product.find({}).select('_id title price category rating').lean();
 
         // Build context
         let contextPrompt = '';
+        let targetCategory = null;
 
         if (productId) {
-            const currentProduct = products.find(p => p._id.toString() === productId);
+            const currentProduct = allProducts.find(p => p._id.toString() === productId);
             if (currentProduct) {
                 contextPrompt = `The customer is currently viewing: "${currentProduct.title}" (₹${currentProduct.price}, category: ${currentProduct.category}).`;
+                targetCategory = currentProduct.category;
             }
         }
 
         if (cartItems.length > 0) {
             const cartDescriptions = cartItems.map(item => `"${item.title}" (₹${item.price})`).join(', ');
             contextPrompt += `\nThe customer's cart contains: ${cartDescriptions}.`;
+            if (!targetCategory && cartItems[0].category) targetCategory = cartItems[0].category;
         }
 
-        const catalogSummary = products.map(p =>
+        // To avoid TPM limits, limit to ~80 products prioritized by category
+        let productsToSend = allProducts;
+        if (targetCategory) {
+            productsToSend = allProducts.filter(p => p.category === targetCategory).slice(0, 60);
+            if (productsToSend.length < 60) {
+                const others = allProducts.filter(p => p.category !== targetCategory).slice(0, 60 - productsToSend.length);
+                productsToSend = [...productsToSend, ...others];
+            }
+        } else {
+            productsToSend = allProducts.slice(0, 60);
+        }
+
+        const catalogSummary = productsToSend.map(p =>
             `ID:${p._id} | ${p.title} | ₹${p.price} | ${p.category} | Rating:${p.rating?.rate || 'N/A'}`
         ).join('\n');
 

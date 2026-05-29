@@ -384,11 +384,20 @@ router.get('/analytics', protect, admin, async (req, res) => {
         ]);
 
         const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const formattedDailyData = dailyOrders.map(item => ({
-            name: days[item._id - 1],
-            sales: item.sales,
-            orders: item.orders
-        }));
+        const formattedDailyData = [];
+        
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dayIndex = d.getDay() + 1; // $dayOfWeek returns 1 for Sunday
+            
+            const existingOrder = dailyOrders.find(item => item._id === dayIndex);
+            formattedDailyData.push({
+                name: days[dayIndex - 1],
+                sales: existingOrder ? existingOrder.sales : 0,
+                orders: existingOrder ? existingOrder.orders : 0
+            });
+        }
 
         // 4. Top Selling Products
         const topProducts = await Order.aggregate([

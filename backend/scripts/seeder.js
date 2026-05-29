@@ -1,17 +1,22 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const Product = require('./models/Product');
-const User = require('./models/User');
-const connectDB = require('./config/db');
+const path = require('path');
+
+// Resolve paths relative to the backend root (parent of scripts/)
+const Product = require(path.join(__dirname, '..', 'models', 'Product'));
+const User = require(path.join(__dirname, '..', 'models', 'User'));
+const connectDB = require(path.join(__dirname, '..', 'config', 'db'));
 const bcrypt = require('bcryptjs');
 
-// Import new product data
-const { newElectronics, newFootwear, newClothing } = require('./data/newProducts');
-const { newAccessories, newFurniture, newSports } = require('./data/newProducts2');
-const { newHomeKitchen, newStationery, newBooksMedia, newBeauty } = require('./data/newProducts3');
-const { newToysGames, newAutomotive } = require('./data/newProducts4');
+// Load .env from the backend root
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
-dotenv.config();
+// Import new product data
+const { newElectronics, newFootwear, newClothing } = require(path.join(__dirname, '..', 'data', 'newProducts'));
+const { newAccessories, newFurniture, newSports } = require(path.join(__dirname, '..', 'data', 'newProducts2'));
+const { newHomeKitchen, newStationery, newBooksMedia, newBeauty } = require(path.join(__dirname, '..', 'data', 'newProducts3'));
+const { newToysGames, newAutomotive } = require(path.join(__dirname, '..', 'data', 'newProducts4'));
+
 connectDB();
 
 const products = [
@@ -159,13 +164,12 @@ const importData = async () => {
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash('password123', salt);
-        const adminPassword = await bcrypt.hash('admin@123', salt);
 
         const users = [
             {
                 name: 'Admin User',
-                email: 'admin@gmail.com',
-                password: adminPassword,
+                email: 'admin@shop.com',
+                password: hashedPassword,
                 role: 'admin'
             },
             {

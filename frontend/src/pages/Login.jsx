@@ -12,8 +12,8 @@ const Login = () => {
 
     const formik = useFormik({
         initialValues: {
-            email: 'user@shop.com',
-            password: 'password123'
+            email: '',
+            password: ''
         },
         validate: values => {
             const errors = {};
@@ -38,10 +38,11 @@ const Login = () => {
                 if (role === 'admin' || role === 'manager') {
                     navigate('/admin');
                 } else {
-                    navigate('/dashboard');
+                    navigate('/');
                 }
             } catch (error) {
-                toast.error('Failed to login. Please try again.');
+                const msg = error?.message || 'Failed to login. Please check your credentials.';
+                toast.error(msg);
             } finally {
                 setIsLoading(false);
             }
@@ -162,44 +163,6 @@ const Login = () => {
                     color: #4b5563;
                 }
 
-                .demo-section {
-                    margin-bottom: 2rem;
-                }
-
-                .demo-label {
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    color: #9ca3af;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                    margin-bottom: 0.75rem;
-                }
-
-                .demo-buttons {
-                    display: flex;
-                    gap: 0.5rem;
-                }
-
-                .demo-btn {
-                    flex: 1;
-                    padding: 0.625rem 0.5rem;
-                    background: #f9fafb;
-                    color: #4b5563;
-                    font-family: 'Inter', sans-serif;
-                    font-size: 0.8125rem;
-                    font-weight: 600;
-                    border-radius: 8px;
-                    border: 1px solid #e5e7eb;
-                    cursor: pointer;
-                    text-transform: capitalize;
-                    transition: all 0.2s ease;
-                }
-
-                .demo-btn:hover {
-                    border-color: #2563eb;
-                    color: #2563eb;
-                    background: #eff6ff;
-                }
 
                 .form-group {
                     margin-bottom: 1.25rem;
@@ -401,21 +364,7 @@ const Login = () => {
                         <p className="login-subtitle">Sign in to your account to continue</p>
                     </div>
 
-                    <div className="demo-section">
-                        <p className="demo-label">Quick Demo Access</p>
-                        <div className="demo-buttons">
-                            {['admin', 'manager', 'user'].map((role) => (
-                                <button
-                                    key={role}
-                                    type="button"
-                                    onClick={() => formik.setValues({ email: `${role}@shop.com`, password: 'password123' })}
-                                    className="demo-btn"
-                                >
-                                    {role}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+
 
                     <form onSubmit={formik.handleSubmit}>
                         <div className="form-group">

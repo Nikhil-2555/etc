@@ -107,6 +107,7 @@ const AIChatWidget = () => {
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/^[•\-]\s?(.+)/gm, '<li>$1</li>')
             .replace(/(<li>.*<\/li>)/gs, '<ul class="list-disc pl-4 space-y-1 my-2">$1</ul>')
+            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="w-24 h-24 object-cover rounded-lg my-2 border border-gray-200 dark:border-gray-700 shadow-sm" />')
             .replace(/\n/g, '<br/>');
     };
 

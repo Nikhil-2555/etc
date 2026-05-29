@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const Coupon = require('./models/Coupon');
+const path = require('path');
+const Coupon = require(path.join(__dirname, '..', 'models', 'Coupon'));
 
-dotenv.config({ path: './.env' });
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const seedCoupons = async () => {
     try {

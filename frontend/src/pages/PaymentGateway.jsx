@@ -127,13 +127,17 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
     const Icon = methodData.icon;
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 lg:px-8">
-            <div className="max-w-6xl mx-auto w-full">
+        <div className="min-h-screen bg-[#fafafc] dark:bg-gray-950 py-24 px-4 sm:px-8 lg:px-12 relative overflow-hidden transition-colors duration-300">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-200/40 dark:bg-indigo-900/20 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200/40 dark:bg-blue-900/20 rounded-full blur-[120px] pointer-events-none" />
+
+            <div className="max-w-[2000px] mx-auto relative z-10">
                 {/* Back Button */}
                 <button
                     onClick={onBack}
                     disabled={processing}
-                    className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 font-medium mb-6 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 font-medium mb-6 transition-colors disabled:opacity-50"
                 >
                     <FiArrowLeft size={16} /> Change Payment Method
                 </button>
@@ -141,25 +145,29 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
                     {/* Left Column: Form */}
                     <div className="lg:col-span-7 xl:col-span-8">
-                        {/* Card Header */}
-                <div className="text-center mb-8">
-                    <div className={`w-14 h-14 rounded-xl bg-primary-600 flex items-center justify-center mx-auto mb-4`}>
-                        <Icon className="text-white" size={28} />
-                    </div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-                        Pay with {methodData.name}
-                    </h1>
-                    <p className="text-gray-500 text-sm">
-                        Amount: <span className="font-bold text-gray-800">₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}</span>
-                    </p>
-                    <div className="mt-2 inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">
-                        <svg viewBox="0 0 28 12" width="28" height="12" className="flex-shrink-0"><path fill="#635BFF" d="M13.976 3.075c0-1.09.535-1.95 1.558-1.95.98 0 1.514.86 1.514 1.928 0 1.432-.578 1.983-1.536 1.983-.937 0-1.536-.616-1.536-1.961zm-1.254 0c0 1.84 1.09 3.075 2.79 3.075 1.744 0 2.812-1.278 2.812-3.097C18.324 1.278 17.234 0 15.512 0c-1.7 0-2.79 1.235-2.79 3.075zM1.167 5.908h1.301l.3-1.928h.022c.107 1.322.959 2.084 2.084 2.084.535 0 .97-.171 1.3-.45l-.213-1.112c-.235.193-.535.322-.862.322-.659 0-1.108-.472-1.108-1.322V3.44h1.885V2.307H3.69V.464H2.369l-.171 1.843H1.167v1.133h.981v.064c0 1.507-.407 2.404-1.883 2.404h-.064l.966.043V5.91zM8.69 5.908h1.236V3.869c0-.83.45-1.365 1.172-1.365.15 0 .343.021.472.064V1.328a1.5 1.5 0 0 0-.364-.043c-.665 0-1.172.408-1.365 1.09h-.021l-.065-.98H8.69v4.513zM19.24 5.908h1.236V3.61c0-.723.45-1.172 1.108-1.172.622 0 .895.386.895 1.044v2.426h1.236V3.267c0-1.236-.665-1.982-1.757-1.982-.73 0-1.214.343-1.493.895h-.022V1.395H19.24v4.513zM24.77 4.539c.3.3.773.493 1.365.493 1.044 0 1.843-.644 1.843-1.6 0-.73-.407-1.172-1.172-1.407l-.493-.15c-.3-.107-.493-.236-.493-.472 0-.257.236-.429.579-.429.3 0 .536.107.708.3l.73-.665c-.278-.3-.73-.493-1.322-.493-1.001 0-1.715.601-1.715 1.493 0 .708.429 1.15 1.108 1.365l.472.15c.364.107.558.257.558.493 0 .278-.257.472-.644.472-.364 0-.644-.15-.862-.386l-.665.836z"/></svg>
-                        Powered by Stripe (Test Mode)
-                    </div>
-                </div>
-
-                {/* 3D Flipping Card Preview */}
-                <div className="w-full max-w-md mx-auto aspect-[1.586/1] perspective-1000 mb-8 cursor-pointer relative" onClick={() => setIsFlipped(!isFlipped)}>
+                        <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-8 md:p-10 flex flex-col xl:flex-row gap-8 xl:gap-12 items-center xl:items-start">
+                            
+                            {/* Left Side: Header & Card */}
+                            <div className="w-full xl:w-[45%] flex flex-col items-center">
+                                {/* Card Header */}
+                                <div className="text-center mb-8 w-full">
+                                    <div className={`w-14 h-14 rounded-xl bg-primary-600 flex items-center justify-center mx-auto mb-4`}>
+                                        <Icon className="text-white" size={28} />
+                                    </div>
+                                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                                        Pay with {methodData.name}
+                                    </h1>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                        Amount: <span className="font-bold text-gray-800 dark:text-gray-200">₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}</span>
+                                    </p>
+                                    <div className="mt-2 inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">
+                                        <svg viewBox="0 0 28 12" width="28" height="12" className="flex-shrink-0"><path fill="#635BFF" d="M13.976 3.075c0-1.09.535-1.95 1.558-1.95.98 0 1.514.86 1.514 1.928 0 1.432-.578 1.983-1.536 1.983-.937 0-1.536-.616-1.536-1.961zm-1.254 0c0 1.84 1.09 3.075 2.79 3.075 1.744 0 2.812-1.278 2.812-3.097C18.324 1.278 17.234 0 15.512 0c-1.7 0-2.79 1.235-2.79 3.075zM1.167 5.908h1.301l.3-1.928h.022c.107 1.322.959 2.084 2.084 2.084.535 0 .97-.171 1.3-.45l-.213-1.112c-.235.193-.535.322-.862.322-.659 0-1.108-.472-1.108-1.322V3.44h1.885V2.307H3.69V.464H2.369l-.171 1.843H1.167v1.133h.981v.064c0 1.507-.407 2.404-1.883 2.404h-.064l.966.043V5.91zM8.69 5.908h1.236V3.869c0-.83.45-1.365 1.172-1.365.15 0 .343.021.472.064V1.328a1.5 1.5 0 0 0-.364-.043c-.665 0-1.172.408-1.365 1.09h-.021l-.065-.98H8.69v4.513zM19.24 5.908h1.236V3.61c0-.723.45-1.172 1.108-1.172.622 0 .895.386.895 1.044v2.426h1.236V3.267c0-1.236-.665-1.982-1.757-1.982-.73 0-1.214.343-1.493.895h-.022V1.395H19.24v4.513zM24.77 4.539c.3.3.773.493 1.365.493 1.044 0 1.843-.644 1.843-1.6 0-.73-.407-1.172-1.172-1.407l-.493-.15c-.3-.107-.493-.236-.493-.472 0-.257.236-.429.579-.429.3 0 .536.107.708.3l.73-.665c-.278-.3-.73-.493-1.322-.493-1.001 0-1.715.601-1.715 1.493 0 .708.429 1.15 1.108 1.365l.472.15c.364.107.558.257.558.493 0 .278-.257.472-.644.472-.364 0-.644-.15-.862-.386l-.665.836z"/></svg>
+                                        Powered by Stripe (Test Mode)
+                                    </div>
+                                </div>
+                                
+                                {/* 3D Flipping Card Preview */}
+                                <div className="w-full max-w-[320px] aspect-[1.586/1] perspective-1000 mb-6 cursor-pointer relative" onClick={() => setIsFlipped(!isFlipped)}>
                     <div className={`w-full h-full duration-700 transform-style-3d transition-transform relative ${isFlipped ? 'rotate-y-180' : ''}`}>
                         
                         {/* Front Face */}
@@ -224,28 +232,29 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
                             </div>
                         </div>
                     </div>
-                </div>
+                            </div>
+                        </div>
 
-                {/* Stripe Card Form */}
-                <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 md:p-8 space-y-5">
+                            {/* Right Side Inputs */}
+                            <form onSubmit={handleSubmit} className="w-full xl:w-[55%] space-y-6 xl:pl-4 xl:border-l xl:border-gray-100 dark:border-gray-700/50/50 pt-6 xl:pt-0 border-t xl:border-t-0 border-gray-100 dark:border-gray-700/50/50">
                     
                     {/* Cardholder Name */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Cardholder Name</label>
+                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Cardholder Name</label>
                         <input
                             type="text"
                             value={cardholderName}
                             onChange={(e) => setCardholderName(e.target.value)}
                             placeholder="e.g. John Doe"
-                            className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 transition-colors bg-white text-gray-900 text-sm font-medium"
+                            className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-primary-500 transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-medium"
                             required
                         />
                     </div>
 
                     {/* Card Number element */}
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Card Number</label>
-                        <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 bg-white'}`}>
+                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Card Number</label>
+                        <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 dark:border-red-500/50 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 bg-white dark:bg-gray-900'}`}>
                             <CardNumberElement
                                 options={CARD_ELEMENT_OPTIONS}
                                 onFocus={() => { setFocusedField('number'); setIsFlipped(false); }}
@@ -268,8 +277,8 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
                     {/* Expiry and CVC elements in grid */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Expiry Date</label>
-                            <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 bg-white'}`}>
+                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Expiry Date</label>
+                            <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 dark:border-red-500/50 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 bg-white dark:bg-gray-900'}`}>
                                 <CardExpiryElement
                                     options={CARD_ELEMENT_OPTIONS}
                                     onFocus={() => { setFocusedField('expiry'); setIsFlipped(false); }}
@@ -286,8 +295,8 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">CVC / CVV</label>
-                            <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 bg-white'}`}>
+                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">CVC / CVV</label>
+                            <div className={`px-4 py-4 border-2 rounded-xl transition-all ${cardError ? 'border-red-400 dark:border-red-500/50 bg-red-50 dark:bg-red-900/20' : 'border-gray-200 dark:border-gray-700 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 bg-white dark:bg-gray-900'}`}>
                                 <CardCvcElement
                                     options={CARD_ELEMENT_OPTIONS}
                                     onFocus={() => { setFocusedField('cvc'); setIsFlipped(true); }}
@@ -309,7 +318,7 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
                     {cardError && <p className="text-xs text-red-500 mt-1 font-medium">{cardError}</p>}
                     
                     <p className="text-xs text-gray-400 mt-1">
-                        Test card number: <span className="font-mono font-bold text-gray-500">4242 4242 4242 4242</span> • Any future date • Any CVC
+                        Test card number: <span className="font-mono font-bold text-gray-500 dark:text-gray-400">4242 4242 4242 4242</span> • Any future date • Any CVC
                     </p>
 
                     {/* Security note */}
@@ -362,84 +371,67 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
                         }
                     `}} />
                 </form>
-
-                {/* Security Footer */}
-                <div className="mt-6 flex items-center justify-center gap-6">
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <FiShield className="text-green-400" size={14}/>
-                        <span>256-bit SSL</span>
-                    </div>
-                    <div className="w-px h-4 bg-gray-200" />
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <FiLock className="text-green-400" size={14}/>
-                        <span>PCI DSS Compliant</span>
-                    </div>
-                    <div className="w-px h-4 bg-gray-200" />
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <FiShield className="text-green-400" size={14}/>
-                        <span>Stripe Secured</span>
-                    </div>
-                </div>
+                        </div>
                     </div>
 
                     {/* Right Column: Order Summary */}
                     {orderData && (
-                        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-8 space-y-6">
+                        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-12 space-y-8">
                             {/* Order Summary Card */}
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
-                                <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
-                                    <h3 className="text-lg font-bold text-gray-900">Order Summary</h3>
-                                    <p className="text-xs text-gray-500 mt-1">Order #{orderId?.slice(-8).toUpperCase()}</p>
+                            <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] overflow-hidden">
+                                <div className="px-8 py-6 border-b border-white/50 bg-white/40 dark:bg-gray-800/40">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Order Summary</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-mono">Order #{orderId?.slice(-8).toUpperCase()}</p>
                                 </div>
                                 
                                 <div className="px-6 py-5 max-h-[350px] overflow-y-auto scrollbar-thin">
                                     <div className="space-y-4">
                                         {orderData.orderItems?.map((item) => (
                                             <div key={item._id} className="flex gap-4">
-                                                <div className="w-16 h-16 rounded-xl bg-gray-100 flex-shrink-0 border border-gray-200 overflow-hidden">
+                                                <div className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-gray-800 flex-shrink-0 border border-gray-200 dark:border-gray-700 overflow-hidden">
                                                     <img src={item.image} alt={item.name} className="w-full h-full object-cover mix-blend-multiply" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-sm font-bold text-gray-900 truncate">{item.name}</h4>
-                                                    <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity} {item.size && `• Size: ${item.size}`}</p>
-                                                    <p className="text-sm font-bold text-gray-900 mt-1">₹{item.price.toLocaleString('en-IN')}</p>
+                                                    <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{item.name}</h4>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Qty: {item.quantity} {item.size && `• Size: ${item.size}`}</p>
+                                                    <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-1">₹{item.price.toLocaleString('en-IN')}</p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="px-6 py-5 border-t border-gray-100 bg-gray-50">
+                                <div className="px-6 py-5 border-t border-gray-100 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-800/80">
                                     <div className="flex items-center justify-between mb-2 text-sm">
-                                        <span className="text-gray-500">Subtotal</span>
-                                        <span className="font-bold text-gray-700">₹{orderData.itemsPrice?.toLocaleString('en-IN') || orderAmount?.toLocaleString('en-IN')}</span>
+                                        <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
+                                        <span className="font-bold text-gray-700 dark:text-gray-300">₹{orderData.itemsPrice?.toLocaleString('en-IN') || orderAmount?.toLocaleString('en-IN')}</span>
                                     </div>
                                     <div className="flex items-center justify-between mb-2 text-sm">
-                                        <span className="text-gray-500">Shipping</span>
-                                        <span className="font-bold text-gray-700">{orderData.shippingPrice === 0 ? 'Free' : `₹${orderData.shippingPrice?.toLocaleString('en-IN')}`}</span>
+                                        <span className="text-gray-500 dark:text-gray-400">Shipping</span>
+                                        <span className="font-bold text-gray-700 dark:text-gray-300">{orderData.shippingPrice === 0 ? 'Free' : `₹${orderData.shippingPrice?.toLocaleString('en-IN')}`}</span>
                                     </div>
                                     <div className="flex items-center justify-between mb-4 text-sm">
-                                        <span className="text-gray-500">Tax</span>
-                                        <span className="font-bold text-gray-700">₹{orderData.taxPrice?.toLocaleString('en-IN') || 0}</span>
+                                        <span className="text-gray-500 dark:text-gray-400">Tax</span>
+                                        <span className="font-bold text-gray-700 dark:text-gray-300">₹{orderData.taxPrice?.toLocaleString('en-IN') || 0}</span>
                                     </div>
-                                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                                        <span className="text-base font-bold text-gray-900">Total</span>
-                                        <span className="text-xl font-bold text-gray-900">₹{orderAmount?.toLocaleString('en-IN')}</span>
+                                    <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                                        <span className="text-base font-bold text-gray-900 dark:text-gray-100">Total</span>
+                                        <span className="text-xl font-bold text-gray-900 dark:text-gray-100">₹{orderAmount?.toLocaleString('en-IN')}</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Trust Badge Card */}
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Why Shop With Us?</h4>
+                            <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-8">
+                                <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">Why Shop With Us?</h4>
                                 <div className="space-y-4">
                                     <div className="flex gap-3">
                                         <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center flex-shrink-0 text-primary-600">
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-gray-900">100% Genuine Products</p>
-                                            <p className="text-xs text-gray-500 mt-0.5">Sourced directly from brands</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">100% Genuine Products</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Sourced directly from brands</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-3">
@@ -447,8 +439,8 @@ const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack })
                                             <FiShield size={16} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-gray-900">Secure Payments</p>
-                                            <p className="text-xs text-gray-500 mt-0.5">Your data is always protected</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">Secure Payments</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Your data is always protected</p>
                                         </div>
                                     </div>
                                 </div>
@@ -487,8 +479,9 @@ const PaymentGateway = () => {
         };
         loadOrder();
 
+        const timer = redirectTimerRef.current;
         return () => {
-            if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+            if (timer) clearTimeout(timer);
         };
     }, [orderId]);
 
@@ -508,10 +501,10 @@ const PaymentGateway = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-800/80 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-                    <p className="text-gray-500 font-medium">Loading payment details...</p>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">Loading payment details...</p>
                 </div>
             </div>
         );
@@ -534,39 +527,43 @@ const PaymentGateway = () => {
 
     // --- Default: Payment Method Selection ---
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4">
-            <div className="max-w-2xl mx-auto">
+        <div className="min-h-screen bg-[#fafafc] py-24 px-4 sm:px-8 relative overflow-hidden transition-colors duration-300">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-200/40 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200/40 rounded-full blur-[120px] pointer-events-none" />
+
+            <div className="max-w-3xl mx-auto relative z-10">
 
                 {/* Header */}
-                <div className="text-center mb-8">
+                <div className="text-center mb-10">
                     <button
                         onClick={() => navigate(-1)}
-                        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 font-medium mb-6 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 font-medium mb-8 transition-colors bg-white/50 dark:bg-gray-800/50 px-4 py-2 rounded-full shadow-sm hover:shadow-md"
                     >
                         <FiArrowLeft size={16} /> Back
                     </button>
-                    <div className="w-16 h-16 rounded-xl bg-primary-600 flex items-center justify-center mx-auto mb-5">
-                        <FiLock className="text-white" size={32} />
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary-600 to-indigo-500 text-white flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-200/50">
+                        <FiLock size={36} />
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 mb-3 tracking-tight">
                         Secure Payment
                     </h1>
-                    <p className="text-gray-500 text-base">
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">
                         Select a payment method to proceed
                     </p>
                 </div>
 
                 {/* Amount Card */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-5 mb-6">
+                <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-8 md:p-10 mb-8">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Amount to Pay</p>
-                            <p className="text-3xl font-bold text-gray-900">
+                            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                                 ₹{orderAmount ? orderAmount.toLocaleString('en-IN') : '—'}
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                            <span className="text-xs font-mono text-gray-400 bg-gray-50 dark:bg-gray-800/80 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
                                 Order #{orderId?.slice(-8).toUpperCase()}
                             </span>
                         </div>
@@ -575,7 +572,7 @@ const PaymentGateway = () => {
 
                 {/* Payment Methods */}
                 <div className="mb-6">
-                    <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 px-1">
+                    <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 px-1">
                         Choose Payment Method
                     </h2>
                     <div className="space-y-3">
@@ -586,23 +583,23 @@ const PaymentGateway = () => {
                                     key={method.id}
                                     type="button"
                                     onClick={() => handleSelectMethod(method.id)}
-                                    className={`w-full relative rounded-2xl border-2 p-5 transition-all duration-300 text-left group border-gray-200 bg-white hover:border-gray-300 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]`}
+                                    className={`w-full relative rounded-3xl border border-white/80 dark:border-gray-700/50 p-6 transition-all duration-300 text-left group bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl hover:bg-white/90 dark:hover:bg-gray-800/90 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-0.5 active:scale-[0.99]`}
                                 >
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-5">
                                         {/* Icon */}
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors bg-gray-100 text-gray-500 group-hover:bg-primary-600 group-hover:text-white`}>
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 group-hover:bg-primary-600 group-hover:text-white`}>
                                             <Icon size={22} />
                                         </div>
 
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-bold text-base mb-0.5 text-gray-800">
+                                            <h3 className="font-bold text-base mb-0.5 text-gray-800 dark:text-gray-200">
                                                 {method.name}
                                             </h3>
-                                            <p className="text-xs text-gray-500">{method.description}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{method.description}</p>
                                             <div className="flex flex-wrap gap-1.5 mt-2">
                                                 {method.tags.map(tag => (
-                                                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">{tag}</span>
+                                                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">{tag}</span>
                                                 ))}
                                             </div>
                                         </div>
@@ -618,7 +615,7 @@ const PaymentGateway = () => {
 
                                     {/* Method type badge */}
                                     <div className="absolute top-3 right-3">
-                                        <span className="text-[9px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                        <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full uppercase tracking-wider">
                                             Stripe Secure
                                         </span>
                                     </div>

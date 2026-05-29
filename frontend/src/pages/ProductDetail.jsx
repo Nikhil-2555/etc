@@ -18,8 +18,6 @@ const ProductDetail = () => {
     const [recsAIPowered, setRecsAIPowered] = useState(false);
     const { addToCart, cart } = useCart();
     const { addToCompare, removeFromCompare, compareItems } = useCompare();
-    const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-
     const isCompared = product && compareItems.some((item) => item._id === (product._id || product.id));
 
     const handleToggleCompare = () => {
@@ -61,7 +59,8 @@ const ProductDetail = () => {
             }
         };
         if (id) loadRecommendations();
-    }, [id]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, cart]);
 
     const handleAddToCart = () => {
         if (product.sizes && product.sizes.length > 0 && !selectedSize) {
@@ -88,12 +87,12 @@ const ProductDetail = () => {
 
                 {/* Product Info */}
                 <div className="flex flex-col justify-center">
-                    <nav className="text-sm text-gray-500 mb-4 flex items-center space-x-2">
-                        <Link to="/" className="hover:text-primary-600">Home</Link>
+                    <nav className="text-sm text-gray-500 dark:text-gray-400 mb-4 flex items-center space-x-2">
+                        <Link to="/" className="hover:text-primary-600 dark:hover:text-primary-400">Home</Link>
                         <span>/</span>
-                        <Link to="/products" className="hover:text-primary-600">Products</Link>
+                        <Link to="/products" className="hover:text-primary-600 dark:hover:text-primary-400">Products</Link>
                         <span>/</span>
-                        <span className="text-gray-900 font-medium truncate max-w-[200px]">{product.title}</span>
+                        <span className="text-gray-900 dark:text-gray-100 font-medium truncate max-w-[200px]">{product.title}</span>
                     </nav>
 
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">{product.title}</h1>
@@ -144,8 +143,8 @@ const ProductDetail = () => {
                                         key={size}
                                         onClick={() => setSelectedSize(size)}
                                         className={`px-4 h-14 rounded-xl flex items-center justify-center font-bold transition-all border-2 ${selectedSize === size
-                                            ? 'border-primary-600 bg-primary-50 text-primary-600 shadow-md transform scale-105'
-                                            : 'border-gray-100 bg-white text-gray-600 hover:border-gray-200 hover:bg-gray-50'
+                                            ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 shadow-md transform scale-105'
+                                            : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-gray-200 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                                             }`}
                                     >
                                         {size}
@@ -159,14 +158,14 @@ const ProductDetail = () => {
                         <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-xl">
                             <button
                                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                className="px-4 py-3 hover:bg-gray-50 text-gray-500 transition-colors"
+                                className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
                             >
                                 <FiMinus />
                             </button>
                             <span className="px-4 py-3 font-medium text-gray-900 dark:text-white w-12 text-center">{quantity}</span>
                             <button
                                 onClick={() => setQuantity(quantity + 1)}
-                                className="px-4 py-3 hover:bg-gray-50 text-gray-500 transition-colors"
+                                className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
                             >
                                 <FiPlus />
                             </button>

@@ -137,12 +137,12 @@ const Compare = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-[1600px] w-full mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
                             <div className="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center text-white">
                                 <FiLayers size={20} />
                             </div>
@@ -181,7 +181,7 @@ const Compare = () => {
                                 </div>
                                 <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Best Price</span>
                             </div>
-                            <p className="text-sm font-bold text-gray-900 line-clamp-1">{lowestPrice?.title}</p>
+                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">{lowestPrice?.title}</p>
                             <p className="text-green-600 font-bold text-lg">{formatPrice(lowestPrice?.price)}</p>
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl border border-amber-100 dark:border-amber-800 p-4 shadow-sm">
@@ -191,7 +191,7 @@ const Compare = () => {
                                 </div>
                                 <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Top Rated</span>
                             </div>
-                            <p className="text-sm font-bold text-gray-900 line-clamp-1">{highestRated?.title}</p>
+                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">{highestRated?.title}</p>
                             <p className="text-amber-600 font-bold text-lg">{highestRated?.rating?.rate?.toFixed(1) || 0} ★</p>
                         </div>
                         <div className="bg-white dark:bg-gray-800 rounded-xl border border-primary-100 dark:border-primary-800 p-4 shadow-sm col-span-2 md:col-span-1">
@@ -215,7 +215,7 @@ const Compare = () => {
                             {/* Product Headers */}
                             <thead>
                                 <tr className="border-b border-gray-100">
-                                    <th className="p-5 bg-gray-50 w-48 min-w-[180px] sticky left-0 z-10 border-r border-gray-100">
+                                    <th className="p-5 bg-gray-50 dark:bg-gray-800 w-48 min-w-[180px] sticky left-0 z-10 border-r border-gray-100 dark:border-gray-700">
                                         <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Features</span>
                                     </th>
                                     {compareItems.map((product) => (

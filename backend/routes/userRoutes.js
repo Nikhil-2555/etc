@@ -13,7 +13,12 @@ const generateToken = (id) => {
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email });
+
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Please provide email and password' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
 
         if (user && (await user.matchPassword(password))) {
             res.json({
@@ -28,7 +33,8 @@ router.post('/login', async (req, res) => {
             res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message, stack: error.stack });
+        console.error('Login error:', error.message);
+        res.status(500).json({ message: 'Server error during login' });
     }
 });
 
@@ -37,16 +43,26 @@ router.post('/login', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        const userExists = await User.findOne({ email });
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: 'Please provide name, email, and password' });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const userExists = await User.findOne({ email: normalizedEmail });
 
         if (userExists) {
             res.status(400).json({ message: 'User already exists' });
             return;
         }
 
-        const role = email.includes('admin') ? 'admin' : (email.includes('manager') ? 'manager' : 'user');
+        const role = normalizedEmail.includes('admin') ? 'admin' : (normalizedEmail.includes('manager') ? 'manager' : 'user');
 
-        const user = await User.create({ name, email, password, role });
+        const user = await User.create({ name: name.trim(), email: normalizedEmail, password, role });
 
         if (user) {
             res.status(201).json({
@@ -61,64 +77,84 @@ router.post('/', async (req, res) => {
             res.status(400).json({ message: 'Invalid user data' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message, stack: error.stack });
+        // Handle Mongoose duplicate key error
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+        console.error('Registration error:', error.message);
+        res.status(500).json({ message: 'Server error during registration' });
     }
 });
 
 // @desc Get user profile
 // @route GET /api/users/profile
 router.get('/profile', protect, async (req, res) => {
-    const user = await User.findById(req.user._id);
-    if (user) {
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            rewardPoints: user.rewardPoints,
-        });
-    } else {
-        res.status(404).json({ message: 'User not found' });
+    try {
+        const user = await User.findById(req.user._id);
+        if (user) {
+            res.json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                rewardPoints: user.rewardPoints,
+            });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        console.error('Get profile error:', error.message);
+        res.status(500).json({ message: 'Server error fetching profile' });
     }
 });
 
 // @desc Update user profile
 // @route PUT /api/users/profile
 router.put('/profile', protect, async (req, res) => {
-    const user = await User.findById(req.user._id);
+    try {
+        const user = await User.findById(req.user._id);
 
-    if (user) {
-        user.name = req.body.name || user.name;
-        user.email = req.body.email || user.email;
-        if (req.body.password) {
-            user.password = req.body.password;
+        if (user) {
+            user.name = req.body.name || user.name;
+            user.email = req.body.email || user.email;
+            if (req.body.password) {
+                user.password = req.body.password;
+            }
+
+            const updatedUser = await user.save();
+
+            res.json({
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                rewardPoints: updatedUser.rewardPoints,
+                token: generateToken(updatedUser._id),
+            });
+        } else {
+            res.status(404).json({ message: 'User not found' });
         }
-
-        const updatedUser = await user.save();
-
-        res.json({
-            _id: updatedUser._id,
-            name: updatedUser.name,
-            email: updatedUser.email,
-            role: updatedUser.role,
-            rewardPoints: updatedUser.rewardPoints,
-            token: generateToken(updatedUser._id),
-        });
-    } else {
-        res.status(404).json({ message: 'User not found' });
+    } catch (error) {
+        console.error('Update profile error:', error.message);
+        res.status(500).json({ message: 'Server error updating profile' });
     }
 });
 
 // @desc Delete user account
 // @route DELETE /api/users/profile
 router.delete('/profile', protect, async (req, res) => {
-    const user = await User.findById(req.user._id);
+    try {
+        const user = await User.findById(req.user._id);
 
-    if (user) {
-        await user.deleteOne();
-        res.json({ message: 'User removed' });
-    } else {
-        res.status(404).json({ message: 'User not found' });
+        if (user) {
+            await user.deleteOne();
+            res.json({ message: 'User removed' });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        console.error('Delete profile error:', error.message);
+        res.status(500).json({ message: 'Server error deleting profile' });
     }
 });
 

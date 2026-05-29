@@ -48,10 +48,10 @@ const Sales = () => {
     ];
 
     const activeSale = {
-        title: "Holi Festival Sale",
+        title: "Great Indian Summer Sale",
         date: "Live Now!",
         endsIn: "2 Days",
-        description: "Colors of joy, colors of savings! Grab exclusive deals this Holi."
+        description: "Get ready for the hottest deals of the season! Up to 50% off on summer essentials."
     };
 
     useEffect(() => {

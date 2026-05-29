@@ -111,29 +111,34 @@ const CustomerSupport = () => {
             .replace(/\*(.*?)\*/g, '<em class="italic text-inherit">$1</em>')
             .replace(/^[•\-]\s?(.+)/gm, '<li class="ml-4 list-disc marker:text-primary-400">$1</li>')
             .replace(/(<li class="ml-4 list-disc marker:text-primary-400">.*<\/li>)/gs, '<ul class="space-y-1.5 my-3">$1</ul>')
+            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="w-32 h-32 object-cover rounded-xl my-3 border border-gray-200 dark:border-gray-700 shadow-md" />')
             .replace(/\n/g, '<br/>');
     };
 
     return (
-        <div className="h-[calc(100vh-80px)] bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center py-4 sm:py-6 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
-            <div className="w-[95%] max-w-[1400px] bg-white dark:bg-gray-800 shadow-sm rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col h-full max-h-[850px] overflow-hidden">
+        <div className="min-h-[calc(100vh-4rem)] bg-[#fafafc] dark:bg-gray-950 flex flex-col items-center justify-center py-24 px-4 sm:px-8 lg:px-12 xl:px-16 relative overflow-hidden transition-colors duration-300">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-200/40 rounded-full blur-[120px] mix-blend-multiply pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-[120px] mix-blend-multiply pointer-events-none" />
+
+            <div className="w-full max-w-[2000px] bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 flex flex-col h-[80vh] min-h-[600px] max-h-[900px] overflow-hidden relative z-10">
 
                 {/* Header */}
-                <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-5 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-4">
+                <div className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border-b border-white/60 dark:border-gray-700/50 px-8 py-6 flex items-center justify-between flex-shrink-0 z-20">
+                    <div className="flex items-center gap-5">
                         <div className="relative">
-                            <div className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
-                                <FiCpu className="text-white" size={24} />
+                            <div className="w-14 h-14 bg-gradient-to-tr from-primary-600 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200/50">
+                                <FiCpu className="text-white" size={26} />
                             </div>
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></span>
+                            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-[3px] border-white rounded-full shadow-sm"></span>
                         </div>
                         <div>
-                            <h2 className="text-gray-900 dark:text-white font-bold text-xl flex items-center gap-2">
-                                ShopFlow Assistant
-                                <FiShield className="text-primary-500" size={16} />
+                            <h2 className="text-gray-900 dark:text-gray-100 font-extrabold text-2xl flex items-center gap-2 tracking-tight">
+                                ShopFlow AI Assistant
+                                <FiShield className="text-indigo-500" size={18} />
                             </h2>
-                            <p className="text-primary-600 dark:text-primary-400 text-sm flex items-center gap-1">
-                                <FiSmile size={13} /> Always here to help
+                            <p className="text-indigo-600 font-medium text-sm flex items-center gap-1.5 mt-0.5">
+                                <FiSmile size={14} /> Always active & ready to help
                             </p>
                         </div>
                     </div>
@@ -143,29 +148,29 @@ const CustomerSupport = () => {
                 <div
                     ref={chatContainerRef}
                     onScroll={handleScroll}
-                    className="flex-1 overflow-y-auto px-6 py-6 space-y-6 scroll-smooth"
+                    className="flex-1 overflow-y-auto px-8 py-8 space-y-8 scroll-smooth"
                 >
                     {messages.map((msg, idx) => (
                         <div
                             key={idx}
                             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                            <div className={`flex gap-3 max-w-[85%] sm:max-w-[75%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                            <div className={`flex gap-4 max-w-[85%] sm:max-w-[70%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                                 {/* Avatar */}
-                                <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center mt-1 ${msg.role === 'user'
-                                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                                    : 'bg-primary-600 text-white'
+                                <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center mt-1 shadow-sm ${msg.role === 'user'
+                                    ? 'bg-gradient-to-tr from-gray-800 to-gray-900 text-white'
+                                    : 'bg-gradient-to-tr from-primary-600 to-indigo-500 text-white'
                                     }`}>
-                                    {msg.role === 'user' ? <FiUser size={16} /> : <FiCpu size={16} />}
+                                    {msg.role === 'user' ? <FiUser size={18} /> : <FiCpu size={18} />}
                                 </div>
 
                                 {/* Bubble */}
                                 <div
-                                    className={`px-5 py-3.5 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                        ? 'bg-primary-600 text-white rounded-tr-sm'
+                                    className={`px-6 py-4 rounded-[1.5rem] text-[15px] leading-relaxed shadow-sm ${msg.role === 'user'
+                                        ? 'bg-gray-900 dark:bg-primary-600 text-white rounded-tr-sm'
                                         : msg.isError
-                                            ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-900/50 rounded-tl-sm'
-                                            : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-600 rounded-tl-sm'
+                                            ? 'bg-red-50 text-red-700 border border-red-100 rounded-tl-sm'
+                                            : 'bg-white/80 dark:bg-gray-800/80 backdrop-blur-md text-gray-800 dark:text-gray-200 border border-white/60 dark:border-gray-700/50 rounded-tl-sm'
                                         }`}
                                     dangerouslySetInnerHTML={{
                                         __html: msg.role === 'user' ? msg.content : formatMessage(msg.content)
@@ -226,13 +231,13 @@ const CustomerSupport = () => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                            className="px-6 pb-3 pt-1 flex flex-wrap gap-2 flex-shrink-0 justify-center"
+                            className="px-8 pb-4 pt-2 flex flex-wrap gap-3 flex-shrink-0 justify-center"
                         >
                             {QUICK_PROMPTS.map((qp, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => sendMessage(qp.prompt)}
-                                    className="text-xs px-3.5 py-2 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400 border border-gray-200 dark:border-gray-600 transition-colors font-medium"
+                                    className="text-sm px-5 py-2.5 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm text-gray-700 dark:text-gray-300 rounded-xl hover:bg-white dark:hover:bg-gray-700 hover:text-indigo-600 border border-gray-100/50 dark:border-gray-700/50 transition-all font-semibold"
                                 >
                                     {qp.label}
                                 </button>
@@ -242,28 +247,28 @@ const CustomerSupport = () => {
                 </AnimatePresence>
 
                 {/* Input Area */}
-                <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
-                    <div className="flex items-end gap-2.5 bg-gray-50 dark:bg-gray-700 rounded-xl p-2 border border-gray-200 dark:border-gray-600 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/10 transition-all">
-                        <div className="w-9 h-9 flex items-center justify-center shrink-0 rounded-lg bg-white dark:bg-gray-600 ml-0.5 mb-0.5">
-                            <FiShoppingBag className="text-gray-400 dark:text-gray-500" size={16} />
+                <div className="px-8 py-6 border-t border-white/60 dark:border-gray-700/50 flex-shrink-0 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md">
+                    <div className="flex items-end gap-3 bg-white/80 dark:bg-gray-800/80 rounded-2xl p-2 border border-gray-100/50 dark:border-gray-700/50 shadow-inner focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-100/50 transition-all">
+                        <div className="w-12 h-12 flex items-center justify-center shrink-0 rounded-xl bg-gray-50 dark:bg-gray-700/80 ml-1 mb-1">
+                            <FiShoppingBag className="text-indigo-400" size={20} />
                         </div>
                         <textarea
                             ref={inputRef}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Type a message to ShopFlow AI..."
-                            className="flex-1 bg-transparent outline-none text-sm pt-2.5 pb-2.5 text-gray-800 dark:text-gray-200 placeholder-gray-400 resize-none min-h-[40px] max-h-[120px]"
+                            placeholder="Ask ShopFlow AI about products, trends, or gifts..."
+                            className="flex-1 bg-transparent outline-none text-[15px] font-medium pt-4 pb-3 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 resize-none min-h-[50px] max-h-[150px]"
                             disabled={isLoading}
                             rows={1}
                             style={{
-                                height: input ? 'auto' : '40px',
+                                height: input ? 'auto' : '50px',
                                 scrollbarWidth: 'none'
                             }}
                             onInput={(e) => {
                                 e.target.style.height = 'auto';
                                 e.target.style.height = (e.target.scrollHeight) + 'px';
-                                if (e.target.scrollHeight > 120) {
+                                if (e.target.scrollHeight > 150) {
                                     e.target.style.overflowY = 'auto';
                                 } else {
                                     e.target.style.overflowY = 'hidden';
@@ -273,12 +278,12 @@ const CustomerSupport = () => {
                         <button
                             onClick={() => sendMessage()}
                             disabled={!input.trim() || isLoading}
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center mb-0.5 transition-all flex-shrink-0 ${input.trim() && !isLoading
-                                ? 'bg-primary-600 text-white hover:bg-primary-700'
-                                : 'bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                            className={`w-12 h-12 rounded-xl flex items-center justify-center mb-1 transition-all flex-shrink-0 shadow-sm ${input.trim() && !isLoading
+                                ? 'bg-gray-900 dark:bg-primary-600 text-white hover:bg-indigo-600 hover:shadow-md'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
                                 }`}
                         >
-                            <FiSend size={16} />
+                            <FiSend size={18} className={input.trim() && !isLoading ? 'translate-x-0.5' : ''} />
                         </button>
                     </div>
                     <div className="flex justify-between items-center mt-2.5 px-1">

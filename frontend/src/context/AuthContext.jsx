@@ -10,33 +10,36 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
+        try {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                const parsed = JSON.parse(storedUser);
+                // Validate that the stored data has essential fields
+                if (parsed && parsed.token && parsed._id) {
+                    setUser(parsed);
+                } else {
+                    localStorage.removeItem('user');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to parse stored user data:', error);
+            localStorage.removeItem('user');
         }
         setLoading(false);
     }, []);
 
     const login = async (email, password) => {
-        try {
-            const userData = await apiLogin(email, password);
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
-            return userData;
-        } catch (error) {
-            throw error;
-        }
+        const userData = await apiLogin(email, password);
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        return userData;
     };
 
     const register = async (name, email, password) => {
-        try {
-            const userData = await apiRegister(name, email, password);
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
-            return userData;
-        } catch (error) {
-            throw error;
-        }
+        const userData = await apiRegister(name, email, password);
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        return userData;
     };
 
     const updateProfile = (updatedUser) => {

@@ -6,9 +6,14 @@ const api = axios.create({
 
 // Add token to requests
 api.interceptors.request.use((config) => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
+    try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user && user.token) {
+            config.headers.Authorization = `Bearer ${user.token}`;
+        }
+    } catch {
+        // Corrupted localStorage — ignore
+        localStorage.removeItem('user');
     }
     return config;
 });
@@ -17,10 +22,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        const isLoginRequest = error.config && error.config.url && error.config.url.includes('/users/login');
-        if (error.response && error.response.status === 401 && !isLoginRequest) {
+        const url = error.config?.url || '';
+        const isAuthRequest = url.includes('/users/login') || url === '/users';
+        const isAlreadyOnAuthPage = window.location.pathname === '/login' || window.location.pathname === '/signup' || window.location.pathname === '/admin/login';
+
+        if (error.response && error.response.status === 401 && !isAuthRequest && !isAlreadyOnAuthPage) {
             localStorage.removeItem('user');
             window.location.href = '/login';
+        }
+
+        // Extract the server error message so callers get a useful message
+        const serverMessage = error.response?.data?.message;
+        if (serverMessage) {
+            error.message = serverMessage;
         }
         return Promise.reject(error);
     }

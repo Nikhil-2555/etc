@@ -306,7 +306,7 @@ const Navbar = () => {
     ];
 
     return (
-        <div className="navbar-sticky relative z-[100]">
+        <div className={`navbar-sticky sticky top-4 z-[100] px-4 sm:px-8 lg:px-12 xl:px-16 transition-all duration-500 ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
 
             {/* Voice Listening Overlay */}
             {isListening && (
@@ -361,12 +361,12 @@ const Navbar = () => {
 
 
             {/* Main Navbar */}
-            <nav className="relative z-[100] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors duration-300">
-                <div className="max-w-[1920px] mx-auto px-6 h-20 flex items-center justify-between gap-4 md:gap-8">
+            <nav className="w-full max-w-[2400px] mx-auto bg-white/80 backdrop-blur-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-full transition-all duration-300">
+                <div className="px-6 md:px-8 h-16 md:h-[4.5rem] flex items-center justify-between gap-4 md:gap-8">
 
                     {/* Logo & Main Nav */}
                     <div className="flex items-center gap-8 flex-shrink-0">
-                        <Link to="/" className="text-2xl font-bold text-primary-600 tracking-tight">
+                        <Link to="/" className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-500 tracking-tight">
                             ShopFlow
                         </Link>
                         
@@ -405,24 +405,24 @@ const Navbar = () => {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                                className={`w-full pl-5 pr-24 py-2.5 bg-gray-50 border rounded-full focus:outline-none focus:border-primary-500 focus:bg-white transition-all text-sm ${
-                                    isListening ? 'border-red-400 ring-2 ring-red-200 bg-red-50/30' : 'border-gray-200'
+                                className={`w-full pl-6 pr-24 py-2.5 bg-gray-50/50 backdrop-blur-sm border rounded-full focus:outline-none focus:border-primary-300 focus:bg-white focus:ring-4 focus:ring-primary-100/50 transition-all text-sm font-medium ${
+                                    isListening ? 'border-red-400 ring-4 ring-red-100 bg-red-50/50 text-red-700' : 'border-gray-200/80 text-gray-800 hover:bg-gray-50'
                                 }`}
                             />
-                            <button type="submit" className="absolute right-10 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors">
-                                <FiSearch size={16} />
+                            <button type="submit" className="absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-gray-900 text-white rounded-full hover:bg-primary-600 hover:shadow-md transition-all">
+                                <FiSearch size={14} />
                             </button>
                             <button
                                 type="button"
                                 onClick={handleVoiceSearch}
-                                className={`absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
                                     isListening
                                         ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-primary-100 hover:text-primary-600'
+                                        : 'bg-white text-gray-500 border border-gray-100 hover:bg-primary-50 hover:text-primary-600 shadow-sm'
                                 }`}
                                 title="Voice Search"
                             >
-                                <FiMic size={16} />
+                                <FiMic size={14} />
                             </button>
                         </form>
 
@@ -451,12 +451,12 @@ const Navbar = () => {
                     </div>
 
                     {/* Desktop Actions */}
-                    <div className="hidden md:flex items-center space-x-6 flex-shrink-0">
+                    <div className="hidden md:flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
                         {/* Categories Dropdown */}
-                        <div className="relative" ref={categoryMenuRef}>
+                        <div className="relative mr-2" ref={categoryMenuRef}>
                             <button
                                 onClick={() => setIsCategoryMenuOpen(!isCategoryMenuOpen)}
-                                className="flex items-center space-x-1 text-gray-600 hover:text-primary-600 font-medium transition-colors"
+                                className="flex items-center space-x-1 px-4 py-2 rounded-2xl hover:bg-white/80 hover:shadow-sm text-gray-700 hover:text-primary-600 font-semibold transition-all border border-transparent hover:border-gray-100"
                             >
                                 <span>Categories</span>
                                 <FiChevronDown size={16} className={`transition-transform ${isCategoryMenuOpen ? 'rotate-180' : ''}`} />
@@ -487,29 +487,29 @@ const Navbar = () => {
                         {/* Dark Mode Toggle */}
                         <button
                             onClick={toggleTheme}
-                            className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-all shadow-sm"
                             aria-label="Toggle dark mode"
                         >
-                            {darkMode ? <FiSun size={20} /> : <FiMoon size={20} />}
+                            {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
                         </button>
 
-                        <Link to="/support" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 transition-colors relative" aria-label="Customer Support">
-                            <FiMessageCircle size={22} />
+                        <Link to="/support" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-100 transition-all shadow-sm relative" aria-label="Customer Support">
+                            <FiMessageCircle size={18} />
                         </Link>
 
-                        <Link to="/wishlist" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 transition-colors relative">
-                            <FiHeart size={22} />
+                        <Link to="/wishlist" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition-all shadow-sm relative">
+                            <FiHeart size={18} />
                             {totalWishlistItems > 0 && (
-                                <span className={`absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseWishlist ? 'animate-badge-pop' : ''}`}>
+                                <span className={`absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white ${pulseWishlist ? 'animate-badge-pop' : ''}`}>
                                     {totalWishlistItems}
                                 </span>
                             )}
                         </Link>
 
-                        <Link to="/compare" className="text-gray-600 dark:text-gray-300 hover:text-primary-600 transition-colors relative" aria-label="Compare Products">
-                            <FiLayers size={22} />
+                        <Link to="/compare" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 hover:border-cyan-100 transition-all shadow-sm relative" aria-label="Compare Products">
+                            <FiLayers size={18} />
                             {compareItems.length > 0 && (
-                                <span className={`absolute -top-2 -right-2 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseCompare ? 'animate-badge-pop' : ''}`}>
+                                <span className={`absolute -top-1.5 -right-1.5 bg-cyan-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white ${pulseCompare ? 'animate-badge-pop' : ''}`}>
                                     {compareItems.length}
                                 </span>
                             )}
@@ -518,7 +518,7 @@ const Navbar = () => {
                         {(user?.role === 'admin' || user?.role === 'manager') && (
                             <Link
                                 to="/admin"
-                                className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-full text-sm font-bold hover:bg-amber-600 transition-all shadow-md hover:shadow-lg active:scale-95"
+                                className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-[1.25rem] text-sm font-bold hover:bg-amber-600 transition-all shadow-md hover:shadow-lg active:scale-95"
                             >
                                 <FiSettings className="animate-spin-slow" /> Admin
                             </Link>
@@ -527,59 +527,59 @@ const Navbar = () => {
                         <button 
                             onClick={() => setIsCartDrawerOpen(true)}
                             id="desktop-cart-btn"
-                            className="cart-icon-target relative text-gray-600 hover:text-primary-600 transition-colors focus:outline-none"
+                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100 transition-all shadow-sm relative focus:outline-none cart-icon-target"
                             aria-label="Open Shopping Cart Drawer"
                         >
-                            <FiShoppingCart size={22} />
+                            <FiShoppingCart size={18} />
                             {totalItems > 0 && (
-                                <span className={`absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseCart ? 'animate-badge-pop' : ''}`}>
+                                <span className={`absolute -top-1.5 -right-1.5 bg-emerald-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white ${pulseCart ? 'animate-badge-pop' : ''}`}>
                                     {totalItems}
                                 </span>
                             )}
                         </button>
 
                         {user ? (
-                            <div className="relative" ref={userMenuRef}>
+                            <div className="relative ml-2" ref={userMenuRef}>
                                 <button
                                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                    className="flex items-center space-x-2 focus:outline-none"
+                                    className="flex items-center space-x-2 pl-2 pr-4 py-1.5 rounded-[2rem] hover:bg-white/80 hover:shadow-sm border border-transparent hover:border-gray-100 transition-all focus:outline-none"
                                 >
-                                    <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold border border-primary-200">
+                                    <div className="w-8 h-8 bg-gradient-to-tr from-primary-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold shadow-inner">
                                         {user.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="text-left hidden lg:block">
-                                        <p className="text-xs text-gray-500">Welcome</p>
-                                        <p className="text-sm font-semibold text-gray-900 leading-none">{user.name.split(' ')[0]}</p>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Account</p>
+                                        <p className="text-sm font-bold text-gray-900 leading-none">{user.name.split(' ')[0]}</p>
                                     </div>
-                                    <FiChevronDown size={14} className="text-gray-400" />
+                                    <FiChevronDown size={14} className="text-gray-400 ml-1" />
                                 </button>
 
                                 {isUserMenuOpen && (
-                                    <div className="absolute top-full right-0 mt-3 w-56 z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
-                                        <div className="px-4 py-3 border-b border-gray-50">
+                                    <div className="absolute top-full right-0 mt-3 w-56 z-50 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100/50 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
+                                        <div className="px-4 py-3 border-b border-gray-50 bg-gray-50/50">
                                             <p className="text-sm font-bold text-gray-900">{user.name}</p>
                                             <p className="text-xs text-gray-500 truncate">{user.email}</p>
                                         </div>
 
-                                        <Link to="/dashboard" onClick={() => setIsUserMenuOpen(false)} className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <Link to="/dashboard" onClick={() => setIsUserMenuOpen(false)} className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 font-medium transition-colors">
                                             <FiUser size={16} />
                                             <span>My Profile</span>
                                         </Link>
-                                        <Link to="/dashboard" onClick={() => setIsUserMenuOpen(false)} className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <Link to="/dashboard" onClick={() => setIsUserMenuOpen(false)} className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 font-medium transition-colors">
                                             <FiBox size={16} />
                                             <span>Orders</span>
                                         </Link>
                                         {(user.role === 'admin' || user.role === 'manager') && (
-                                            <Link to="/admin" onClick={() => setIsUserMenuOpen(false)} className="flex items-center space-x-3 px-4 py-3 text-sm text-primary-600 hover:bg-primary-50 transition-colors font-medium">
+                                            <Link to="/admin" onClick={() => setIsUserMenuOpen(false)} className="flex items-center space-x-3 px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 font-bold transition-colors">
                                                 <FiSettings size={16} />
                                                 <span>Manager Panel</span>
                                             </Link>
                                         )}
 
-                                        <div className="border-t border-gray-100 mt-1">
+                                        <div className="border-t border-gray-50 mt-1">
                                             <button
                                                 onClick={() => { logout(); navigate('/'); }}
-                                                className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                                                className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 font-medium transition-colors"
                                             >
                                                 <FiLogOut size={16} />
                                                 <span>Log Out</span>
@@ -589,7 +589,7 @@ const Navbar = () => {
                                 )}
                             </div>
                         ) : (
-                            <Link to="/login" className="bg-gray-900 text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-primary-600 transition-all shadow-md hover:shadow-lg transform active:scale-95">
+                            <Link to="/login" className="ml-2 bg-gray-900 text-white px-6 py-2.5 rounded-2xl text-sm font-bold hover:bg-primary-600 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 transform">
                                 Login
                             </Link>
                         )}
@@ -626,8 +626,8 @@ const Navbar = () => {
 
                 {/* Mobile Menu Overlay */}
                 {isMenuOpen && (
-                    <div className="md:hidden bg-white border-t border-gray-100 absolute top-full left-0 right-0 shadow-xl border-b z-40 max-h-[90vh] overflow-y-auto">
-                        <div className="p-4 space-y-6">
+                    <div className="md:hidden bg-white/95 backdrop-blur-3xl border border-white/60 absolute top-full left-2 right-2 mt-2 rounded-[2rem] shadow-2xl z-40 max-h-[85vh] overflow-y-auto">
+                        <div className="p-5 space-y-6">
                             <div className="relative">
                                 <form onSubmit={handleSearch} className="relative">
                                     <input
@@ -739,12 +739,12 @@ const Navbar = () => {
 
             {/* Slide-Over Cart Drawer Panel */}
             <div 
-                className={`fixed top-0 right-0 h-screen w-full sm:max-w-md bg-white dark:bg-gray-900 shadow-2xl z-[9999] flex flex-col transition-transform duration-300 ease-out transform ${
-                    isCartDrawerOpen ? 'translate-x-0' : 'translate-x-full'
+                className={`fixed top-2 bottom-2 right-2 md:top-4 md:bottom-4 md:right-4 h-[calc(100vh-1rem)] md:h-[calc(100vh-2rem)] w-[calc(100%-1rem)] sm:max-w-md bg-white/95 backdrop-blur-3xl border border-white shadow-2xl shadow-gray-400/30 rounded-3xl z-[9999] flex flex-col transition-transform duration-500 ease-out transform ${
+                    isCartDrawerOpen ? 'translate-x-0' : 'translate-x-[120%]'
                 }`}
             >
                 {/* Drawer Header */}
-                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <div className="p-6 border-b border-gray-100/50 flex items-center justify-between bg-white/50 rounded-t-3xl">
                     <div className="flex items-center gap-2">
                         <FiShoppingCart className="text-primary-600" size={20} />
                         <h2 className="text-lg font-bold text-gray-900 dark:text-white">Shopping Cart</h2>
@@ -780,8 +780,8 @@ const Navbar = () => {
                         cart.map((item) => {
                             const itemId = item._id || item.id;
                             return (
-                                <div key={`${itemId}-${item.size}`} className="flex gap-4 bg-gray-50 dark:bg-gray-800/40 p-3 rounded-xl border border-gray-100/50 dark:border-gray-700/50 hover:shadow-sm transition-shadow">
-                                    <div className="w-16 h-16 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-1 flex-shrink-0 flex items-center justify-center">
+                                <div key={`${itemId}-${item.size}`} className="flex gap-4 bg-white/60 p-4 rounded-2xl border border-gray-100/60 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 group">
+                                    <div className="w-16 h-16 rounded-xl bg-white border border-gray-50 p-1 flex-shrink-0 flex items-center justify-center shadow-sm">
                                         <img src={item.image} alt={item.title} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -829,7 +829,7 @@ const Navbar = () => {
 
                 {/* Drawer Footer */}
                 {cart.length > 0 && (
-                    <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/20 space-y-4">
+                    <div className="p-6 border-t border-gray-100/50 bg-white/80 rounded-b-3xl space-y-4">
                         <div className="flex items-center justify-between">
                             <span className="text-gray-500 text-sm">Estimated Total</span>
                             <span className="text-xl font-bold text-primary-600 dark:text-primary-400">₹{totalPrice.toLocaleString('en-IN')}</span>
@@ -844,7 +844,7 @@ const Navbar = () => {
                             </button>
                             <button
                                 onClick={() => { setIsCartDrawerOpen(false); navigate('/cart'); }}
-                                className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl py-2.5 font-medium text-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+                                className="w-full bg-white border border-gray-200 text-gray-700 rounded-xl py-3 font-semibold text-center hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
                             >
                                 View Detailed Cart
                             </button>
