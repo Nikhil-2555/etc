@@ -14,7 +14,6 @@ const NotificationManager = () => {
         // Connect through Vite proxy instead of directly to backend
         socket = io('/', {
             withCredentials: true,
-            transports: ['websocket'], // Force WebSocket to prevent long-polling issues in clustered backend
         });
 
         // Whenever the user logs in, join the user room with their ID

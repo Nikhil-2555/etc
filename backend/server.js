@@ -1,21 +1,3 @@
-const cluster = require('cluster');
-const os = require('os');
-
-if (cluster.isPrimary || cluster.isMaster) {
-    const numCPUs = os.cpus().length;
-    console.log(`Primary process ${process.pid} is running`);
-
-    // Fork workers for each CPU core
-    for (let i = 0; i < numCPUs; i++) {
-        cluster.fork();
-    }
-
-    // Replace dead workers to ensure high availability
-    cluster.on('exit', (worker, code, signal) => {
-        console.log(`Worker ${worker.process.pid} died. Restarting...`);
-        cluster.fork();
-    });
-} else {
 const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -93,7 +75,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/payment', paymentRoutes);
-
+// hello
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -115,5 +97,4 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, console.log(`Worker ${process.pid} running in ${process.env.NODE_ENV} mode on port ${PORT}`));
-}
+server.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));

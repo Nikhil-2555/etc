@@ -37,11 +37,8 @@ const Home = () => {
             <section className="relative px-4 pt-6 pb-12 sm:px-8 lg:px-12 xl:px-16 w-full max-w-[2400px] mx-auto">
                 <div className="relative h-[85vh] min-h-[600px] w-full rounded-[2.5rem] overflow-hidden shadow-2xl shadow-gray-200/50">
                     <img
-                        src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=75&auto=format&fit=crop"
+                        src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop"
                         alt="Hero Background"
-                        fetchpriority="high"
-                        width="1200"
-                        height="800"
                         className="absolute inset-0 w-full h-full object-cover scale-105 transform origin-center animate-image-pan"
                         style={{ animation: 'pan 30s linear infinite alternate' }}
                     />

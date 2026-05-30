@@ -117,8 +117,6 @@ const ProductCard = ({ product }) => {
                         ref={imgRef}
                         src={product.image}
                         alt={product.title}
-                        loading="lazy"
-                        decoding="async"
                         onError={(e) => {
                             e.target.src = 'https://images.unsplash.com/photo-1594122230689-45899d9e6f69?w=800';
                         }}
@@ -129,8 +127,6 @@ const ProductCard = ({ product }) => {
                         <img
                             src={secondaryImage}
                             alt={`${product.title} Alternate View`}
-                            loading="lazy"
-                            decoding="async"
                             onError={(e) => {
                                 e.target.style.display = 'none';
                             }}

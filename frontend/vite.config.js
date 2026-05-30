@@ -12,22 +12,6 @@ export default defineConfig({
       "@": path.resolve(process.cwd(), "./src"),
     },
   },
-  build: {
-    // Split large vendor libs into separate cacheable chunks
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-charts': ['recharts'],
-          'vendor-stripe': ['@stripe/stripe-js', '@stripe/react-stripe-js'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-ui': ['react-icons', 'react-hot-toast', 'lucide-react'],
-        },
-      },
-    },
-    // Increase warning threshold since we've split chunks
-    chunkSizeWarningLimit: 600,
-  },
   server: {
     port: 5100,
     proxy: {
