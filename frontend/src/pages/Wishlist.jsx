@@ -3,6 +3,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { FiHeart, FiTrash2, FiShoppingCart, FiArrowLeft } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { Helmet } from 'react-helmet-async';
 
 const Wishlist = () => {
     const { wishlist, removeFromWishlist } = useWishlist();
@@ -21,6 +22,9 @@ const Wishlist = () => {
     if (wishlist.length === 0) {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center p-4">
+                <Helmet>
+                    <title>My Wishlist | E-Commerce</title>
+                </Helmet>
                 <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6 text-gray-300 dark:text-gray-600">
                     <FiHeart size={40} />
                 </div>
@@ -35,6 +39,10 @@ const Wishlist = () => {
 
     return (
         <div className="container mx-auto px-4 py-8 min-h-screen">
+            <Helmet>
+                <title>My Wishlist ({wishlist.length}) | E-Commerce</title>
+                <meta name="description" content="View and manage your saved products in your wishlist." />
+            </Helmet>
             <div className="flex items-center gap-4 mb-8">
                 <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-900 dark:text-white">
                     <FiArrowLeft size={24} />

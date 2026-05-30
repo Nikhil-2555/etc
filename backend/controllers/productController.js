@@ -1,9 +1,25 @@
 const Product = require('../models/Product');
 
+// ── In-memory cache for product listing (avoids repeated DB round-trips) ──
+let productsCache = null;
+let productsCacheTime = 0;
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+const invalidateProductsCache = () => {
+    productsCache = null;
+    productsCacheTime = 0;
+};
+
 // @desc Fetch all products
 // @route GET /api/products
 const getProducts = async (req, res) => {
-    const products = await Product.find({});
+    const now = Date.now();
+    if (productsCache && (now - productsCacheTime) < CACHE_TTL_MS) {
+        return res.json(productsCache);
+    }
+    const products = await Product.find({}).lean();
+    productsCache = products;
+    productsCacheTime = now;
     res.json(products);
 };
 
@@ -15,7 +31,7 @@ const searchProducts = async (req, res) => {
         if (!query) return res.json([]);
         const products = await Product.find({
             title: { $regex: query, $options: 'i' }
-        }).limit(6);
+        }).limit(6).lean();
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: 'Search failed' });
@@ -26,7 +42,7 @@ const searchProducts = async (req, res) => {
 // @route GET /api/products/:id
 const getProductById = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const product = await Product.findById(req.params.id).lean();
         if (product) {
             res.json(product);
         } else {
@@ -53,6 +69,7 @@ const createProduct = async (req, res) => {
     });
 
     const createdProduct = await product.save();
+    invalidateProductsCache();
     res.status(201).json(createdProduct);
 };
 
@@ -90,6 +107,7 @@ const updateProduct = async (req, res) => {
             });
         }
 
+        invalidateProductsCache();
         res.json(updatedProduct);
     } else {
         res.status(404).json({ message: 'Product not found' });
@@ -102,6 +120,7 @@ const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (product) {
         await Product.deleteOne({ _id: product._id });
+        invalidateProductsCache();
         res.json({ message: 'Product removed' });
     } else {
         res.status(404).json({ message: 'Product not found' });

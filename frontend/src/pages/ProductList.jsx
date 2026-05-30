@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { fetchProducts } from '../services/api';
-import { FiFilter, FiSearch, FiX } from 'react-icons/fi';
+import { FiFilter, FiSearch, FiX, FiAlertCircle } from 'react-icons/fi';
+import { Helmet } from 'react-helmet-async';
 
 const ProductList = () => {
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [searchParams] = useSearchParams();
     const categoryParam = searchParams.get('category');
     const searchParam = searchParams.get('search');
@@ -39,12 +41,14 @@ const ProductList = () => {
     useEffect(() => {
         const loadProducts = async () => {
             setLoading(true);
+            setError(null);
             try {
                 const data = await fetchProducts();
                 setProducts(data);
                 setFilteredProducts(data);
-            } catch (error) {
-                console.error("Failed to load products", error);
+            } catch (err) {
+                console.error("Failed to load products", err);
+                setError("Unable to load products. Please check your connection and try again.");
             } finally {
                 setLoading(false);
             }
@@ -84,6 +88,10 @@ const ProductList = () => {
 
     return (
         <div className="max-w-[1920px] mx-auto px-6 py-8">
+            <Helmet>
+                <title>Shop Premium Products | E-Commerce</title>
+                <meta name="description" content="Discover our wide range of premium products. Filter by category, price, and find exactly what you need with our seamless shopping experience." />
+            </Helmet>
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shop</h1>
@@ -169,7 +177,19 @@ const ProductList = () => {
 
                 {/* Product Grid */}
                 <div className="flex-1">
-                    {loading ? (
+                    {error ? (
+                        <div className="text-center py-20 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-dashed border-red-200 dark:border-red-800 flex flex-col items-center">
+                            <FiAlertCircle className="text-red-500 mb-4" size={48} />
+                            <h3 className="text-xl font-bold text-red-700 dark:text-red-400 mb-2">Oops! Something went wrong</h3>
+                            <p className="text-red-600 dark:text-red-500 mb-6 max-w-md">{error}</p>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors shadow-md shadow-red-500/20 active:scale-95"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    ) : loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
                                 <div key={i} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 h-[420px] flex flex-col justify-between">
@@ -225,13 +245,15 @@ const ProductList = () => {
                             </div>
                         )
                     ) : (
-                        <div className="text-center py-20 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-                            <p className="text-gray-500 dark:text-gray-400 text-lg">No products found matching your criteria.</p>
+                        <div className="text-center py-24 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 shadow-sm flex flex-col items-center">
+                            <FiSearch className="text-gray-300 dark:text-gray-600 mb-4" size={64} />
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No products found</h3>
+                            <p className="text-gray-500 dark:text-gray-400 text-lg max-w-md mb-6">We couldn't find anything matching your current filters. Try adjusting your search criteria.</p>
                             <button
                                 onClick={() => { setSelectedCategory('All'); setSearchQuery(''); setPriceRange([0, 200000]); }}
-                                className="mt-4 text-primary-600 font-medium hover:underline"
+                                className="px-6 py-3 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 active:scale-95"
                             >
-                                Clear Filters
+                                Clear All Filters
                             </button>
                         </div>
                     )}
