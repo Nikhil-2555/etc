@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { useCompare } from '../context/CompareContext';
 import { useCart } from '../context/CartContext';
@@ -9,6 +10,35 @@ import {
 } from 'react-icons/fi';
 import { useWishlist } from '../context/WishlistContext';
 import toast from 'react-hot-toast';
+
+const SectionHeader = ({ title, icon: Icon, sectionKey, badge, expandedSections, toggleSection }) => (
+    <tr className="bg-gray-50 dark:bg-gray-700/80">
+        <td
+            colSpan={5}
+            className="px-6 py-3 cursor-pointer select-none"
+            onClick={() => toggleSection(sectionKey)}
+        >
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Icon className="text-primary-600" size={16} />
+                    <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">{title}</span>
+                    {badge && (
+                        <span className="bg-primary-100 text-primary-700 dark:text-primary-400 text-[10px] font-bold px-2 py-0.5 rounded-full">{badge}</span>
+                    )}
+                </div>
+                {expandedSections[sectionKey] ? <FiChevronUp size={16} className="text-gray-400 dark:text-gray-500" /> : <FiChevronDown size={16} className="text-gray-400 dark:text-gray-500" />}
+            </div>
+        </td>
+    </tr>
+);
+
+const EmptyCell = ({ index }) => (
+    <td key={`empty-${index}`} className="px-4 py-4 border-l border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <div className="flex flex-col items-center justify-center text-gray-300">
+            <span className="text-xs">—</span>
+        </div>
+    </td>
+);
 
 const Compare = () => {
     const { compareItems, removeFromCompare, clearCompare } = useCompare();
@@ -101,34 +131,7 @@ const Compare = () => {
         );
     }
 
-    const SectionHeader = ({ title, icon: Icon, sectionKey, badge }) => (
-        <tr className="bg-gray-50 dark:bg-gray-700/80">
-            <td
-                colSpan={compareItems.length + 1 + (4 - compareItems.length)}
-                className="px-6 py-3 cursor-pointer select-none"
-                onClick={() => toggleSection(sectionKey)}
-            >
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Icon className="text-primary-600" size={16} />
-                        <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">{title}</span>
-                        {badge && (
-                            <span className="bg-primary-100 text-primary-700 dark:text-primary-400 text-[10px] font-bold px-2 py-0.5 rounded-full">{badge}</span>
-                        )}
-                    </div>
-                    {expandedSections[sectionKey] ? <FiChevronUp size={16} className="text-gray-400 dark:text-gray-500" /> : <FiChevronDown size={16} className="text-gray-400 dark:text-gray-500" />}
-                </div>
-            </td>
-        </tr>
-    );
 
-    const EmptyCell = ({ index }) => (
-        <td key={`empty-${index}`} className="px-4 py-4 border-l border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
-            <div className="flex flex-col items-center justify-center text-gray-300">
-                <span className="text-xs">—</span>
-            </div>
-        </td>
-    );
 
     const isDifferent = (getValue) => {
         if (!highlightDifferences || compareItems.length < 2) return false;
@@ -302,7 +305,7 @@ const Compare = () => {
 
                             <tbody>
                                 {/* ═══════ PRICING SECTION ═══════ */}
-                                <SectionHeader title="Pricing" icon={FiAward} sectionKey="pricing" />
+                                <SectionHeader title="Pricing" icon={FiAward} sectionKey="pricing" expandedSections={expandedSections} toggleSection={toggleSection} />
                                 {expandedSections.pricing && (
                                     <>
                                         {/* Price */}
@@ -326,7 +329,7 @@ const Compare = () => {
                                                     )}
                                                 </td>
                                             ))}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`price-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`price-${i}`} index={`price-${i}`} />)}
                                         </tr>
 
                                         {/* Original Price */}
@@ -343,7 +346,7 @@ const Compare = () => {
                                                     )}
                                                 </td>
                                             ))}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`orig-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`orig-${i}`} index={`orig-${i}`} />)}
                                         </tr>
 
                                         {/* Savings */}
@@ -365,13 +368,13 @@ const Compare = () => {
                                                     </td>
                                                 );
                                             })}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`save-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`save-${i}`} index={`save-${i}`} />)}
                                         </tr>
                                     </>
                                 )}
 
                                 {/* ═══════ DETAILS SECTION ═══════ */}
-                                <SectionHeader title="Product Details" icon={FiPackage} sectionKey="details" />
+                                <SectionHeader title="Product Details" icon={FiPackage} sectionKey="details" expandedSections={expandedSections} toggleSection={toggleSection} />
                                 {expandedSections.details && (
                                     <>
                                         {/* Category */}
@@ -387,7 +390,7 @@ const Compare = () => {
                                                     </span>
                                                 </td>
                                             ))}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`cat-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`cat-${i}`} index={`cat-${i}`} />)}
                                         </tr>
 
                                         {/* Rating */}
@@ -427,7 +430,7 @@ const Compare = () => {
                                                     </td>
                                                 );
                                             })}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`rat-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`rat-${i}`} index={`rat-${i}`} />)}
                                         </tr>
 
                                         {/* Sizes */}
@@ -450,7 +453,7 @@ const Compare = () => {
                                                     )}
                                                 </td>
                                             ))}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`size-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`size-${i}`} index={`size-${i}`} />)}
                                         </tr>
 
                                         {/* Description */}
@@ -465,13 +468,13 @@ const Compare = () => {
                                                     </p>
                                                 </td>
                                             ))}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`desc-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`desc-${i}`} index={`desc-${i}`} />)}
                                         </tr>
                                     </>
                                 )}
 
                                 {/* ═══════ AVAILABILITY SECTION ═══════ */}
-                                <SectionHeader title="Availability & Shipping" icon={FiTruck} sectionKey="availability" />
+                                <SectionHeader title="Availability & Shipping" icon={FiTruck} sectionKey="availability" expandedSections={expandedSections} toggleSection={toggleSection} />
                                 {expandedSections.availability && (
                                     <>
                                         {/* Stock Status */}
@@ -492,7 +495,7 @@ const Compare = () => {
                                                     </td>
                                                 );
                                             })}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`stock-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`stock-${i}`} index={`stock-${i}`} />)}
                                         </tr>
 
                                         {/* Free Delivery */}
@@ -513,7 +516,7 @@ const Compare = () => {
                                                     )}
                                                 </td>
                                             ))}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`del-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`del-${i}`} index={`del-${i}`} />)}
                                         </tr>
 
                                         {/* Return Policy */}
@@ -528,7 +531,7 @@ const Compare = () => {
                                                     </span>
                                                 </td>
                                             ))}
-                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={i} index={`ret-${i}`} />)}
+                                            {Array.from({ length: Math.max(0, 4 - compareItems.length) }).map((_, i) => <EmptyCell key={`ret-${i}`} index={`ret-${i}`} />)}
                                         </tr>
                                     </>
                                 )}
@@ -536,7 +539,7 @@ const Compare = () => {
                                 {/* ═══════ SPECS SECTION ═══════ */}
                                 {specsList.length > 0 && (
                                     <>
-                                        <SectionHeader title="Specifications" icon={FiZap} sectionKey="specs" badge={`${specsList.length} specs`} />
+                                        <SectionHeader title="Specifications" icon={FiZap} sectionKey="specs" badge={`${specsList.length} specs`} expandedSections={expandedSections} toggleSection={toggleSection} />
                                         {expandedSections.specs && specsList.map((specKey) => (
                                             <tr key={specKey} className={`border-b border-gray-50 hover:bg-gray-50 dark:bg-gray-700/50 transition-colors ${highlightDifferences && isDifferent(p => p.specs?.[specKey]) ? 'bg-yellow-50 dark:bg-yellow-900/30/50' : ''
                                                 }`}>

@@ -59,7 +59,7 @@ const ProductDetail = () => {
             }
         };
         if (id) loadRecommendations();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [id, cart]);
 
     const handleAddToCart = () => {

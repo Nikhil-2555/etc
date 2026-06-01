@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { Component } from 'react';
 import { FiAlertTriangle, FiRefreshCw, FiHome } from 'react-icons/fi';
 

@@ -4,6 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "cluster": "node cluster.js",
     "dev": "nodemon server.js",
     "seed": "node seeder.js"
   },

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { FiMessageCircle, FiSend, FiCpu, FiShoppingBag, FiUser, FiChevronDown, FiShield, FiSmile } from 'react-icons/fi';
 import { getAIRecommendations } from '../services/api';
 
@@ -109,7 +109,7 @@ const CustomerSupport = () => {
         return text
             .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-inherit">$1</strong>')
             .replace(/\*(.*?)\*/g, '<em class="italic text-inherit">$1</em>')
-            .replace(/^[•\-]\s?(.+)/gm, '<li class="ml-4 list-disc marker:text-primary-400">$1</li>')
+            .replace(/^[•-]\s?(.+)/gm, '<li class="ml-4 list-disc marker:text-primary-400">$1</li>')
             .replace(/(<li class="ml-4 list-disc marker:text-primary-400">.*<\/li>)/gs, '<ul class="space-y-1.5 my-3">$1</ul>')
             .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="w-32 h-32 object-cover rounded-xl my-3 border border-gray-200 dark:border-gray-700 shadow-md" />')
             .replace(/\n/g, '<br/>');

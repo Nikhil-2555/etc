@@ -223,4 +223,30 @@ export const updateOrderStatus = async (id, status) => {
     return data;
 };
 
+// ── Cluster APIs ──
+export const getClusterStatus = async () => {
+    const { data } = await api.get('/cluster/status');
+    return data;
+};
+
+export const getClusterUsers = async (params = {}) => {
+    const { data } = await api.get('/cluster/users', { params });
+    return data;
+};
+
+export const batchUpdateUserRoles = async (userIds, role) => {
+    const { data } = await api.put('/cluster/users/batch-role', { userIds, role });
+    return data;
+};
+
+export const batchDeleteUsers = async (userIds) => {
+    const { data } = await api.delete('/cluster/users/batch', { data: { userIds } });
+    return data;
+};
+
+export const exportUsers = async () => {
+    const { data } = await api.get('/cluster/users/export');
+    return data;
+};
+
 export default api;

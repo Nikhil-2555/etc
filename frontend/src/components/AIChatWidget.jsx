@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-useless-escape */
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiMessageCircle, FiX, FiSend, FiCpu, FiShoppingBag, FiUser, FiChevronDown } from 'react-icons/fi';

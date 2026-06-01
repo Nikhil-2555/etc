@@ -1,3 +1,4 @@
+const cluster = require('cluster');
 const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -11,6 +12,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const clusterRoutes = require('./routes/clusterRoutes');
 
 connectDB();
 
@@ -75,7 +77,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/payment', paymentRoutes);
-// hello
+app.use('/api/cluster', clusterRoutes);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -97,4 +99,24 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
+server.listen(PORT, () => {
+    const workerLabel = cluster.isWorker ? `Worker #${process.env.WORKER_INDEX} (PID: ${process.pid})` : `PID: ${process.pid}`;
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT} [${workerLabel}]`);
+
+    // Notify primary process that this worker is ready
+    if (cluster.isWorker) {
+        try {
+            process.send({ type: 'worker:ready' });
+        } catch (_) { /* not running in cluster mode */ }
+    }
+});
+
+// Handle graceful shutdown from cluster primary
+if (cluster.isWorker) {
+    process.on('message', (msg) => {
+        if (msg.type === 'shutdown') {
+            console.log(`Worker ${process.pid} shutting down gracefully...`);
+            server.close(() => process.exit(0));
+        }
+    });
+}
