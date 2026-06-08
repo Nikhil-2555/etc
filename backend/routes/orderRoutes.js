@@ -80,6 +80,9 @@ router.post('/', protect, async (req, res) => {
 // @route POST /api/orders/:id/create-payment-intent
 router.post('/:id/create-payment-intent', protect, async (req, res) => {
     try {
+        if (!process.env.STRIPE_SECRET_KEY) {
+            return res.status(500).json({ message: 'Stripe is not configured. Please add STRIPE_SECRET_KEY to your environment variables.' });
+        }
         const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
         const order = await Order.findById(req.params.id);
 

@@ -21,13 +21,9 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?git rm -r --cached node_modules
-git rm -r --cached backend/node_modules
-git rm -r --cached node_modules
-node_modules/
+*.sw?
 
-dist/
-build/
+# Environment files
 .env
-backend/.env
-node_modules
+.env.local
+.env.production.local

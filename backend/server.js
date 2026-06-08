@@ -60,12 +60,20 @@ const allowedOrigins = [
     'http://localhost:5101',
     'http://127.0.0.1:5101',
     'https://localhost:5100',
-    'https://127.0.0.1:5100'
+    'https://127.0.0.1:5100',
 ];
+// Add the production CLIENT_URL if it exists
+if (process.env.CLIENT_URL) {
+    allowedOrigins.push(process.env.CLIENT_URL);
+}
 app.use(cors({
     origin: function (origin, callback) {
-        // Reflect the exact origin back to allow all origins with credentials
-        callback(null, true);
+        // Allow requests with no origin (mobile apps, curl, server-to-server)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
 }));

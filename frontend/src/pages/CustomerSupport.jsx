@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FiMessageCircle, FiSend, FiCpu, FiShoppingBag, FiUser, FiChevronDown, FiShield, FiSmile } from 'react-icons/fi';
 import { getAIRecommendations } from '../services/api';
 

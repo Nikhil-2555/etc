@@ -2,7 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+let stripe = null;
+if (process.env.STRIPE_SECRET_KEY) {
+    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+}
 
 // @desc    Create a Stripe PaymentIntent
 // @route   POST /api/payment/create-payment-intent
@@ -13,6 +16,10 @@ router.post('/create-payment-intent', protect, async (req, res) => {
 
         if (!amount || amount <= 0) {
             return res.status(400).json({ message: 'Invalid payment amount' });
+        }
+
+        if (!stripe) {
+            return res.status(500).json({ message: 'Stripe is not configured on the server. Please add STRIPE_SECRET_KEY.' });
         }
 
         // Stripe expects amount in the smallest currency unit (paise for INR)
@@ -46,6 +53,10 @@ router.post('/confirm', protect, async (req, res) => {
 
         if (!paymentIntentId || !orderId) {
             return res.status(400).json({ message: 'Missing paymentIntentId or orderId' });
+        }
+
+        if (!stripe) {
+            return res.status(500).json({ message: 'Stripe is not configured on the server. Please add STRIPE_SECRET_KEY.' });
         }
 
         // Verify the payment intent status with Stripe

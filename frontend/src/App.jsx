@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -47,6 +47,111 @@ const ProtectedRoute = ({ children, role }) => {
   return children;
 };
 
+// Layout wrapper that hides Navbar/Footer on admin routes
+const AppLayout = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  return (
+    <div className={`flex flex-col min-h-screen ${isAdminRoute ? '' : 'bg-gray-50 dark:bg-gray-900 dark:text-gray-100'} transition-colors duration-300 font-sans`}>
+      {!isAdminRoute && <Navbar />}
+      <main className={isAdminRoute ? '' : 'flex-grow'}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<ProductList />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/sales" element={<Sales />} />
+          <Route path="/wishlist" element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Payment Flow Routes */}
+          <Route path="/payment/:orderId" element={
+            <ProtectedRoute>
+              <PaymentGateway />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/payment/processing/:orderId" element={
+            <ProtectedRoute>
+              <ProcessingPayment />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/payment/success/:orderId" element={
+            <ProtectedRoute>
+              <PaymentSuccess />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/payment/failed/:orderId" element={
+            <ProtectedRoute>
+              <PaymentFailed />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/order-confirmation/:orderId" element={
+            <ProtectedRoute>
+              <OrderConfirmation />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/receipt/:orderId" element={
+            <ProtectedRoute>
+              <Receipt />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={
+            <ProtectedRoute role={['admin', 'manager']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/support" element={<CustomerSupport />} />
+
+          {/* 404 Catch-all */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      {!isAdminRoute && <Footer />}
+      <Toaster position="bottom-right" toastOptions={{
+        style: {
+          background: '#333',
+          color: '#fff',
+        },
+        success: {
+          duration: 3000,
+          iconTheme: {
+            primary: '#6366f1',
+            secondary: '#fff',
+          },
+        },
+      }} />
+      <NotificationManager />
+    </div>
+  );
+};
+
 function App() {
   return (
     <ErrorBoundary>
@@ -56,102 +161,7 @@ function App() {
             <CompareProvider>
               <CartProvider>
                 <Router>
-                  <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
-                    <Navbar />
-                    <main className="flex-grow">
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/products" element={<ProductList />} />
-                        <Route path="/products/:id" element={<ProductDetail />} />
-                        <Route path="/cart" element={<Cart />} />
-                        <Route path="/compare" element={<Compare />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route path="/sales" element={<Sales />} />
-                        <Route path="/wishlist" element={
-                          <ProtectedRoute>
-                            <Wishlist />
-                          </ProtectedRoute>
-                        } />
-
-                        <Route path="/checkout" element={
-                          <ProtectedRoute>
-                            <Checkout />
-                          </ProtectedRoute>
-                        } />
-
-                        <Route path="/dashboard" element={
-                          <ProtectedRoute>
-                            <UserDashboard />
-                          </ProtectedRoute>
-                        } />
-
-                        {/* Payment Flow Routes */}
-                        <Route path="/payment/:orderId" element={
-                          <ProtectedRoute>
-                            <PaymentGateway />
-                          </ProtectedRoute>
-                        } />
-
-                        <Route path="/payment/processing/:orderId" element={
-                          <ProtectedRoute>
-                            <ProcessingPayment />
-                          </ProtectedRoute>
-                        } />
-
-                        <Route path="/payment/success/:orderId" element={
-                          <ProtectedRoute>
-                            <PaymentSuccess />
-                          </ProtectedRoute>
-                        } />
-
-                        <Route path="/payment/failed/:orderId" element={
-                          <ProtectedRoute>
-                            <PaymentFailed />
-                          </ProtectedRoute>
-                        } />
-
-                        <Route path="/order-confirmation/:orderId" element={
-                          <ProtectedRoute>
-                            <OrderConfirmation />
-                          </ProtectedRoute>
-                        } />
-
-                        <Route path="/receipt/:orderId" element={
-                          <ProtectedRoute>
-                            <Receipt />
-                          </ProtectedRoute>
-                        } />
-
-                        <Route path="/admin/login" element={<AdminLogin />} />
-                        <Route path="/admin" element={
-                          <ProtectedRoute role={['admin', 'manager']}>
-                            <AdminDashboard />
-                          </ProtectedRoute>
-                        } />
-
-                        <Route path="/support" element={<CustomerSupport />} />
-
-                        {/* 404 Catch-all */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </main>
-                    <Footer />
-                    <Toaster position="bottom-right" toastOptions={{
-                      style: {
-                        background: '#333',
-                        color: '#fff',
-                      },
-                      success: {
-                        duration: 3000,
-                        iconTheme: {
-                          primary: '#6366f1',
-                          secondary: '#fff',
-                        },
-                      },
-                    }} />
-                    <NotificationManager />
-                  </div>
+                  <AppLayout />
                 </Router>
               </CartProvider>
             </CompareProvider>

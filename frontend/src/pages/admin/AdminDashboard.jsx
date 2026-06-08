@@ -304,7 +304,6 @@ const AdminDashboard = () => {
         { id: 'products', label: 'Products', icon: <FiPackage /> },
         { id: 'orders', label: 'Orders', icon: <FiShoppingBag /> },
         { id: 'customers', label: 'Customers', icon: <FiUsers /> },
-        { id: 'cluster', label: 'Cluster', icon: <FiCpu /> },
         { id: 'analytics', label: 'Analytics', icon: <FiActivity /> },
         { id: 'settings', label: 'Settings', icon: <FiSettings /> },
     ];

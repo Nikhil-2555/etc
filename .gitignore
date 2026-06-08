@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env*.local
+
+# Build output
+dist/
+build/
+
+# Editor
+.vscode/
+.idea/
+*.sw?
+.DS_Store
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+
+# Stitch/design files
+current_ds.json
+ds_clean.json

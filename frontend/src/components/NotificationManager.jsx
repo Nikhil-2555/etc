@@ -11,8 +11,11 @@ const NotificationManager = () => {
     useEffect(() => {
         if (!user) return;
 
-        // Connect through Vite proxy instead of directly to backend
-        socket = io('/', {
+        // In production, connect directly to the backend URL; in dev, Vite proxy handles '/'
+        const socketUrl = import.meta.env.VITE_API_URL
+            ? import.meta.env.VITE_API_URL.replace(/\/api$/, '')
+            : '/';
+        socket = io(socketUrl, {
             withCredentials: true,
         });
 

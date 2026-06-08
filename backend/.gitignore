@@ -1,2 +1,15 @@
+# Environment files
 .env
+.env.local
+.env.production
+
+# Dependencies
 node_modules/
+
+# Uploads
+temp_uploads/*
+!temp_uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
