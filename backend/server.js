@@ -61,10 +61,15 @@ const allowedOrigins = [
     'http://127.0.0.1:5101',
     'https://localhost:5100',
     'https://127.0.0.1:5100',
+    'https://shopflow-kappa-three.vercel.app',
+    'https://etc-production-89ba.up.railway.app',
 ];
-// Add the production CLIENT_URL if it exists
+// Add the production CLIENT_URL if it exists (strip trailing slash)
 if (process.env.CLIENT_URL) {
-    allowedOrigins.push(process.env.CLIENT_URL);
+    const clientUrl = process.env.CLIENT_URL.replace(/\/+$/, '');
+    if (!allowedOrigins.includes(clientUrl)) {
+        allowedOrigins.push(clientUrl);
+    }
 }
 app.use(cors({
     origin: function (origin, callback) {
