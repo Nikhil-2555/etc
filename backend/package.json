@@ -6,7 +6,7 @@
     "start": "node server.js",
     "cluster": "node cluster.js",
     "dev": "nodemon server.js",
-    "seed": "node seeder.js"
+    "seed": "node scripts/seeder.js"
   },
   "keywords": [],
   "author": "",

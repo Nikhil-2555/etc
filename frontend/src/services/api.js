@@ -2,6 +2,10 @@ import axios from 'axios';
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '/api',
+    timeout: 15000, // 15s timeout — mobile networks can be slow
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
 // Add token to requests
@@ -18,10 +22,29 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Handle global response errors (e.g. 401 Unauthorized token expirations)
+// Retry logic for network failures (mobile networks are unreliable)
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
+        const config = error.config;
+
+        // Only retry on network errors or timeouts, not server errors
+        const isNetworkError = !error.response && (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED' || error.message === 'Network Error');
+        const isRetryable = isNetworkError && config && !config._retryCount;
+
+        if (isRetryable) {
+            config._retryCount = (config._retryCount || 0) + 1;
+            const maxRetries = 2;
+
+            if (config._retryCount <= maxRetries) {
+                // Exponential backoff: 1s, 2s
+                const delay = config._retryCount * 1000;
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return api(config);
+            }
+        }
+
+        // Handle 401 - redirect to login (but not for auth requests themselves)
         const url = error.config?.url || '';
         const isAuthRequest = url.includes('/users/login') || url === '/users';
         const isAlreadyOnAuthPage = window.location.pathname === '/login' || window.location.pathname === '/signup' || window.location.pathname === '/admin/login';
@@ -31,11 +54,14 @@ api.interceptors.response.use(
             window.location.href = '/login';
         }
 
-        // Extract the server error message so callers get a useful message
-        const serverMessage = error.response?.data?.message;
-        if (serverMessage) {
-            error.message = serverMessage;
+        // Extract the best possible error message for the user
+        if (error.response?.data?.message) {
+            error.message = error.response.data.message;
+        } else if (!error.response) {
+            // No response at all — network issue (common on mobile)
+            error.message = 'Unable to connect to the server. Please check your internet connection and try again.';
         }
+
         return Promise.reject(error);
     }
 );

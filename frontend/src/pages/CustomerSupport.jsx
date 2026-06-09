@@ -116,12 +116,12 @@ const CustomerSupport = () => {
     };
 
     return (
-        <div className="min-h-[calc(100vh-4rem)] bg-[#fafafc] dark:bg-gray-950 flex flex-col items-center justify-center py-24 px-4 sm:px-8 lg:px-12 xl:px-16 relative overflow-hidden transition-colors duration-300">
+        <div className="min-h-[calc(100vh-4rem)] bg-[#fafafc] dark:bg-gray-950 flex flex-col items-center justify-center py-6 sm:py-24 px-4 sm:px-8 lg:px-12 xl:px-16 relative overflow-hidden transition-colors duration-300">
             {/* Ambient Background Glows */}
             <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-200/40 rounded-full blur-[120px] mix-blend-multiply pointer-events-none" />
             <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-[120px] mix-blend-multiply pointer-events-none" />
 
-            <div className="w-full max-w-[2000px] bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 flex flex-col h-[80vh] min-h-[600px] max-h-[900px] overflow-hidden relative z-10">
+            <div className="w-full max-w-[2000px] bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl shadow-[0_8px_40px_rgb(0,0,0,0.06)] rounded-3xl sm:rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 flex flex-col h-[85vh] sm:h-[80vh] min-h-[400px] sm:min-h-[600px] max-h-[900px] overflow-hidden relative z-10">
 
                 {/* Header */}
                 <div className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border-b border-white/60 dark:border-gray-700/50 px-8 py-6 flex items-center justify-between flex-shrink-0 z-20">

@@ -597,8 +597,11 @@ const Navbar = () => {
                     </div>
 
                     {/* Mobile Menu Button */}
-                    <div className="flex md:hidden items-center space-x-4">
-                        <Link to="/compare" className="relative text-gray-600 hover:text-primary-600 transition-colors">
+                    <div className="flex md:hidden items-center space-x-3 sm:space-x-4">
+                        <Link to="/support" className="text-gray-600 hover:text-primary-600 transition-colors" aria-label="Customer Support">
+                            <FiMessageCircle size={24} />
+                        </Link>
+                        <Link to="/compare" className="relative text-gray-600 hover:text-primary-600 transition-colors hidden sm:block">
                             <FiLayers size={24} />
                             {compareItems.length > 0 && (
                                 <span className={`absolute -top-2 -right-2 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseCompare ? 'animate-badge-pop' : ''}`}>
@@ -692,6 +695,8 @@ const Navbar = () => {
                                 <Link to="/products?category=sports" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Sports</Link>
                                 <Link to="/products?category=beauty & personal care" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Beauty</Link>
                                 <Link to="/products?category=books & media" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Books</Link>
+                                <Link to="/support" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-primary-600 font-bold mt-2">Customer Support Chat</Link>
+                                <Link to="/compare" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium sm:hidden">Compare Products</Link>
                             </div>
 
                             {/* Mobile Dark Mode Toggle */}

@@ -12,7 +12,7 @@ const createOrUpdateAdmin = async () => {
         
         console.log('MongoDB Connected');
         
-        const email = 'admin@gmail.com';
+        const email = 'shopflow@gmail.com';
         const plainPassword = '12345678';
         
         const salt = await bcrypt.genSalt(10);

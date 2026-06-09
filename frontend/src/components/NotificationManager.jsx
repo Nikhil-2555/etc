@@ -15,9 +15,24 @@ const NotificationManager = () => {
         const socketUrl = import.meta.env.VITE_API_URL
             ? import.meta.env.VITE_API_URL.replace(/\/api$/, '')
             : '/';
-        socket = io(socketUrl, {
-            withCredentials: true,
-        });
+
+        try {
+            socket = io(socketUrl, {
+                withCredentials: true,
+                transports: ['websocket', 'polling'],
+                reconnectionAttempts: 5,
+                reconnectionDelay: 2000,
+                timeout: 10000,
+            });
+
+            // Silently handle connection errors (common on mobile)
+            socket.on('connect_error', (err) => {
+                console.warn('Socket connection error:', err.message);
+            });
+        } catch (err) {
+            console.warn('Failed to initialize socket:', err.message);
+            return;
+        }
 
         // Whenever the user logs in, join the user room with their ID
         if (user && user._id) {

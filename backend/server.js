@@ -20,13 +20,48 @@ const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
 
+// ── CORS origin whitelist (shared by Express & Socket.io) ──
+const allowedOrigins = [
+    'http://localhost:5100',
+    'http://127.0.0.1:5100',
+    'http://localhost:5101',
+    'http://127.0.0.1:5101',
+    'https://localhost:5100',
+    'https://127.0.0.1:5100',
+    'https://shopflow-kappa-three.vercel.app',
+    'https://etc-production-89ba.up.railway.app',
+];
+// Add the production CLIENT_URL if it exists (strip trailing slash)
+if (process.env.CLIENT_URL) {
+    const clientUrl = process.env.CLIENT_URL.replace(/\/+$/, '');
+    if (!allowedOrigins.includes(clientUrl)) {
+        allowedOrigins.push(clientUrl);
+    }
+}
+
+// Shared CORS origin checker
+function checkOrigin(origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+    }
+    console.warn(`CORS blocked origin: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
+}
+
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: true,
+        origin: checkOrigin,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true
-    }
+    },
+    // Mobile browsers may close connections more aggressively
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    transports: ['websocket', 'polling'],
 });
 
 // Attach io to the req object or app locals so we can use it in routes
@@ -50,38 +85,23 @@ if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
 
+// ── CORS middleware (MUST be before body parsers for mobile preflight) ──
+const corsOptions = {
+    origin: checkOrigin,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Content-Length', 'X-Request-Id'],
+    maxAge: 86400, // Cache preflight for 24 hours to reduce mobile overhead
+};
+
+// Handle preflight OPTIONS for ALL routes before anything else
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
+
+// Body parsers AFTER CORS so mobile preflight OPTIONS never hits JSON parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// CORS — whitelist frontend origin
-const allowedOrigins = [
-    'http://localhost:5100',
-    'http://127.0.0.1:5100',
-    'http://localhost:5101',
-    'http://127.0.0.1:5101',
-    'https://localhost:5100',
-    'https://127.0.0.1:5100',
-    'https://shopflow-kappa-three.vercel.app',
-    'https://etc-production-89ba.up.railway.app',
-];
-// Add the production CLIENT_URL if it exists (strip trailing slash)
-if (process.env.CLIENT_URL) {
-    const clientUrl = process.env.CLIENT_URL.replace(/\/+$/, '');
-    if (!allowedOrigins.includes(clientUrl)) {
-        allowedOrigins.push(clientUrl);
-    }
-}
-app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (mobile apps, curl, server-to-server)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-}));
 
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
@@ -91,6 +111,21 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/cluster', clusterRoutes);
+// Quick seeding endpoint for production initialization
+app.get('/api/seed-database', (req, res) => {
+    const { exec } = require('child_process');
+    const path = require('path');
+    console.log('Seeding database from API...');
+    
+    exec(`node ${path.join(__dirname, 'scripts', 'seeder.js')}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Seed error: ${error}`);
+            return res.status(500).json({ success: false, message: 'Seeding failed', error: error.message });
+        }
+        res.json({ success: true, message: 'Database successfully seeded!', output: stdout });
+    });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
