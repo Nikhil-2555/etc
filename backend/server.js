@@ -96,7 +96,7 @@ const corsOptions = {
 };
 
 // Handle preflight OPTIONS for ALL routes before anything else
-app.options('*', cors(corsOptions));
+app.options('/{*splat}', cors(corsOptions));
 app.use(cors(corsOptions));
 
 // Body parsers AFTER CORS so mobile preflight OPTIONS never hits JSON parsing
