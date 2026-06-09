@@ -21,7 +21,7 @@ const RESTART_WINDOW_MS = 60000; // 1 minute
 
 if (cluster.isPrimary) {
     console.log(`\n╔══════════════════════════════════════════════════════╗`);
-    console.log(`║  🚀  ShopFlow Cluster Manager                       ║`);
+    console.log(`║  🚀  ShopFlow Cluster Manager                     ║`);
     console.log(`║  Primary PID: ${String(process.pid).padEnd(39)}║`);
     console.log(`║  CPU Cores: ${String(NUM_CPUS).padEnd(41)}║`);
     console.log(`║  Workers: ${String(NUM_CPUS).padEnd(43)}║`);
