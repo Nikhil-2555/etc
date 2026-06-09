@@ -95,8 +95,7 @@ const corsOptions = {
     maxAge: 86400, // Cache preflight for 24 hours to reduce mobile overhead
 };
 
-// Handle preflight OPTIONS for ALL routes before anything else
-app.options('/{*splat}', cors(corsOptions));
+// Handle preflight OPTIONS globally
 app.use(cors(corsOptions));
 
 // Body parsers AFTER CORS so mobile preflight OPTIONS never hits JSON parsing
