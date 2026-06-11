@@ -84,7 +84,7 @@ if (process.env.NODE_ENV === 'development') {
 // ── Explicit preflight handler for mobile browser compatibility ──
 // Some mobile browsers (especially older Android WebViews) require an
 // explicit OPTIONS response before CORS middleware runs.
-app.options('*', (req, res) => {
+app.options(/.*/, (req, res) => {
     const origin = req.headers.origin || 'https://shopflow-kappa-three.vercel.app';
     checkOrigin(origin, (err, allowed) => {
         if (allowed) {
