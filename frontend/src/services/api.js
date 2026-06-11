@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '/api',
+    baseURL: import.meta.env.VITE_API_URL || 'https://etc-production-89ba.up.railway.app/api',
     timeout: 30000, // 30s timeout — mobile networks need more time
     headers: {
         'Content-Type': 'application/json',

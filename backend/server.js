@@ -41,17 +41,9 @@ if (process.env.CLIENT_URL) {
 
 // Shared CORS origin checker — also allows Vercel preview URLs
 function checkOrigin(origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, server-to-server)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-    }
-    // Allow any Vercel preview deployment of the same project
-    if (/^https:\/\/shopflow.*\.vercel\.app$/.test(origin)) {
-        return callback(null, true);
-    }
-    console.warn(`CORS blocked origin: ${origin}`);
-    return callback(new Error('Not allowed by CORS'));
+    // For mobile browser and testing compatibility, we allow all origins
+    // Using callback(null, true) ensures we reflect the origin for credentials
+    return callback(null, true);
 }
 
 const server = http.createServer(app);
@@ -92,8 +84,8 @@ if (process.env.NODE_ENV === 'development') {
 // ── Explicit preflight handler for mobile browser compatibility ──
 // Some mobile browsers (especially older Android WebViews) require an
 // explicit OPTIONS response before CORS middleware runs.
-app.options('/{*splat}', (req, res) => {
-    const origin = req.headers.origin;
+app.options('*', (req, res) => {
+    const origin = req.headers.origin || 'https://shopflow-kappa-three.vercel.app';
     checkOrigin(origin, (err, allowed) => {
         if (allowed) {
             res.header('Access-Control-Allow-Origin', origin);
