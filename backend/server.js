@@ -39,11 +39,15 @@ if (process.env.CLIENT_URL) {
     }
 }
 
-// Shared CORS origin checker
+// Shared CORS origin checker — also allows Vercel preview URLs
 function checkOrigin(origin, callback) {
     // Allow requests with no origin (mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+    }
+    // Allow any Vercel preview deployment of the same project
+    if (/^https:\/\/shopflow.*\.vercel\.app$/.test(origin)) {
         return callback(null, true);
     }
     console.warn(`CORS blocked origin: ${origin}`);
@@ -85,6 +89,24 @@ if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
 
+// ── Explicit preflight handler for mobile browser compatibility ──
+// Some mobile browsers (especially older Android WebViews) require an
+// explicit OPTIONS response before CORS middleware runs.
+app.options('*', (req, res) => {
+    const origin = req.headers.origin;
+    checkOrigin(origin, (err, allowed) => {
+        if (allowed) {
+            res.header('Access-Control-Allow-Origin', origin);
+            res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+            res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
+            res.header('Access-Control-Allow-Credentials', 'true');
+            res.header('Access-Control-Max-Age', '86400');
+            return res.sendStatus(204);
+        }
+        return res.sendStatus(403);
+    });
+});
+
 // ── CORS middleware (MUST be before body parsers for mobile preflight) ──
 const corsOptions = {
     origin: checkOrigin,
@@ -95,7 +117,7 @@ const corsOptions = {
     maxAge: 86400, // Cache preflight for 24 hours to reduce mobile overhead
 };
 
-// Handle preflight OPTIONS globally
+// Handle CORS for all routes
 app.use(cors(corsOptions));
 
 // Body parsers AFTER CORS so mobile preflight OPTIONS never hits JSON parsing

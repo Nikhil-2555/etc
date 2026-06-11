@@ -2,13 +2,24 @@ import axios from 'axios';
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '/api',
-    timeout: 15000, // 15s timeout — mobile networks can be slow
+    timeout: 30000, // 30s timeout — mobile networks need more time
     headers: {
         'Content-Type': 'application/json',
     },
+    // Ensure credentials (cookies) are sent cross-origin for mobile browsers
+    withCredentials: true,
 });
 
-// Add token to requests
+// Warn developers if the API URL is not explicitly set (will cause issues on Vercel/Netlify)
+if (!import.meta.env.VITE_API_URL) {
+    console.warn(
+        '⚠️ VITE_API_URL is not set! API requests will go to /api (same-origin).',
+        'In production deploys (Vercel), you MUST set VITE_API_URL in the environment variables.',
+        'Example: VITE_API_URL=https://etc-production-89ba.up.railway.app/api'
+    );
+}
+
+// Add token to requests & set up abort controller for mobile reliability
 api.interceptors.request.use((config) => {
     try {
         const user = JSON.parse(localStorage.getItem('user'));
@@ -23,24 +34,37 @@ api.interceptors.request.use((config) => {
 });
 
 // Retry logic for network failures (mobile networks are unreliable)
+const MAX_RETRIES = 3;
+
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const config = error.config;
 
-        // Only retry on network errors or timeouts, not server errors
-        const isNetworkError = !error.response && (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED' || error.message === 'Network Error');
-        const isRetryable = isNetworkError && config && !config._retryCount;
+        // Determine if the error is a transient network issue worth retrying
+        const isNetworkError =
+            !error.response &&
+            (error.code === 'ERR_NETWORK' ||
+             error.code === 'ECONNABORTED' ||
+             error.code === 'ETIMEDOUT' ||
+             error.code === 'ERR_CANCELED' ||
+             error.message === 'Network Error' ||
+             error.message?.includes('timeout') ||
+             error.message?.includes('aborted'));
 
-        if (isRetryable) {
+        if (isNetworkError && config) {
             config._retryCount = (config._retryCount || 0) + 1;
-            const maxRetries = 2;
 
-            if (config._retryCount <= maxRetries) {
-                // Exponential backoff: 1s, 2s
-                const delay = config._retryCount * 1000;
+            if (config._retryCount <= MAX_RETRIES) {
+                // Exponential backoff: 1s, 2s, 4s
+                const delay = Math.min(1000 * Math.pow(2, config._retryCount - 1), 4000);
+                console.log(`Retry ${config._retryCount}/${MAX_RETRIES} for ${config.url} in ${delay}ms...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
-                return api(config);
+                // Create a fresh config to avoid stale abort controllers
+                const freshConfig = { ...config };
+                delete freshConfig.cancelToken;
+                delete freshConfig.signal;
+                return api(freshConfig);
             }
         }
 
@@ -57,7 +81,7 @@ api.interceptors.response.use(
         // Extract the best possible error message for the user
         if (error.response?.data?.message) {
             error.message = error.response.data.message;
-        } else if (!error.response) {
+        } else if (error.response?.status === 0 || !error.response) {
             // No response at all — network issue (common on mobile)
             error.message = 'Unable to connect to the server. Please check your internet connection and try again.';
         }
@@ -68,6 +92,11 @@ api.interceptors.response.use(
 
 export const fetchProducts = async () => {
     const { data } = await api.get('/products');
+    // Guard: if backend is unreachable and Vercel serves HTML instead of JSON
+    if (typeof data === 'string' || !Array.isArray(data)) {
+        console.error('fetchProducts received non-array data — VITE_API_URL may be misconfigured:', typeof data);
+        return [];
+    }
     return data;
 };
 
