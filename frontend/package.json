@@ -30,7 +30,10 @@
     "react-router-dom": "^7.13.0",
     "recharts": "^3.7.0",
     "shadcn": "^4.0.0",
+<<<<<<< HEAD
     "shopflow": "file:..",
+=======
+>>>>>>> ac794f6acd6f07d555238c252853f4601e063236
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.5.0",
     "tw-animate-css": "^1.4.0"

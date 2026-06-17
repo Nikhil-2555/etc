@@ -21,7 +21,11 @@ const Signup = () => {
             }
             if (!values.email) {
                 errors.email = 'Email is required';
+<<<<<<< HEAD
             } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email.trim())) {
+=======
+            } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+>>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                 errors.email = 'Invalid email address';
             }
             if (!values.password) {
@@ -39,7 +43,11 @@ const Signup = () => {
         onSubmit: async (values) => {
             setIsLoading(true);
             try {
+<<<<<<< HEAD
                 await register(values.name.trim(), values.email.trim(), values.password);
+=======
+                await register(values.name, values.email, values.password);
+>>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                 toast.success('Account created successfully!');
                 navigate('/');
             } catch (error) {

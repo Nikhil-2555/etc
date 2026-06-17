@@ -1,13 +1,20 @@
 /* eslint-env node */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+<<<<<<< HEAD
 import mkcert from 'vite-plugin-mkcert'
+=======
+>>>>>>> ac794f6acd6f07d555238c252853f4601e063236
 import path from "path"
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
   const config = {
+<<<<<<< HEAD
     plugins: [react(), mkcert()],
+=======
+    plugins: [react()],
+>>>>>>> ac794f6acd6f07d555238c252853f4601e063236
     resolve: {
       alias: {
         "@": path.resolve(process.cwd(), "./src"),

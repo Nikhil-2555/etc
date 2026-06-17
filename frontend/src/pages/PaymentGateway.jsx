@@ -57,6 +57,10 @@ const CARD_ELEMENT_OPTIONS = {
             iconColor: '#ef4444',
         },
     },
+<<<<<<< HEAD
+=======
+    hidePostalCode: true,
+>>>>>>> ac794f6acd6f07d555238c252853f4601e063236
 };
 
 const StripeCardForm = ({ orderAmount, orderId, orderData, methodData, onBack }) => {
