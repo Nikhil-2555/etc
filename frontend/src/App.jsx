@@ -1,0 +1,175 @@
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import ErrorBoundary from './components/ErrorBoundary';
+import Home from './pages/Home';
+import ProductList from './pages/ProductList';
+import ProductDetail from './pages/ProductDetail';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Sales from './pages/Sales';
+import UserDashboard from './pages/dashboard/UserDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminLogin from './pages/admin/AdminLogin';
+import NotFound from './pages/NotFound';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import { WishlistProvider } from './context/WishlistContext';
+import { ThemeProvider } from './context/ThemeContext';
+import Wishlist from './pages/Wishlist';
+import ProcessingPayment from './pages/Payment';
+import PaymentGateway from './pages/PaymentGateway';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailed from './pages/PaymentFailed';
+import OrderConfirmation from './pages/OrderConfirmation';
+import Receipt from './pages/Receipt';
+import CustomerSupport from './pages/CustomerSupport';
+import Compare from './pages/Compare';
+import { CompareProvider } from './context/CompareContext';
+import NotificationManager from './components/NotificationManager';
+
+const ProtectedRoute = ({ children, role }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (role) {
+    const roles = Array.isArray(role) ? role : [role];
+    if (!roles.includes(user.role)) {
+      return <Navigate to="/" replace />;
+    }
+  }
+
+  return children;
+};
+
+// Layout wrapper that hides Navbar/Footer on admin routes
+const AppLayout = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  return (
+    <div className={`flex flex-col min-h-screen ${isAdminRoute ? '' : 'bg-gray-50 dark:bg-gray-900 dark:text-gray-100'} transition-colors duration-300 font-sans`}>
+      {!isAdminRoute && <Navbar />}
+      <main className={isAdminRoute ? '' : 'flex-grow'}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<ProductList />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/sales" element={<Sales />} />
+          <Route path="/wishlist" element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <UserDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Payment Flow Routes */}
+          <Route path="/payment/:orderId" element={
+            <ProtectedRoute>
+              <PaymentGateway />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/payment/processing/:orderId" element={
+            <ProtectedRoute>
+              <ProcessingPayment />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/payment/success/:orderId" element={
+            <ProtectedRoute>
+              <PaymentSuccess />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/payment/failed/:orderId" element={
+            <ProtectedRoute>
+              <PaymentFailed />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/order-confirmation/:orderId" element={
+            <ProtectedRoute>
+              <OrderConfirmation />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/receipt/:orderId" element={
+            <ProtectedRoute>
+              <Receipt />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={
+            <ProtectedRoute role={['admin', 'manager']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/support" element={<CustomerSupport />} />
+
+          {/* 404 Catch-all */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      {!isAdminRoute && <Footer />}
+      <Toaster position="bottom-right" toastOptions={{
+        style: {
+          background: '#333',
+          color: '#fff',
+        },
+        success: {
+          duration: 3000,
+          iconTheme: {
+            primary: '#6366f1',
+            secondary: '#fff',
+          },
+        },
+      }} />
+      <NotificationManager />
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <ThemeProvider>
+          <WishlistProvider>
+            <CompareProvider>
+              <CartProvider>
+                <Router>
+                  <AppLayout />
+                </Router>
+              </CartProvider>
+            </CompareProvider>
+          </WishlistProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;

@@ -1,0 +1,327 @@
+import { useFormik } from 'formik';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { toast } from 'react-hot-toast';
+import {
+    FiArrowRight, FiTag, FiCreditCard, FiPackage,
+    FiShield, FiCheckCircle, FiTruck
+} from 'react-icons/fi';
+import { createOrder, applyCoupon } from '../services/api';
+import { useState } from 'react';
+
+const Checkout = () => {
+    const { cart, totalPrice, clearCart } = useCart();
+    const navigate = useNavigate();
+    const [couponCodeInput, setCouponCodeInput] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [isApplying, setIsApplying] = useState(false);
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+    const finalAmount = Math.max(0, totalPrice - discountAmount) + 100;
+
+    const formik = useFormik({
+        initialValues: {
+            firstName: '',
+            lastName: '',
+            email: '',
+            address: '',
+            city: '',
+            postalCode: '',
+        },
+        validate: values => {
+            const errors = {};
+            if (!values.firstName.trim()) errors.firstName = 'First name is required';
+            if (!values.lastName.trim()) errors.lastName = 'Last name is required';
+            if (!values.email) {
+                errors.email = 'Email is required';
+            } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+                errors.email = 'Invalid email address';
+            }
+            if (!values.address.trim()) {
+                errors.address = 'Street address is required';
+            } else if (values.address.trim().length < 5) {
+                errors.address = 'Please enter a complete address';
+            }
+            if (!values.city.trim()) {
+                errors.city = 'City is required';
+            }
+            if (!values.postalCode.trim()) {
+                errors.postalCode = 'Postal code is required';
+            } else if (!/^[1-9][0-9]{5}$/.test(values.postalCode.trim())) {
+                errors.postalCode = 'Enter a valid 6-digit postal code';
+            }
+            return errors;
+        },
+        onSubmit: async (values) => {
+            setIsPlacingOrder(true);
+            try {
+                const orderData = {
+                    orderItems: cart,
+                    shippingAddress: {
+                        address: values.address,
+                        city: values.city,
+                        postalCode: values.postalCode,
+                        country: 'India'
+                    },
+                    paymentMethod: 'Online',
+                    paymentStatus: 'Pending',
+                    orderStatus: 'Placed',
+                    totalPrice: finalAmount,
+                    couponCode: appliedCoupon ? appliedCoupon.code : null,
+                    discountAmount: discountAmount
+                };
+
+                const createdOrder = await createOrder(orderData);
+                clearCart();
+                
+                toast.success('Order placed! Redirecting to payment...');
+                navigate(`/payment/${createdOrder._id}`);
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'Failed to place order');
+            } finally {
+                setIsPlacingOrder(false);
+            }
+        }
+    });
+
+    const handleApplyCoupon = async () => {
+        if (!couponCodeInput.trim()) return;
+        setIsApplying(true);
+        try {
+            const data = await applyCoupon(couponCodeInput.toUpperCase(), totalPrice, cart);
+            setAppliedCoupon(data.coupon);
+            setDiscountAmount(data.discountAmount || 0);
+            toast.success(`Coupon applied! You save ₹${data.discountAmount}`);
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Invalid or expired coupon');
+            setAppliedCoupon(null);
+            setDiscountAmount(0);
+        } finally {
+            setIsApplying(false);
+        }
+    };
+
+    const removeCoupon = () => {
+        setCouponCodeInput('');
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        toast.success("Coupon removed");
+    };
+
+    if (cart.length === 0) {
+        return <div className="text-center py-20 font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500">Your cart is empty. Please add items to checkout.</div>;
+    }
+
+    return (
+        <div className="min-h-screen bg-[#fafafc] dark:bg-gray-950 py-24 px-4 sm:px-8 lg:px-12 xl:px-16 relative overflow-hidden transition-colors duration-300">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-200/40 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200/40 rounded-full blur-[120px] pointer-events-none" />
+
+            <div className="max-w-[2000px] mx-auto relative z-10">
+                <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight mb-8">Secure Checkout</h1>
+
+                <div className="flex flex-col xl:flex-row gap-8 xl:gap-12">
+                    {/* Left Column: Shipping */}
+                    <div className="flex-1">
+                        <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-8 md:p-12">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3 mb-8 tracking-tight">
+                                <span className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary-600 to-indigo-500 text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-indigo-200/50">
+                                    <FiTruck size={20} />
+                                </span>
+                                Shipping Information
+                            </h2>
+
+                            <form className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">First Name</label>
+                                                <input
+                                                    type="text" name="firstName"
+                                                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.firstName}
+                                                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.firstName && formik.errors.firstName ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                    placeholder="John"
+                                                />
+                                                {formik.touched.firstName && formik.errors.firstName && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.firstName}</p>}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Last Name</label>
+                                                <input
+                                                    type="text" name="lastName"
+                                                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.lastName}
+                                                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.lastName && formik.errors.lastName ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                    placeholder="Doe"
+                                                />
+                                                {formik.touched.lastName && formik.errors.lastName && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.lastName}</p>}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Email Address</label>
+                                            <input
+                                                type="email" name="email"
+                                                onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.email}
+                                                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.email && formik.errors.email ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                placeholder="john@example.com"
+                                            />
+                                            {formik.touched.email && formik.errors.email && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.email}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Street Address</label>
+                                            <input
+                                                type="text" name="address"
+                                                onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.address}
+                                                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.address && formik.errors.address ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                placeholder="123 Main Street"
+                                            />
+                                            {formik.touched.address && formik.errors.address && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.address}</p>}
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-5">
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">City</label>
+                                                <input
+                                                    type="text" name="city"
+                                                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.city}
+                                                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.city && formik.errors.city ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                    placeholder="Mumbai"
+                                                />
+                                                {formik.touched.city && formik.errors.city && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.city}</p>}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-1.5">Postal Code</label>
+                                                <input
+                                                    type="text" name="postalCode"
+                                                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.postalCode}
+                                                    className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${formik.touched.postalCode && formik.errors.postalCode ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-100'}`}
+                                                    placeholder="400001" maxLength={6}
+                                                />
+                                                {formik.touched.postalCode && formik.errors.postalCode && <p className="text-red-500 text-xs font-medium mt-1">{formik.errors.postalCode}</p>}
+                                            </div>
+                                        </div>
+                                    </form>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Order Summary */}
+                    <div className="w-full xl:w-[450px]">
+                        <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-3xl rounded-[2.5rem] border border-white/80 dark:border-gray-700/50 shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-8 md:p-10 sticky top-32">
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 tracking-tight">Order Summary</h3>
+                            <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-1">
+                                {cart.map(item => (
+                                    <div key={`${item.id || item._id}-${item.size}`} className="flex gap-3">
+                                        <div className="w-14 h-14 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-700 p-1 flex-shrink-0">
+                                            <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">{item.title}</p>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Qty: {item.quantity}</p>
+                                                {item.size && (
+                                                    <>
+                                                        <span className="text-gray-300 text-[10px]">•</span>
+                                                        <p className="text-xs font-bold text-primary-600 dark:text-primary-400">Size: {item.size}</p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-900 dark:text-white flex-shrink-0">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
+                                {/* Coupon Section */}
+                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <FiTag className="text-primary-600 dark:text-primary-400" /> Apply Coupon
+                                    </h4>
+                                    {!appliedCoupon ? (
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Enter code"
+                                                className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:border-primary-500 uppercase bg-white dark:bg-gray-800"
+                                                value={couponCodeInput}
+                                                onChange={(e) => setCouponCodeInput(e.target.value)}
+                                                disabled={isApplying}
+                                            />
+                                            <button
+                                                onClick={handleApplyCoupon}
+                                                disabled={isApplying || !couponCodeInput}
+                                                className="bg-gray-900 dark:bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 dark:hover:bg-primary-700 disabled:bg-gray-400 transition-colors"
+                                            >
+                                                {isApplying ? '...' : 'Apply'}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between bg-green-50 dark:bg-green-900/30 px-3 py-2 rounded-lg border border-green-200">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-green-700 dark:text-green-400 font-bold text-sm tracking-wide">{appliedCoupon.code}</span>
+                                                <span className="bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">APPLIED</span>
+                                            </div>
+                                            <button onClick={removeCoupon} className="text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-red-500 text-xs font-bold transition-colors">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
+                                    <span>Subtotal</span>
+                                    <span>₹{totalPrice.toLocaleString('en-IN')}</span>
+                                </div>
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between text-sm text-green-600 dark:text-green-400 font-medium">
+                                        <span>Discount ({appliedCoupon?.code})</span>
+                                        <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
+                                    <span>Shipping</span>
+                                    <span>₹100</span>
+                                </div>
+                                <div className="flex justify-between font-bold text-xl text-gray-900 dark:text-gray-100 mt-5 pt-5 border-t border-gray-200 dark:border-gray-700/50">
+                                    <span>Total</span>
+                                    <span className="text-primary-600 dark:text-primary-400">₹{finalAmount.toLocaleString('en-IN')}</span>
+                                </div>
+                            </div>
+                            
+                            {/* Unified Action Button */}
+                            <button
+                                onClick={formik.submitForm}
+                                disabled={isPlacingOrder}
+                                className={`w-full mt-8 py-4 rounded-2xl font-bold text-white text-[15px] transition-all flex items-center justify-center gap-2 shadow-lg ${
+                                    isPlacingOrder
+                                        ? 'bg-gray-300 cursor-not-allowed shadow-none'
+                                        : 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-primary-600 hover:to-indigo-600 shadow-gray-900/20 hover:shadow-primary-500/30 hover:-translate-y-0.5'
+                                }`}
+                            >
+                                {isPlacingOrder ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                        Processing Order...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FiCreditCard size={18} /> Pay ₹{finalAmount.toLocaleString('en-IN')} Securely
+                                    </>
+                                )}
+                            </button>
+
+                            <div className="mt-6 text-center">
+                                <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1">
+                                    <FiShield className="text-green-400" /> Secure & Encrypted Checkout
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Checkout;

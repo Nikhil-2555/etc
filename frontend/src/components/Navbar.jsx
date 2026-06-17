@@ -1,0 +1,885 @@
+/* eslint-disable no-unused-vars */
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useCompare } from '../context/CompareContext';
+import {
+    FiShoppingCart, FiUser, FiLogOut, FiMenu, FiSearch, FiHeart, FiBell,
+    FiChevronDown, FiGrid, FiBox, FiSettings, FiX, FiSun, FiMoon, FiMessageCircle, FiLayers, FiMic, FiTrash2, FiMinus, FiPlus, FiArrowRight
+} from 'react-icons/fi';
+import { useState, useRef, useEffect } from 'react';
+import { searchProducts, parseVoiceCommand, transcribeAudio } from '../services/api';
+
+const Navbar = () => {
+    const { totalItems, cart, removeFromCart, updateQuantity, totalPrice } = useCart();
+    const { totalWishlistItems } = useWishlist();
+    const { compareItems } = useCompare();
+    const { user, logout } = useAuth();
+    const { darkMode, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const [voiceText, setVoiceText] = useState('');
+    const [voiceError, setVoiceError] = useState('');
+    const [voiceStatus, setVoiceStatus] = useState(''); // 'recording', 'processing'
+    
+    // Animation and drawer states
+    const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
+    const [pulseCart, setPulseCart] = useState(false);
+    const [pulseWishlist, setPulseWishlist] = useState(false);
+    const [pulseCompare, setPulseCompare] = useState(false);
+
+    const prevCartCount = useRef(totalItems);
+    const prevWishlistCount = useRef(totalWishlistItems);
+    const prevCompareCount = useRef(compareItems.length);
+
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
+    const userMenuRef = useRef(null);
+    const categoryMenuRef = useRef(null);
+    const searchRef = useRef(null);
+
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setIsUserMenuOpen(false);
+            }
+            if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target)) {
+                setIsCategoryMenuOpen(false);
+            }
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowSuggestions(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Smart Scroll visibility and close dropdowns on scroll down
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            if (currentScrollY > lastScrollY && currentScrollY > 80) {
+                setIsVisible(false); // scrolling down
+                setIsCategoryMenuOpen(false);
+                setIsUserMenuOpen(false);
+                setShowSuggestions(false);
+            } else {
+                setIsVisible(true); // scrolling up
+            }
+            setLastScrollY(currentScrollY);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [lastScrollY]);
+
+    // Badge popup notifications
+    useEffect(() => {
+        if (totalItems > prevCartCount.current) {
+            setPulseCart(true);
+            const timer = setTimeout(() => setPulseCart(false), 500);
+            return () => clearTimeout(timer);
+        }
+        prevCartCount.current = totalItems;
+    }, [totalItems]);
+
+    useEffect(() => {
+        if (totalWishlistItems > prevWishlistCount.current) {
+            setPulseWishlist(true);
+            const timer = setTimeout(() => setPulseWishlist(false), 500);
+            return () => clearTimeout(timer);
+        }
+        prevWishlistCount.current = totalWishlistItems;
+    }, [totalWishlistItems]);
+
+    useEffect(() => {
+        if (compareItems.length > prevCompareCount.current) {
+            setPulseCompare(true);
+            const timer = setTimeout(() => setPulseCompare(false), 500);
+            return () => clearTimeout(timer);
+        }
+        prevCompareCount.current = compareItems.length;
+    }, [compareItems]);
+
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            if (searchQuery.trim().length >= 2) {
+                try {
+                    const data = await searchProducts(searchQuery);
+                    setSuggestions(data);
+                    setShowSuggestions(true);
+                } catch (error) {
+                    console.error('Error fetching suggestions:', error);
+                }
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        };
+
+        const debounceTimer = setTimeout(fetchSuggestions, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [searchQuery]);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+            setIsMenuOpen(false);
+            setShowSuggestions(false);
+        }
+    };
+
+    // Stop voice recording
+    const stopListening = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
+        } else {
+            setIsListening(false);
+            setVoiceStatus('');
+        }
+    };
+
+    // Voice Search Handler using MediaRecorder + GROQ Whisper
+    const handleVoiceSearch = async () => {
+        // If already listening, stop
+        if (isListening) {
+            stopListening();
+            return;
+        }
+
+        // Check if MediaRecorder is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            setVoiceError('Voice search is not supported in this browser.');
+            setTimeout(() => setVoiceError(''), 4000);
+            return;
+        }
+
+        setVoiceText('');
+        setVoiceError('');
+        setVoiceStatus('recording');
+        audioChunksRef.current = [];
+
+        try {
+            // Request microphone access
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            const mediaRecorder = new MediaRecorder(stream, {
+                mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? 'audio/webm;codecs=opus'
+                    : 'audio/webm'
+            });
+            mediaRecorderRef.current = mediaRecorder;
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstart = () => {
+                console.log('Voice recording started');
+                setIsListening(true);
+            };
+
+            mediaRecorder.onstop = async () => {
+                console.log('Voice recording stopped');
+                // Stop all mic tracks
+                stream.getTracks().forEach(track => track.stop());
+
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+
+                if (audioBlob.size < 1000) {
+                    // Too short/empty recording
+                    setIsListening(false);
+                    setVoiceStatus('');
+                    setVoiceError('Recording too short. Please try again and speak clearly.');
+                    setTimeout(() => setVoiceError(''), 4000);
+                    return;
+                }
+
+                setVoiceStatus('processing');
+                setVoiceText('Processing your voice...');
+
+                try {
+                    // Send audio to backend for GROQ Whisper transcription
+                    const result = await transcribeAudio(audioBlob);
+                    const transcript = result.text?.trim();
+
+                    if (!transcript) {
+                        setVoiceError('Could not understand. Please try again.');
+                        setTimeout(() => setVoiceError(''), 4000);
+                        setIsListening(false);
+                        setVoiceStatus('');
+                        return;
+                    }
+
+                    console.log('Whisper transcription:', transcript);
+                    setVoiceText(transcript);
+                    setSearchQuery(transcript);
+
+                    // Parse the voice command using AI
+                    try {
+                        const parsed = await parseVoiceCommand(transcript);
+                        const params = new URLSearchParams();
+                        if (parsed.query) params.set('search', parsed.query);
+                        if (parsed.maxPrice) params.set('maxPrice', parsed.maxPrice);
+                        if (parsed.minPrice) params.set('minPrice', parsed.minPrice);
+                        if (parsed.category) params.set('category', parsed.category);
+                        if (parsed.sortBy) params.set('sort', parsed.sortBy);
+                        navigate(`/products?${params.toString()}`);
+                        setIsMenuOpen(false);
+                        setShowSuggestions(false);
+                    } catch (err) {
+                        console.log('AI parse failed, using raw transcript:', err);
+                        navigate(`/products?search=${encodeURIComponent(transcript)}`);
+                        setIsMenuOpen(false);
+                    }
+                } catch (err) {
+                    console.error('Transcription failed:', err);
+                    const errorMessage = err.response?.data?.message || 'Voice transcription failed. Please try again.';
+                    setVoiceError(errorMessage);
+                    setTimeout(() => setVoiceError(''), 7000);
+                } finally {
+                    setIsListening(false);
+                    setVoiceStatus('');
+                }
+            };
+
+            mediaRecorder.onerror = (event) => {
+                console.error('MediaRecorder error:', event.error);
+                stream.getTracks().forEach(track => track.stop());
+                setIsListening(false);
+                setVoiceStatus('');
+                setVoiceError('Recording failed. Please try again.');
+                setTimeout(() => setVoiceError(''), 4000);
+            };
+
+            // Start recording
+            mediaRecorder.start();
+
+            // Auto-stop after 10 seconds
+            setTimeout(() => {
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            }, 10000);
+
+        } catch (err) {
+            console.error('Microphone access error:', err);
+            setIsListening(false);
+            setVoiceStatus('');
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                setVoiceError('Microphone access denied. Please allow mic access in browser settings.');
+            } else if (err.name === 'NotFoundError') {
+                setVoiceError('No microphone found. Please connect a microphone.');
+            } else {
+                setVoiceError('Failed to access microphone. Please try again.');
+            }
+            setTimeout(() => setVoiceError(''), 5000);
+        }
+    };
+
+    const categories = [
+        { name: 'Electronics', icon: <FiGrid />, path: '/products?category=electronics' },
+        { name: 'Accessories', icon: <FiGrid />, path: '/products?category=accessories' },
+        { name: 'Clothing', icon: <FiGrid />, path: '/products?category=clothing' },
+        { name: 'Furniture', icon: <FiGrid />, path: '/products?category=furniture' },
+        { name: 'Footwear', icon: <FiGrid />, path: '/products?category=footwear' },
+        { name: 'Sports', icon: <FiGrid />, path: '/products?category=sports' },
+        { name: 'Home & Kitchen', icon: <FiGrid />, path: '/products?category=home & kitchen' },
+        { name: 'Stationery', icon: <FiGrid />, path: '/products?category=stationery' },
+        { name: 'Books & Media', icon: <FiGrid />, path: '/products?category=books & media' },
+        { name: 'Beauty & Personal Care', icon: <FiGrid />, path: '/products?category=beauty & personal care' },
+        { name: 'Toys & Games', icon: <FiGrid />, path: '/products?category=toys & games' },
+        { name: 'Automotive', icon: <FiGrid />, path: '/products?category=automotive' },
+    ];
+
+    return (
+        <div className={`navbar-sticky sticky top-4 z-[100] px-4 sm:px-8 lg:px-12 xl:px-16 transition-all duration-500 ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+
+            {/* Voice Listening Overlay */}
+            {isListening && (
+                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center" onClick={voiceStatus === 'recording' ? stopListening : undefined}>
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 flex flex-col items-center gap-5 shadow-2xl animate-fade-in max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative">
+                            <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg ${
+                                    voiceStatus === 'processing' 
+                                        ? 'bg-amber-500' 
+                                        : 'bg-primary-600'
+                            }`}>
+                                {voiceStatus === 'processing' ? (
+                                    <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <FiMic size={40} className="text-white" />
+                                )}
+                            </div>
+                            {voiceStatus === 'recording' && (
+                                <>
+                                    <div className="absolute inset-0 rounded-full bg-primary-400 opacity-50 animate-ping" />
+                                    <div className="absolute -inset-2 rounded-full border-4 border-primary-300 opacity-40 animate-pulse" />
+                                </>
+                            )}
+                        </div>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">
+                            {voiceStatus === 'processing' ? 'Transcribing...' : 'Listening...'}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                            {voiceStatus === 'processing' 
+                                ? 'Converting your speech to text using AI' 
+                                : 'Speak now, e.g. "Show laptops under 50000"'}
+                        </p>
+                        {voiceText && <p className="text-sm font-medium text-primary-600 bg-primary-50 dark:bg-primary-900/30 dark:text-primary-300 px-4 py-2 rounded-full">"{voiceText}"</p>}
+                        {voiceStatus === 'recording' && (
+                            <button 
+                                onClick={stopListening}
+                                className="mt-2 px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-medium transition-colors shadow-md"
+                            >
+                                Stop Recording
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Voice Error Toast */}
+            {voiceError && (
+                <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[201] bg-red-500 text-white px-6 py-3 rounded-xl shadow-xl text-sm font-medium animate-fade-in flex items-center gap-2">
+                    <FiMic size={16} /> {voiceError}
+                </div>
+            )}
+
+
+            {/* Main Navbar */}
+            <nav className="w-full max-w-[2400px] mx-auto bg-white/80 backdrop-blur-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-full transition-all duration-300">
+                <div className="px-6 md:px-8 h-16 md:h-[4.5rem] flex items-center justify-between gap-4 md:gap-8">
+
+                    {/* Logo & Main Nav */}
+                    <div className="flex items-center gap-8 flex-shrink-0">
+                        <Link to="/" className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-500 tracking-tight">
+                            ShopFlow
+                        </Link>
+                        
+                        <div className="hidden lg:flex items-center space-x-6 relative">
+                            <Link 
+                                to="/" 
+                                className={`py-2 text-sm font-medium transition-colors relative ${
+                                    location.pathname === '/' ? 'text-primary-600' : 'text-gray-600 hover:text-primary-600'
+                                }`}
+                            >
+                                Home
+                                {location.pathname === '/' && (
+                                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full animate-indicator-slide" />
+                                )}
+                            </Link>
+                            <Link 
+                                to="/products" 
+                                className={`py-2 text-sm font-medium transition-colors relative ${
+                                    location.pathname.startsWith('/products') ? 'text-primary-600' : 'text-gray-600 hover:text-primary-600'
+                                }`}
+                            >
+                                Shop
+                                {location.pathname.startsWith('/products') && (
+                                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full animate-indicator-slide" />
+                                )}
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Desktop Search Bar */}
+                    <div className="hidden md:flex flex-1 max-w-2xl relative" ref={searchRef}>
+                        <form onSubmit={handleSearch} className="w-full relative flex items-center">
+                            <input
+                                type="text"
+                                placeholder={isListening ? '🎤 Listening... speak now' : 'Search for products, brands and more...'}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                                className={`w-full pl-6 pr-24 py-2.5 bg-gray-50/50 backdrop-blur-sm border rounded-full focus:outline-none focus:border-primary-300 focus:bg-white focus:ring-4 focus:ring-primary-100/50 transition-all text-sm font-medium ${
+                                    isListening ? 'border-red-400 ring-4 ring-red-100 bg-red-50/50 text-red-700' : 'border-gray-200/80 text-gray-800 hover:bg-gray-50'
+                                }`}
+                            />
+                            <button type="submit" className="absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-gray-900 text-white rounded-full hover:bg-primary-600 hover:shadow-md transition-all">
+                                <FiSearch size={14} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleVoiceSearch}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
+                                    isListening
+                                        ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
+                                        : 'bg-white text-gray-500 border border-gray-100 hover:bg-primary-50 hover:text-primary-600 shadow-sm'
+                                }`}
+                                title="Voice Search"
+                            >
+                                <FiMic size={14} />
+                            </button>
+                        </form>
+
+                        {/* Search Suggestions Dropdown */}
+                        {showSuggestions && suggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 max-h-[300px] overflow-y-auto w-full">
+                                {suggestions.map((product) => (
+                                    <button
+                                        key={product._id}
+                                        onClick={() => {
+                                            navigate(`/products/${product._id}`);
+                                            setShowSuggestions(false);
+                                            setSearchQuery('');
+                                        }}
+                                        className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0"
+                                    >
+                                        <img src={product.image} alt={product.title} className="w-10 h-10 object-cover rounded-md shrink-0" />
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-sm font-semibold text-gray-800 line-clamp-1 truncate">{product.title}</p>
+                                            <p className="text-xs text-primary-600 font-bold">₹{product.price.toLocaleString('en-IN')}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop Actions */}
+                    <div className="hidden md:flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
+                        {/* Categories Dropdown */}
+                        <div className="relative mr-2" ref={categoryMenuRef}>
+                            <button
+                                onClick={() => setIsCategoryMenuOpen(!isCategoryMenuOpen)}
+                                className="flex items-center space-x-1 px-4 py-2 rounded-2xl hover:bg-white/80 hover:shadow-sm text-gray-700 hover:text-primary-600 font-semibold transition-all border border-transparent hover:border-gray-100"
+                            >
+                                <span>Categories</span>
+                                <FiChevronDown size={16} className={`transition-transform ${isCategoryMenuOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isCategoryMenuOpen && (
+                                <div className="absolute top-full right-0 mt-4 w-60 z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
+                                    {categories.map((cat, idx) => (
+                                        <Link
+                                            key={idx}
+                                            to={cat.path}
+                                            className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                                            onClick={() => setIsCategoryMenuOpen(false)}
+                                        >
+                                            {cat.icon}
+                                            <span>{cat.name}</span>
+                                        </Link>
+                                    ))}
+                                    <div className="border-t border-gray-100 mt-2 pt-2">
+                                        <Link to="/products" className="block px-4 py-2 text-center text-xs font-bold text-primary-600 hover:underline">
+                                            View All Products
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Dark Mode Toggle */}
+                        <button
+                            onClick={toggleTheme}
+                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-all shadow-sm"
+                            aria-label="Toggle dark mode"
+                        >
+                            {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+                        </button>
+
+                        <Link to="/support" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-100 transition-all shadow-sm relative" aria-label="Customer Support">
+                            <FiMessageCircle size={18} />
+                        </Link>
+
+                        <Link to="/wishlist" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition-all shadow-sm relative">
+                            <FiHeart size={18} />
+                            {totalWishlistItems > 0 && (
+                                <span className={`absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white ${pulseWishlist ? 'animate-badge-pop' : ''}`}>
+                                    {totalWishlistItems}
+                                </span>
+                            )}
+                        </Link>
+
+                        <Link to="/compare" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 hover:border-cyan-100 transition-all shadow-sm relative" aria-label="Compare Products">
+                            <FiLayers size={18} />
+                            {compareItems.length > 0 && (
+                                <span className={`absolute -top-1.5 -right-1.5 bg-cyan-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white ${pulseCompare ? 'animate-badge-pop' : ''}`}>
+                                    {compareItems.length}
+                                </span>
+                            )}
+                        </Link>
+
+                        {(user?.role === 'admin' || user?.role === 'manager') && (
+                            <Link
+                                to="/admin"
+                                className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-[1.25rem] text-sm font-bold hover:bg-amber-600 transition-all shadow-md hover:shadow-lg active:scale-95"
+                            >
+                                <FiSettings className="animate-spin-slow" /> Admin
+                            </Link>
+                        )}
+
+                        <button 
+                            onClick={() => setIsCartDrawerOpen(true)}
+                            id="desktop-cart-btn"
+                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/60 border border-gray-100/50 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100 transition-all shadow-sm relative focus:outline-none cart-icon-target"
+                            aria-label="Open Shopping Cart Drawer"
+                        >
+                            <FiShoppingCart size={18} />
+                            {totalItems > 0 && (
+                                <span className={`absolute -top-1.5 -right-1.5 bg-emerald-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white ${pulseCart ? 'animate-badge-pop' : ''}`}>
+                                    {totalItems}
+                                </span>
+                            )}
+                        </button>
+
+                        {user ? (
+                            <div className="relative ml-2" ref={userMenuRef}>
+                                <button
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className="flex items-center space-x-2 pl-2 pr-4 py-1.5 rounded-[2rem] hover:bg-white/80 hover:shadow-sm border border-transparent hover:border-gray-100 transition-all focus:outline-none"
+                                >
+                                    <div className="w-8 h-8 bg-gradient-to-tr from-primary-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold shadow-inner">
+                                        {user.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="text-left hidden lg:block">
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Account</p>
+                                        <p className="text-sm font-bold text-gray-900 leading-none">{user.name.split(' ')[0]}</p>
+                                    </div>
+                                    <FiChevronDown size={14} className="text-gray-400 ml-1" />
+                                </button>
+
+                                {isUserMenuOpen && (
+                                    <div className="absolute top-full right-0 mt-3 w-56 z-50 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100/50 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
+                                        <div className="px-4 py-3 border-b border-gray-50 bg-gray-50/50">
+                                            <p className="text-sm font-bold text-gray-900">{user.name}</p>
+                                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                        </div>
+
+                                        <Link to="/dashboard" onClick={() => setIsUserMenuOpen(false)} className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 font-medium transition-colors">
+                                            <FiUser size={16} />
+                                            <span>My Profile</span>
+                                        </Link>
+                                        <Link to="/dashboard" onClick={() => setIsUserMenuOpen(false)} className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 font-medium transition-colors">
+                                            <FiBox size={16} />
+                                            <span>Orders</span>
+                                        </Link>
+                                        {(user.role === 'admin' || user.role === 'manager') && (
+                                            <Link to="/admin" onClick={() => setIsUserMenuOpen(false)} className="flex items-center space-x-3 px-4 py-3 text-sm text-amber-600 hover:bg-amber-50 font-bold transition-colors">
+                                                <FiSettings size={16} />
+                                                <span>Manager Panel</span>
+                                            </Link>
+                                        )}
+
+                                        <div className="border-t border-gray-50 mt-1">
+                                            <button
+                                                onClick={() => { logout(); navigate('/'); }}
+                                                className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 font-medium transition-colors"
+                                            >
+                                                <FiLogOut size={16} />
+                                                <span>Log Out</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <Link to="/login" className="ml-2 bg-gray-900 text-white px-6 py-2.5 rounded-2xl text-sm font-bold hover:bg-primary-600 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 transform">
+                                Login
+                            </Link>
+                        )}
+                    </div>
+
+                    {/* Mobile Menu Button */}
+                    <div className="flex md:hidden items-center space-x-3 sm:space-x-4">
+                        <Link to="/support" className="text-gray-600 hover:text-primary-600 transition-colors" aria-label="Customer Support">
+                            <FiMessageCircle size={24} />
+                        </Link>
+                        <Link to="/compare" className="relative text-gray-600 hover:text-primary-600 transition-colors hidden sm:block">
+                            <FiLayers size={24} />
+                            {compareItems.length > 0 && (
+                                <span className={`absolute -top-2 -right-2 bg-indigo-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseCompare ? 'animate-badge-pop' : ''}`}>
+                                    {compareItems.length}
+                                </span>
+                            )}
+                        </Link>
+                        <button 
+                            onClick={() => setIsCartDrawerOpen(true)}
+                            id="mobile-cart-btn"
+                            className="cart-icon-target relative text-gray-600 hover:text-primary-600 transition-colors focus:outline-none"
+                            aria-label="Open Shopping Cart Drawer"
+                        >
+                            <FiShoppingCart size={24} />
+                            {totalItems > 0 && (
+                                <span className={`absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ${pulseCart ? 'animate-badge-pop' : ''}`}>
+                                    {totalItems}
+                                </span>
+                            )}
+                        </button>
+                        <button className="text-gray-600" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                            {isMenuOpen ? <FiX size={26} /> : <FiMenu size={26} />}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Mobile Menu Overlay */}
+                {isMenuOpen && (
+                    <div className="md:hidden bg-white/95 backdrop-blur-3xl border border-white/60 absolute top-full left-2 right-2 mt-2 rounded-[2rem] shadow-2xl z-40 max-h-[85vh] overflow-y-auto">
+                        <div className="p-5 space-y-6">
+                            <div className="relative">
+                                <form onSubmit={handleSearch} className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder={isListening ? '🎤 Listening...' : 'Search products...'}
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                                        className={`w-full pl-4 pr-20 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
+                                            isListening ? 'border-red-400 ring-2 ring-red-200 bg-red-50/30' : 'border-gray-200'
+                                        }`}
+                                    />
+                                    <button type="submit" className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400">
+                                        <FiSearch size={20} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleVoiceSearch}
+                                        className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-all duration-200 ${
+                                            isListening
+                                                ? 'bg-red-500 text-white animate-pulse'
+                                                : 'text-gray-400 hover:text-primary-600'
+                                        }`}
+                                        title="Voice Search"
+                                    >
+                                        <FiMic size={20} />
+                                    </button>
+                                </form>
+                                {/* Search Suggestions Dropdown Mobile */}
+                                {showSuggestions && suggestions.length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 max-h-[250px] overflow-y-auto w-full">
+                                        {suggestions.map((product) => (
+                                            <button
+                                                key={product._id}
+                                                onClick={() => {
+                                                    navigate(`/products/${product._id}`);
+                                                    setShowSuggestions(false);
+                                                    setIsMenuOpen(false);
+                                                    setSearchQuery('');
+                                                }}
+                                                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0"
+                                            >
+                                                <img src={product.image} alt={product.title} className="w-8 h-8 object-cover rounded-md shrink-0" />
+                                                <div className="flex-1 overflow-hidden">
+                                                    <p className="text-sm font-semibold text-gray-800 line-clamp-1 truncate">{product.title}</p>
+                                                    <p className="text-xs text-primary-600 font-bold">₹{product.price.toLocaleString('en-IN')}</p>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Menu</p>
+                                <Link to="/" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">Home</Link>
+                                <Link to="/products" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">All Products</Link>
+                                <Link to="/products?category=electronics" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Electronics</Link>
+                                <Link to="/products?category=clothing" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Clothing</Link>
+                                <Link to="/products?category=accessories" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Accessories</Link>
+                                <Link to="/products?category=sports" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Sports</Link>
+                                <Link to="/products?category=beauty & personal care" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Beauty</Link>
+                                <Link to="/products?category=books & media" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium ml-4 border-l-2 border-gray-100">Books</Link>
+                                <Link to="/support" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-primary-600 font-bold mt-2">Customer Support Chat</Link>
+                                <Link to="/compare" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium sm:hidden">Compare Products</Link>
+                            </div>
+
+                            {/* Mobile Dark Mode Toggle */}
+                            <button
+                                onClick={toggleTheme}
+                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                            >
+                                {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+                                {darkMode ? 'Light Mode' : 'Dark Mode'}
+                            </button>
+
+                            <div className="border-t border-gray-100 pt-4">
+                                {user ? (
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Account</p>
+                                        <div className="flex items-center space-x-3 px-4 py-3 mb-2">
+                                            <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold border border-primary-200">
+                                                {user.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-900">{user.name}</p>
+                                                <p className="text-xs text-gray-500">{user.email}</p>
+                                            </div>
+                                        </div>
+                                        <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">Dashboard</Link>
+                                        <button onClick={() => { logout(); navigate('/'); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl hover:bg-red-50 text-red-500 font-medium">Log Out</button>
+                                    </div>
+                                ) : (
+                                    <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block w-full text-center bg-primary-600 text-white rounded-xl py-3 font-bold shadow-md">
+                                        Login / Sign Up
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </nav>
+
+            {/* Slide-Over Cart Drawer Backdrop */}
+            <div 
+                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] transition-opacity duration-300 ${
+                    isCartDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+                onClick={() => setIsCartDrawerOpen(false)}
+            />
+
+            {/* Slide-Over Cart Drawer Panel */}
+            <div 
+                className={`fixed top-2 bottom-2 right-2 md:top-4 md:bottom-4 md:right-4 h-[calc(100vh-1rem)] md:h-[calc(100vh-2rem)] w-[calc(100%-1rem)] sm:max-w-md bg-white/95 backdrop-blur-3xl border border-white shadow-2xl shadow-gray-400/30 rounded-3xl z-[9999] flex flex-col transition-transform duration-500 ease-out transform ${
+                    isCartDrawerOpen ? 'translate-x-0' : 'translate-x-[120%]'
+                }`}
+            >
+                {/* Drawer Header */}
+                <div className="p-6 border-b border-gray-100/50 flex items-center justify-between bg-white/50 rounded-t-3xl">
+                    <div className="flex items-center gap-2">
+                        <FiShoppingCart className="text-primary-600" size={20} />
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Shopping Cart</h2>
+                        <span className="bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                            {totalItems} items
+                        </span>
+                    </div>
+                    <button 
+                        onClick={() => setIsCartDrawerOpen(false)}
+                        className="p-1 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                        <FiX size={20} />
+                    </button>
+                </div>
+
+                {/* Drawer Body - Cart Items */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    {cart.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                                <FiShoppingCart size={28} />
+                            </div>
+                            <p className="text-gray-900 dark:text-white font-bold mb-1">Your cart is empty</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mb-6">Start adding some items to see them here.</p>
+                            <button 
+                                onClick={() => { setIsCartDrawerOpen(false); navigate('/products'); }}
+                                className="px-6 py-2.5 bg-gray-900 dark:bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-600 transition-colors text-sm shadow-md"
+                            >
+                                Shop Products
+                            </button>
+                        </div>
+                    ) : (
+                        cart.map((item) => {
+                            const itemId = item._id || item.id;
+                            return (
+                                <div key={`${itemId}-${item.size}`} className="flex gap-4 bg-white/60 p-4 rounded-2xl border border-gray-100/60 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 group">
+                                    <div className="w-16 h-16 rounded-xl bg-white border border-gray-50 p-1 flex-shrink-0 flex items-center justify-center shadow-sm">
+                                        <img src={item.image} alt={item.title} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">{item.title}</h4>
+                                        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-gray-500">
+                                            <span>{item.category}</span>
+                                            {item.size && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span className="font-semibold text-primary-600 dark:text-primary-400">Size {item.size}</span>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center justify-between mt-2">
+                                            <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800">
+                                                <button 
+                                                    onClick={() => updateQuantity(itemId, item.size, Math.max(1, item.quantity - 1))}
+                                                    className="p-1 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+                                                >
+                                                    <FiMinus size={10} />
+                                                </button>
+                                                <span className="px-2 font-medium text-gray-900 dark:text-white text-xs w-6 text-center">{item.quantity}</span>
+                                                <button 
+                                                    onClick={() => updateQuantity(itemId, item.size, item.quantity + 1)}
+                                                    className="p-1 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+                                                >
+                                                    <FiPlus size={10} />
+                                                </button>
+                                            </div>
+                                            <span className="text-sm font-bold text-primary-600 dark:text-primary-400">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => removeFromCart(itemId, item.size)}
+                                        className="text-gray-400 hover:text-red-500 transition-colors p-1 self-start"
+                                        title="Remove item"
+                                    >
+                                        <FiTrash2 size={15} />
+                                    </button>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+
+                {/* Drawer Footer */}
+                {cart.length > 0 && (
+                    <div className="p-6 border-t border-gray-100/50 bg-white/80 rounded-b-3xl space-y-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-gray-500 text-sm">Estimated Total</span>
+                            <span className="text-xl font-bold text-primary-600 dark:text-primary-400">₹{totalPrice.toLocaleString('en-IN')}</span>
+                        </div>
+                        <p className="text-xs text-gray-400">Taxes, shipping, and discounts calculated at checkout.</p>
+                        <div className="space-y-2">
+                            <button
+                                onClick={() => { setIsCartDrawerOpen(false); navigate('/checkout'); }}
+                                className="w-full bg-gray-900 dark:bg-primary-600 text-white rounded-xl py-3 font-semibold text-center hover:bg-primary-600 dark:hover:bg-primary-700 transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95"
+                            >
+                                Checkout <FiArrowRight size={16} />
+                            </button>
+                            <button
+                                onClick={() => { setIsCartDrawerOpen(false); navigate('/cart'); }}
+                                className="w-full bg-white border border-gray-200 text-gray-700 rounded-xl py-3 font-semibold text-center hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+                            >
+                                View Detailed Cart
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Custom Scoped Animations */}
+            <style dangerouslySetInnerHTML={{__html: `
+                @keyframes badgePop {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.4); }
+                    100% { transform: scale(1); }
+                }
+                .animate-badge-pop {
+                    animation: badgePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                @keyframes indicatorSlide {
+                    from { transform: scaleX(0); opacity: 0; }
+                    to { transform: scaleX(1); opacity: 1; }
+                }
+                .animate-indicator-slide {
+                    animation: indicatorSlide 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+                    transform-origin: center;
+                }
+            `}} />
+        </div>
+    );
+};
+
+export default Navbar;
