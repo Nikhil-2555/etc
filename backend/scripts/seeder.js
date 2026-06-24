@@ -163,22 +163,14 @@ const importData = async () => {
         await Product.insertMany(products);
 
         const salt = await bcrypt.genSalt(10);
-<<<<<<< HEAD
         const adminHashedPassword = await bcrypt.hash('12345678', salt);
-=======
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
         const hashedPassword = await bcrypt.hash('password123', salt);
 
         const users = [
             {
                 name: 'Admin User',
-<<<<<<< HEAD
                 email: 'shopflow@gmail.com',
                 password: adminHashedPassword,
-=======
-                email: 'admin@shop.com',
-                password: hashedPassword,
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                 role: 'admin'
             },
             {

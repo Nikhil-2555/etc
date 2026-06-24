@@ -9,7 +9,6 @@ const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-<<<<<<< HEAD
     const [rememberMe, setRememberMe] = useState(() => {
         return localStorage.getItem('shopflow_remember_me') === 'true';
     });
@@ -18,23 +17,12 @@ const Login = () => {
         initialValues: {
             email: localStorage.getItem('shopflow_saved_email') || '',
             password: localStorage.getItem('shopflow_saved_password') || ''
-=======
-
-    const formik = useFormik({
-        initialValues: {
-            email: '',
-            password: ''
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
         },
         validate: values => {
             const errors = {};
             if (!values.email) {
                 errors.email = 'Email is required';
-<<<<<<< HEAD
             } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email.trim())) {
-=======
-            } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                 errors.email = 'Invalid email address';
             }
             if (!values.password) {
@@ -47,7 +35,6 @@ const Login = () => {
         onSubmit: async (values) => {
             setIsLoading(true);
             try {
-<<<<<<< HEAD
                 const userData = await login(values.email.trim(), values.password);
                 toast.success('Successfully logged in!');
                 const role = userData.role?.toLowerCase() || 'user';
@@ -61,11 +48,6 @@ const Login = () => {
                     localStorage.removeItem('shopflow_saved_password');
                 }
 
-=======
-                const userData = await login(values.email, values.password);
-                toast.success('Successfully logged in!');
-                const role = userData.role?.toLowerCase() || 'user';
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                 if (role === 'admin' || role === 'manager') {
                     navigate('/admin');
                 } else {
@@ -445,11 +427,8 @@ const Login = () => {
                                     name="remember-me"
                                     type="checkbox"
                                     className="remember-checkbox"
-<<<<<<< HEAD
                                     checked={rememberMe}
                                     onChange={(e) => setRememberMe(e.target.checked)}
-=======
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                                 />
                                 <span className="remember-text">Remember me</span>
                             </label>

@@ -9,7 +9,6 @@ const AdminLogin = () => {
     const { login, logout } = useAuth();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-<<<<<<< HEAD
     const [rememberMe, setRememberMe] = useState(() => {
         return localStorage.getItem('shopflow_admin_remember_me') === 'true';
     });
@@ -19,20 +18,11 @@ const AdminLogin = () => {
             email: localStorage.getItem('shopflow_admin_saved_email') || '', 
             password: localStorage.getItem('shopflow_admin_saved_password') || '' 
         },
-=======
-
-    const formik = useFormik({
-        initialValues: { email: '', password: '' },
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
         validate: values => {
             const errors = {};
             if (!values.email) {
                 errors.email = 'Email is required';
-<<<<<<< HEAD
             } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email.trim())) {
-=======
-            } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                 errors.email = 'Invalid email address';
             }
             if (!values.password) {
@@ -45,7 +35,6 @@ const AdminLogin = () => {
         onSubmit: async (values) => {
             setIsLoading(true);
             try {
-<<<<<<< HEAD
                 const userData = await login(values.email.trim(), values.password);
                 if (userData.role === 'admin' || userData.role === 'manager') {
                     if (rememberMe) {
@@ -57,10 +46,6 @@ const AdminLogin = () => {
                         localStorage.removeItem('shopflow_admin_saved_email');
                         localStorage.removeItem('shopflow_admin_saved_password');
                     }
-=======
-                const userData = await login(values.email, values.password);
-                if (userData.role === 'admin' || userData.role === 'manager') {
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                     toast.success('Welcome back, Admin!');
                     navigate('/admin');
                 } else {
@@ -230,7 +215,6 @@ const AdminLogin = () => {
                     color: #0f172a;
                 }
 
-<<<<<<< HEAD
                 .remember-label {
                     display: flex;
                     align-items: center;
@@ -253,8 +237,6 @@ const AdminLogin = () => {
                     color: #475569;
                 }
 
-=======
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                 .admin-btn {
                     width: 100%;
                     padding: 0.875rem;
@@ -363,7 +345,6 @@ const AdminLogin = () => {
                 .dark .input-wrapper:focus-within .input-icon {
                     color: #6366f1;
                 }
-<<<<<<< HEAD
                 .dark .remember-text {
                     color: #cbd5e1;
                 }
@@ -371,8 +352,6 @@ const AdminLogin = () => {
                     border-color: #334155;
                     accent-color: #6366f1;
                 }
-=======
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                 .dark .admin-btn {
                     background: #6366f1;
                 }
@@ -433,7 +412,6 @@ const AdminLogin = () => {
                             {formik.touched.password && formik.errors.password && <span className="field-error">{formik.errors.password}</span>}
                         </div>
 
-<<<<<<< HEAD
                         <label className="remember-label">
                             <input
                                 id="remember-me-admin"
@@ -446,8 +424,6 @@ const AdminLogin = () => {
                             <span className="remember-text">Remember my credentials</span>
                         </label>
 
-=======
->>>>>>> ac794f6acd6f07d555238c252853f4601e063236
                         <button type="submit" className="admin-btn" disabled={isLoading}>
                             {isLoading ? (
                                 <div className="spinner" />
