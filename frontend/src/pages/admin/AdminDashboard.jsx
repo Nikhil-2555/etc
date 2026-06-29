@@ -10,12 +10,7 @@ import {
     deleteUser,
     getAllOrdersAdmin,
     getAdminAnalytics,
-    updateOrderStatus,
-    getClusterStatus,
-    getClusterUsers,
-    batchUpdateUserRoles,
-    batchDeleteUsers,
-    exportUsers
+    updateOrderStatus
 } from '../../services/api';
 import { toast } from 'react-hot-toast';
 import {
@@ -23,7 +18,7 @@ import {
     FiTrash2, FiSearch, FiDollarSign, FiShoppingBag, FiTrendingUp,
     FiArrowUpRight, FiArrowDownRight, FiLogOut, FiMenu, FiX, FiActivity,
     FiUserPlus, FiCreditCard, FiBell, FiShield, FiGlobe, FiSmartphone,
-    FiUser, FiMail, FiCpu, FiServer, FiDownload, FiChevronLeft, FiChevronRight,
+    FiUser, FiMail, FiDownload, FiChevronLeft, FiChevronRight,
     FiCheck, FiFilter, FiRefreshCw
 } from 'react-icons/fi';
 import {
@@ -98,69 +93,7 @@ const AdminDashboard = () => {
         password: ''
     });
 
-    // ── Cluster State ──
-    const [clusterStatus, setClusterStatus] = useState(null);
-    const [clusterUsers, setClusterUsers] = useState([]);
-    const [clusterPagination, setClusterPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
-    const [clusterSummary, setClusterSummary] = useState({ roles: {}, statuses: {} });
-    const [clusterSearch, setClusterSearch] = useState('');
-    const [clusterRoleFilter, setClusterRoleFilter] = useState('all');
-    const [clusterStatusFilter, setClusterStatusFilter] = useState('all');
-    const [clusterSortBy, setClusterSortBy] = useState('createdAt');
-    const [clusterSortOrder, setClusterSortOrder] = useState('desc');
-    const [selectedUserIds, setSelectedUserIds] = useState(new Set());
-    const [clusterLoading, setClusterLoading] = useState(false);
 
-    const fetchClusterData = useCallback(async (page = 1) => {
-        setClusterLoading(true);
-        try {
-            const [statusRes, usersRes] = await Promise.all([
-                getClusterStatus().catch(() => null),
-                getClusterUsers({
-                    page, limit: clusterPagination.limit,
-                    search: clusterSearch, role: clusterRoleFilter,
-                    status: clusterStatusFilter, sortBy: clusterSortBy,
-                    sortOrder: clusterSortOrder
-                }),
-            ]);
-            if (statusRes) setClusterStatus(statusRes);
-            setClusterUsers(usersRes.users);
-            setClusterPagination(usersRes.pagination);
-            setClusterSummary(usersRes.summary);
-        } catch (err) {
-            console.error('Cluster data error:', err);
-        } finally {
-            setClusterLoading(false);
-        }
-    }, [clusterSearch, clusterRoleFilter, clusterStatusFilter, clusterSortBy, clusterSortOrder, clusterPagination.limit]);
-
-    // Fetch data on mount and poll every 10 seconds for real-time updates
-    useEffect(() => {
-        fetchDashboardData();
-        const interval = setInterval(() => {
-            fetchDashboardData(true); // silent refresh
-        }, 10000); // 10 seconds polling for faster updates
-
-        return () => clearInterval(interval);
-    }, []);
-
-    // Refresh analytics data when analytics tab is opened
-    useEffect(() => {
-        if (activeTab === 'analytics') {
-            fetchDashboardData(true);
-        }
-    }, [activeTab]);
-
-    // Fetch cluster data when cluster tab is opened or filters change
-    useEffect(() => {
-        if (activeTab === 'cluster') {
-            fetchClusterData(1);
-            const interval = setInterval(() => {
-                getClusterStatus().then(s => setClusterStatus(s)).catch(() => {});
-            }, 8000);
-            return () => clearInterval(interval);
-        }
-    }, [activeTab, clusterSearch, clusterRoleFilter, clusterStatusFilter, clusterSortBy, clusterSortOrder, fetchClusterData]);
 
 
 
@@ -187,13 +120,14 @@ const AdminDashboard = () => {
             } catch (_) { /* orders may fail silently */ }
 
             // Add colors to category data for visualization
-            const coloredCategoryData = analyticsData.categoryData.map((cat, index) => ({
+            const coloredCategoryData = (analyticsData?.categoryData || []).map((cat, index) => ({
                 ...cat,
                 color: CATEGORY_COLORS[index % CATEGORY_COLORS.length]
             }));
 
             setAnalytics({
-                ...analyticsData,
+                metrics: { projectedRevenue: 0, revenueGrowth: 0, conversionRate: 0, cartAbandonment: 0 },
+                ...(analyticsData || {}),
                 categoryData: coloredCategoryData
             });
             setLastRefreshed(new Date());
@@ -208,6 +142,20 @@ const AdminDashboard = () => {
             }
         }
     };
+
+    useEffect(() => {
+        fetchDashboardData();
+        const interval = setInterval(() => {
+            fetchDashboardData(true);
+        }, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === 'analytics') {
+            fetchDashboardData(true);
+        }
+    }, [activeTab]);
 
     const handleDelete = async (id) => {
         try {
@@ -1108,332 +1056,7 @@ const AdminDashboard = () => {
                             </motion.div>
                         )}
 
-                        {activeTab === 'cluster' && (
-                            <motion.div
-                                key="cluster"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                className="space-y-6"
-                            >
-                                {/* Cluster Health Header */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                                    {[
-                                        {
-                                            label: 'CPU Cores',
-                                            value: clusterStatus?.system?.cpuCores || clusterStatus?.cluster?.cpuCores || '—',
-                                            icon: <FiCpu />,
-                                            color: 'from-violet-500 to-purple-600',
-                                            bg: 'bg-violet-50'
-                                        },
-                                        {
-                                            label: 'Memory Usage',
-                                            value: clusterStatus?.currentWorker?.memoryUsage?.heapUsed
-                                                ? `${(clusterStatus.currentWorker.memoryUsage.heapUsed / 1024 / 1024).toFixed(0)} MB`
-                                                : '—',
-                                            icon: <FiServer />,
-                                            color: 'from-cyan-500 to-blue-600',
-                                            bg: 'bg-cyan-50'
-                                        },
-                                        {
-                                            label: 'Uptime',
-                                            value: (() => {
-                                                const s = clusterStatus?.system?.uptime || clusterStatus?.cluster?.uptime || 0;
-                                                const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60);
-                                                return s > 0 ? `${h}h ${m}m` : '—';
-                                            })(),
-                                            icon: <FiActivity />,
-                                            color: 'from-emerald-500 to-green-600',
-                                            bg: 'bg-emerald-50'
-                                        },
-                                        {
-                                            label: 'Mode',
-                                            value: clusterStatus?.mode === 'cluster'
-                                                ? `${clusterStatus.cluster?.totalWorkers || 0} Workers`
-                                                : 'Single Process',
-                                            icon: <FiGlobe />,
-                                            color: 'from-amber-500 to-orange-600',
-                                            bg: 'bg-amber-50'
-                                        }
-                                    ].map((card, i) => (
-                                        <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow">
-                                            <div className={`p-2.5 rounded-xl ${card.bg} w-fit mb-3`}>
-                                                <span className="text-lg text-gray-700">{card.icon}</span>
-                                            </div>
-                                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{card.label}</p>
-                                            <p className="text-xl font-black text-gray-900 dark:text-white">{card.value}</p>
-                                        </div>
-                                    ))}
-                                </div>
 
-                                {/* Worker Status (if cluster mode) */}
-                                {clusterStatus?.mode === 'cluster' && clusterStatus.cluster?.workers?.length > 0 && (
-                                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
-                                        <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Worker Processes</h4>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                            {clusterStatus.cluster.workers.map((w, i) => (
-                                                <div key={i} className="bg-gray-50 dark:bg-gray-950 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <span className={`w-2 h-2 rounded-full ${w.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-                                                        <span className="text-xs font-black text-gray-600 dark:text-gray-300">Worker #{w.index}</span>
-                                                    </div>
-                                                    <p className="text-[10px] text-gray-400 font-mono">PID: {w.pid}</p>
-                                                    <p className="text-[10px] text-gray-400">Reqs: {w.requestsHandled || 0}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* User Management Controls */}
-                                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
-                                    <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-                                        <div>
-                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">User Management</h3>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">{clusterPagination.total} total users • Page {clusterPagination.page}/{clusterPagination.totalPages || 1}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {selectedUserIds.size > 0 && (
-                                                <>
-                                                    <span className="text-xs font-bold text-primary-600 bg-primary-50 px-3 py-1.5 rounded-full">
-                                                        {selectedUserIds.size} selected
-                                                    </span>
-                                                    <select
-                                                        defaultValue=""
-                                                        onChange={async (e) => {
-                                                            if (!e.target.value) return;
-                                                            try {
-                                                                const res = await batchUpdateUserRoles([...selectedUserIds], e.target.value);
-                                                                toast.success(res.message);
-                                                                setSelectedUserIds(new Set());
-                                                                fetchClusterData(clusterPagination.page);
-                                                            } catch (err) { toast.error('Batch role update failed'); }
-                                                            e.target.value = '';
-                                                        }}
-                                                        className="text-xs font-bold bg-gray-100 dark:bg-gray-800 border-none rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 cursor-pointer"
-                                                    >
-                                                        <option value="">Set Role…</option>
-                                                        <option value="user">User</option>
-                                                        <option value="manager">Manager</option>
-                                                        <option value="admin">Admin</option>
-                                                    </select>
-                                                    <button
-                                                        onClick={async () => {
-                                                            if (!confirm(`Delete ${selectedUserIds.size} user(s)?`)) return;
-                                                            try {
-                                                                const res = await batchDeleteUsers([...selectedUserIds]);
-                                                                toast.success(res.message);
-                                                                setSelectedUserIds(new Set());
-                                                                fetchClusterData(clusterPagination.page);
-                                                            } catch (err) { toast.error(err.message || 'Batch delete failed'); }
-                                                        }}
-                                                        className="px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors flex items-center gap-1"
-                                                    >
-                                                        <FiTrash2 size={13} /> Delete
-                                                    </button>
-                                                </>
-                                            )}
-                                            <button
-                                                onClick={async () => {
-                                                    try {
-                                                        const data = await exportUsers();
-                                                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                                                        const url = URL.createObjectURL(blob);
-                                                        const a = document.createElement('a'); a.href = url;
-                                                        a.download = `users_export_${new Date().toISOString().split('T')[0]}.json`;
-                                                        a.click(); URL.revokeObjectURL(url);
-                                                        toast.success('Users exported');
-                                                    } catch (err) { toast.error('Export failed'); }
-                                                }}
-                                                className="px-3 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-xl transition-colors flex items-center gap-1"
-                                            >
-                                                <FiDownload size={13} /> Export
-                                            </button>
-                                            <button
-                                                onClick={() => fetchClusterData(clusterPagination.page)}
-                                                className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
-                                            >
-                                                <FiRefreshCw size={16} className={clusterLoading ? 'animate-spin' : ''} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Filters Row */}
-                                    <div className="flex flex-wrap gap-3 mb-5">
-                                        <div className="relative flex-1 min-w-[200px]">
-                                            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                            <input
-                                                type="text"
-                                                placeholder="Search users by name or email…"
-                                                value={clusterSearch}
-                                                onChange={(e) => setClusterSearch(e.target.value)}
-                                                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                                            />
-                                        </div>
-                                        <select value={clusterRoleFilter} onChange={e => setClusterRoleFilter(e.target.value)}
-                                            className="px-4 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 cursor-pointer">
-                                            <option value="all">All Roles</option>
-                                            <option value="user">User</option>
-                                            <option value="manager">Manager</option>
-                                            <option value="admin">Admin</option>
-                                        </select>
-                                        <select value={clusterStatusFilter} onChange={e => setClusterStatusFilter(e.target.value)}
-                                            className="px-4 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 cursor-pointer">
-                                            <option value="all">All Status</option>
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                            <option value="new">New</option>
-                                        </select>
-                                        <select value={`${clusterSortBy}:${clusterSortOrder}`} onChange={e => {
-                                            const [sb, so] = e.target.value.split(':');
-                                            setClusterSortBy(sb); setClusterSortOrder(so);
-                                        }} className="px-4 py-2.5 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 cursor-pointer">
-                                            <option value="createdAt:desc">Newest First</option>
-                                            <option value="createdAt:asc">Oldest First</option>
-                                            <option value="name:asc">Name A–Z</option>
-                                            <option value="name:desc">Name Z–A</option>
-                                        </select>
-                                    </div>
-
-                                    {/* Summary Pills */}
-                                    <div className="flex flex-wrap gap-2 mb-5">
-                                        {Object.entries(clusterSummary.roles || {}).map(([role, count]) => (
-                                            <span key={role} className="px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-[10px] font-black uppercase tracking-widest">
-                                                {role}: {count}
-                                            </span>
-                                        ))}
-                                        {Object.entries(clusterSummary.statuses || {}).map(([status, count]) => (
-                                            <span key={status} className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                                status === 'active' ? 'bg-emerald-50 text-emerald-700' :
-                                                status === 'new' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
-                                            }`}>
-                                                {status}: {count}
-                                            </span>
-                                        ))}
-                                    </div>
-
-                                    {/* User Table */}
-                                    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-                                        <table className="w-full text-left">
-                                            <thead className="bg-gray-50/50 border-b border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-widest">
-                                                <tr>
-                                                    <th className="px-4 py-4 w-10">
-                                                        <input type="checkbox"
-                                                            checked={clusterUsers.length > 0 && selectedUserIds.size === clusterUsers.length}
-                                                            onChange={(e) => {
-                                                                if (e.target.checked) setSelectedUserIds(new Set(clusterUsers.map(u => u._id)));
-                                                                else setSelectedUserIds(new Set());
-                                                            }}
-                                                            className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                                        />
-                                                    </th>
-                                                    <th className="px-4 py-4 font-black">User</th>
-                                                    <th className="px-4 py-4 font-black">Role</th>
-                                                    <th className="px-4 py-4 font-black">Status</th>
-                                                    <th className="px-4 py-4 font-black">Orders</th>
-                                                    <th className="px-4 py-4 font-black">Spent</th>
-                                                    <th className="px-4 py-4 font-black">Joined</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                                {clusterLoading && clusterUsers.length === 0 ? (
-                                                    <tr><td colSpan="7" className="px-8 py-16 text-center">
-                                                        <FiRefreshCw className="mx-auto text-2xl text-gray-300 animate-spin mb-3" />
-                                                        <p className="text-gray-400 font-medium">Loading users…</p>
-                                                    </td></tr>
-                                                ) : clusterUsers.length > 0 ? clusterUsers.map(user => {
-                                                    const statusColors = { active: 'bg-emerald-100 text-emerald-700', inactive: 'bg-gray-100 text-gray-600', new: 'bg-blue-100 text-blue-700' };
-                                                    const roleColors = { admin: 'bg-rose-100 text-rose-700', manager: 'bg-amber-100 text-amber-700', user: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300' };
-                                                    return (
-                                                        <tr key={user._id} className="hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-colors group">
-                                                            <td className="px-4 py-3.5">
-                                                                <input type="checkbox"
-                                                                    checked={selectedUserIds.has(user._id)}
-                                                                    onChange={() => {
-                                                                        const next = new Set(selectedUserIds);
-                                                                        next.has(user._id) ? next.delete(user._id) : next.add(user._id);
-                                                                        setSelectedUserIds(next);
-                                                                    }}
-                                                                    className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                                                />
-                                                            </td>
-                                                            <td className="px-4 py-3.5">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xs">
-                                                                        {(user.name || 'U').charAt(0).toUpperCase()}
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="font-bold text-gray-900 dark:text-white text-sm">{user.name || 'Unknown'}</p>
-                                                                        <p className="text-[11px] text-gray-400">{user.email}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-3.5">
-                                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${roleColors[user.role] || roleColors.user}`}>
-                                                                    {user.role}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-3.5">
-                                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${statusColors[user.activityStatus] || statusColors.inactive}`}>
-                                                                    <span className={`w-1.5 h-1.5 rounded-full ${user.activityStatus === 'active' ? 'bg-emerald-500 animate-pulse' : user.activityStatus === 'new' ? 'bg-blue-500' : 'bg-gray-400'}`} />
-                                                                    {user.activityStatus || 'inactive'}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-3.5 font-bold text-sm text-gray-700 dark:text-gray-300">{user.totalOrders || 0}</td>
-                                                            <td className="px-4 py-3.5 font-black text-sm text-gray-900 dark:text-white">₹{(user.totalSpent || 0).toLocaleString('en-IN')}</td>
-                                                            <td className="px-4 py-3.5 text-xs text-gray-500 dark:text-gray-400">
-                                                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                }) : (
-                                                    <tr><td colSpan="7" className="px-8 py-16 text-center">
-                                                        <FiUsers className="mx-auto text-3xl text-gray-200 mb-3" />
-                                                        <p className="text-gray-400 font-medium">No users found</p>
-                                                    </td></tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {/* Pagination */}
-                                    {clusterPagination.totalPages > 1 && (
-                                        <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                                Showing {((clusterPagination.page - 1) * clusterPagination.limit) + 1}–{Math.min(clusterPagination.page * clusterPagination.limit, clusterPagination.total)} of {clusterPagination.total}
-                                            </p>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => fetchClusterData(clusterPagination.page - 1)}
-                                                    disabled={clusterPagination.page <= 1}
-                                                    className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 disabled:opacity-30 hover:bg-primary-50 hover:text-primary-600 transition-all"
-                                                >
-                                                    <FiChevronLeft size={16} />
-                                                </button>
-                                                {Array.from({ length: Math.min(5, clusterPagination.totalPages) }, (_, i) => {
-                                                    const start = Math.max(1, clusterPagination.page - 2);
-                                                    const pg = start + i;
-                                                    if (pg > clusterPagination.totalPages) return null;
-                                                    return (
-                                                        <button key={pg} onClick={() => fetchClusterData(pg)}
-                                                            className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${pg === clusterPagination.page ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-primary-50 hover:text-primary-600'}`}>
-                                                            {pg}
-                                                        </button>
-                                                    );
-                                                })}
-                                                <button
-                                                    onClick={() => fetchClusterData(clusterPagination.page + 1)}
-                                                    disabled={clusterPagination.page >= clusterPagination.totalPages}
-                                                    className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 disabled:opacity-30 hover:bg-primary-50 hover:text-primary-600 transition-all"
-                                                >
-                                                    <FiChevronRight size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        )}
 
                         {activeTab === 'analytics' && (
                             <motion.div
@@ -1616,10 +1239,10 @@ const AdminDashboard = () => {
                                     <div className="bg-gradient-to-br from-primary-600 to-indigo-700 p-8 rounded-[2rem] text-white shadow-xl shadow-primary-600/20">
                                         <FiTrendingUp className="text-3xl mb-4 opacity-50" />
                                         <h4 className="text-primary-100 font-medium tracking-wide uppercase text-xs mb-2">Projected Revenue</h4>
-                                        <p className="text-3xl font-black mb-4">₹{analytics.metrics.projectedRevenue.toLocaleString('en-IN')}</p>
+                                        <p className="text-3xl font-black mb-4">₹{(analytics.metrics?.projectedRevenue || 0).toLocaleString('en-IN')}</p>
                                         <div className={`flex items-center gap-2 text-primary-100 text-sm font-bold bg-white/10 w-fit px-3 py-1 rounded-full`}>
-                                            {analytics.metrics.revenueGrowth >= 0 ? <FiArrowUpRight /> : <FiArrowDownRight />}
-                                            {analytics.metrics.revenueGrowth >= 0 ? '+' : ''}{analytics.metrics.revenueGrowth}%
+                                            {(analytics.metrics?.revenueGrowth || 0) >= 0 ? <FiArrowUpRight /> : <FiArrowDownRight />}
+                                            {(analytics.metrics?.revenueGrowth || 0) >= 0 ? '+' : ''}{analytics.metrics?.revenueGrowth || 0}%
                                         </div>
                                     </div>
 
@@ -1628,7 +1251,7 @@ const AdminDashboard = () => {
                                             <FiActivity className="text-2xl" />
                                         </div>
                                         <h4 className="text-gray-500 dark:text-gray-400 font-medium tracking-wide uppercase text-xs mb-2">Conversion Rate</h4>
-                                        <p className="text-3xl font-black text-gray-900 dark:text-white">{analytics.metrics.conversionRate}%</p>
+                                        <p className="text-3xl font-black text-gray-900 dark:text-white">{analytics.metrics?.conversionRate || 0}%</p>
                                     </div>
 
                                     <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm">
@@ -1636,7 +1259,7 @@ const AdminDashboard = () => {
                                             <FiShoppingBag className="text-2xl" />
                                         </div>
                                         <h4 className="text-gray-500 dark:text-gray-400 font-medium tracking-wide uppercase text-xs mb-2">Cart Abandonment</h4>
-                                        <p className="text-3xl font-black text-gray-900 dark:text-white">{analytics.metrics.cartAbandonment}%</p>
+                                        <p className="text-3xl font-black text-gray-900 dark:text-white">{analytics.metrics?.cartAbandonment || 0}%</p>
                                     </div>
                                 </div>
                             </motion.div>
